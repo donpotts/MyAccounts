@@ -148,6 +148,9 @@
     {
         try
         {
+            totalBalance = 0;
+            totalBalanceValue = 0;
+
             AppService.ODataResult<AccountType>? result = null;
 
             result = await AppService.ListAccountTypeODataAsync(null, null, "Name asc", null, true, "Account");
