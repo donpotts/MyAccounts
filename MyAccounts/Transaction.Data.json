@@ -1,0 +1,35 @@
+[
+  {
+    "Id": 1,
+    "Date": "2024-07-21T00:00:00",
+    "Payee": "Taco House",
+    "AccountId": 1,
+    "CategoryId": 1,
+    "Cleared": false,
+    "Amount": 0.00,
+    "Balance": 0.00,
+    "Description": "Lunch"
+  },
+  {
+    "Id": 2,
+    "Date": "2024-07-21T00:00:00",
+    "Payee": "Pizza Place",
+    "AccountId": 2,
+    "CategoryId": 2,
+    "Cleared": false,
+    "Amount": 0.00,
+    "Balance": 0.00,
+    "Description": "Dinner"
+  },
+  {
+    "Id": 3,
+    "Date": "2024-07-20T00:00:00",
+    "Payee": "Cash",
+    "AccountId": 3,
+    "CategoryId": 3,
+    "Cleared": false,
+    "Amount": 500.00,
+    "Balance": 0.00,
+    "Description": "Initial Deposit"
+  }
+]

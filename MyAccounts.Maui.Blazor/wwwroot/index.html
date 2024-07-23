@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Banking</title>
+    <base href="/" />
+    <link rel="stylesheet" href="_content/MyAccounts.Shared.Blazor/lib/roboto/300.css" />
+    <link rel="stylesheet" href="_content/MyAccounts.Shared.Blazor/lib/roboto/400.css" />
+    <link rel="stylesheet" href="_content/MyAccounts.Shared.Blazor/lib/roboto/500.css" />
+    <link rel="stylesheet" href="_content/MyAccounts.Shared.Blazor/lib/roboto/700.css" />
+    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css">
+    <link href="_content/MyAccounts.Shared.Blazor/css/app.css" rel="stylesheet" />
+    <link href="MyAccounts.Maui.Blazor.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="status-bar-safe-area"></div>
+
+    <div id="app">
+        <style>
+            :root {
+                --mud-palette-primary: #594ae2ff;
+                --mud-palette-primary-text: #ffffffff;
+                --mud-palette-background: #ffffffff;
+                --mud-palette-text-primary: #420242ff;
+                --mud-typography-default-family: 'Roboto','Helvetica','Arial','sans-serif';
+                --mud-typography-default-size: .875rem;
+                --mud-typography-default-weight: 400;
+                --mud-typography-default-lineheight: 1.43;
+                --mud-typography-default-letterspacing: .01071em;
+                --mud-typography-default-text-transform: none;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --mud-palette-primary: #776be7ff;
+                    --mud-palette-background: #32333dff;
+                    --mud-palette-text-primary: #ffffffb2;
+                }
+            }
+        </style>
+        <div>Loading...</div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+</body>
+
+</html>

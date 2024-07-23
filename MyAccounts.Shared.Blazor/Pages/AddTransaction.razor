@@ -1,0 +1,131 @@
+@inject AppService AppService
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+
+<EditForm Model="@record" OnValidSubmit="@OnSubmit">
+    <DataAnnotationsValidator />
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">Add Transaction</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" />
+            <MudTextField @bind-Value="record.Payee" For="@(() => record.Payee)" Label="Payee" />
+            <MudCheckBox @bind-Checked="record.Cleared" For="@(() => record.Cleared)" Label="Cleared" />
+            <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+            <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" />
+            <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
+            @if (record.Account != null)
+            {
+                <MudTextField @bind-Value="record.Account.Name" For="@(() => record.Account.Name)" Label="Account Name" ReadOnly="true" />
+            }
+            <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+                @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
+                {
+                    <MudSelectItem T="long?" Value="@category.Id">@category.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="OnCancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Add</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [Parameter]
+    public string AccountName { get; set; }
+
+    [CascadingParameter]
+    MudDialogInstance? MudDialog { get; set; }
+
+    private Account[]? accountArray;
+    private Category[]? categoryArray;
+    private IEnumerable<long?>? categoryValues;
+    private Transaction record = new();
+
+    private string GetAbsoluteUri(string uri)
+    {
+        if (!uri.StartsWith("/"))
+        {
+            return uri;
+        }
+
+        var baseUri = HttpClient.BaseAddress;
+
+        if (baseUri == null)
+        {
+            throw new Exception("Unable to determine base address");
+        }
+
+        Uri absolute = new(baseUri, uri);
+
+        return absolute.ToString();
+    }
+
+    protected override void OnParametersSet()
+    {
+        record.Date = System.DateTime.Now;
+        record.Account = new();
+        record.Account.Name = AccountName;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        try
+        {
+            accountArray = await AppService.ListAccountAsync();
+            categoryArray = await AppService.ListCategoryAsync();
+            categoryValues = record?.Category?.Select(x => x.Id).ToHashSet() ?? [];
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void OnCancel()
+    {
+        MudDialog?.Cancel();
+    }
+
+    private async void OnSubmit()
+    {
+        try
+        {
+            record.Category = categoryValues?.Select(x => new Category { Id = x }).ToList();
+            await AppService.InsertTransactionAsync(record);
+            MudDialog?.Close();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task<string?> UploadImageAsync(IBrowserFile file, int maxWidth = 256, int maxHeight = 256)
+    {
+        if (file.ContentType != "image/png" && file.ContentType != "image/jpeg")
+        {
+            Snackbar.Add("Only PNG or JPEG images can be uploaded.", Severity.Error);
+            return null;
+        }
+
+        var image = await file.RequestImageFileAsync("image/png", maxWidth, maxHeight);
+
+        try
+        {
+            return await AppService.UploadImageAsync(image);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+
+        return null;
+    }
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "Id": 1,
+    "Name": "Account One",
+    "Date": "2024-07-21T00:00:00",
+    "Balance": 0.00,
+    "AccountTypeId": 1
+  },
+  {
+    "Id": 2,
+    "Name": "Account Two",
+    "Date": "2024-07-21T00:00:00",
+    "Balance": 0.00,
+    "AccountTypeId": 2
+  },
+  {
+    "Id": 3,
+    "Name": "Account Three",
+    "Date": "2024-07-21T00:00:00",
+    "Balance": 0.00,
+    "AccountTypeId": 3
+  }
+]

@@ -1,0 +1,319 @@
+@page "/transaction/{AccountName}"
+@inject AppService AppService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject HttpClient HttpClient
+@inject IJSRuntime JSRuntime
+@inject NavigationService NavigationService
+@attribute [Authorize]
+
+<PageTitle>Transaction</PageTitle>
+
+<div class="mb-3">
+    <MudText Typo="Typo.h3">Transaction</MudText>
+</div>
+
+<MudStack AlignItems="AlignItems.End" Class="mb-3">
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
+</MudStack>
+
+<MudDataGrid T="Transaction" @ref="grid" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true">
+    <ToolBarContent>
+        @if (!string.IsNullOrEmpty(Totals))
+        {
+            var colorClass = decimal.TryParse(Totals, out var totalValue) && totalValue <= 0 ? "text-red" : "text-green";
+            <MudText Typo="Typo.h6">Today's Balance =&nbsp;</MudText>
+            <MudText Typo="Typo.h6" Class="@colorClass">$@Totals</MudText>
+        }
+        <MudSpacer />
+         <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
+         <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x!.Date" Title="Date" />
+        <PropertyColumn Property="x => x!.Payee" Title="Payee" />
+        <TemplateColumn Title="Cleared" Sortable="true">
+            <CellTemplate Context="context">
+                <MudCheckBox Value="@context.Item.Cleared" Disabled="true" />
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="Amount" Sortable="true">
+            <CellTemplate Context="context">
+                @if (@context.Item.Amount != null)
+                {
+                    <div style="color: @(context.Item.Amount > 0 ? "green" : "red")">
+                        @FormatCurrency(context.Item.Amount.ToString() ?? "$0.00")
+                    </div>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="Balance" Sortable="true">
+            <CellTemplate Context="context">
+                @if (@context.Item.Balance != null)
+                {
+                    <div style="color: @(context.Item.Balance > 0 ? "green" : "red")">
+                        @FormatCurrency(context.Item.Balance.ToString() ?? "$0.00")
+                    </div>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x!.Description" Title="Description" />
+        <PropertyColumn @ref="accountColumn" Property="x => x!.Account != null ? x.Account.Name : null" Title="Account" />
+        <TemplateColumn Title="Category" Sortable="false" Filterable="false">
+            <CellTemplate>
+                @string.Join(", ", context.Item.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? [])
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
+            <CellTemplate>
+                <MudStack Row="true">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
+                </MudStack>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Transaction" />
+    </PagerContent>
+</MudDataGrid>
+
+<script>
+    window.downloadFromBase64 = function (base64, filename) {
+        var a = document.createElement("a");
+        document.body.appendChild(a);
+        a.style = "display: none";
+        var byteCharacters = atob(base64);
+        var byteNumbers = new Array(byteCharacters.length);
+        for (var i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        var byteArray = new Uint8Array(byteNumbers);
+        var blob = new Blob([byteArray], { type: "application/octet-stream" });
+        var url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+</script>
+
+@code {
+    [Parameter]
+    public string AccountName { get; set; } = null;
+    private string Totals { get; set; }
+    private MudDataGrid<Transaction>? grid;
+    private PropertyColumn<Transaction, string?>? accountColumn;
+    private bool isDisabled = false;
+
+    private string? _searchString;
+
+    protected override void OnParametersSet()
+    {
+        isDisabled = AccountName == "all";
+        grid?.ReloadServerData();
+    }
+
+    private string FormatCurrency(string amount)
+    {
+        if (double.TryParse(amount, out double parsedAmount))
+        {
+            return parsedAmount.ToString("C");
+        }
+        else
+        {
+            return "$0.00";
+        }
+    }
+
+    private string GetAbsoluteUri(string uri)
+    {
+        if (!uri.StartsWith("/"))
+        {
+            return uri;
+        }
+
+        var baseUri = HttpClient.BaseAddress;
+
+        if (baseUri == null)
+        {
+            throw new Exception("Unable to determine base address");
+        }
+
+        Uri absolute = new(baseUri, uri);
+
+        return absolute.ToString();
+    }
+
+    private async Task<GridData<Transaction>> ServerReload(GridState<Transaction> state)
+    {
+        var top = state.PageSize;
+        var skip = state.Page * state.PageSize;
+        var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
+        var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
+        Totals = await AppService.GetTransactionTotals(AccountName);
+
+        if (!string.IsNullOrEmpty(accountColumn?.PropertyName))
+        {
+            orderby = orderby?.Replace(accountColumn.PropertyName, "Account/Name");
+            filter = filter?.Replace(accountColumn.PropertyName, "Account/Name");
+        }
+
+        AppService.ODataResult<Transaction>? result = null;
+
+        try
+        {
+            if (_searchString?.Length > 0)
+            {
+               bool isNumeric = double.TryParse(_searchString, out _);
+               bool isDateTime = DateTime.TryParse(_searchString, out _);
+
+               if (isNumeric)
+               {
+                   filter = $"Id eq {_searchString} or Amount eq {_searchString} or Balance eq {_searchString}";
+               }
+               else if (isDateTime)
+               {
+                   filter = $"Date ge cast({_searchString},Edm.DateTimeOffset)";
+               }
+               else
+               {
+                   filter = $"contains(tolower(Payee), '{_searchString}') or contains(tolower(Description), '{_searchString}') ";
+               }
+            }
+            if (!string.IsNullOrEmpty(AccountName) && AccountName != "all")
+                filter += filter + $"contains(Account/Name, '{AccountName}')";
+            if (string.IsNullOrEmpty(orderby))
+                orderby = "Date ASC";
+
+            result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, true, "Account,Category");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+
+        return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<Transaction>() };
+    }
+
+    private async void OnAdd()
+    {
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        DialogParameters parameters = new();
+        parameters.Add("AccountName", AccountName);
+
+        var result = await DialogService.Show<AddTransaction>("Add Transaction", parameters, dialogOptions).Result;
+
+        if (!result.Canceled)
+        {
+            await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            NavigationService.NotifyStateChanged();
+        }
+    }
+
+    private async void OnEdit(Transaction record)
+    {
+        DialogParameters<UpdateTransaction> dialogParams = new() { { x => x.Id, record.Id!.Value } };
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        var result = await DialogService.Show<UpdateTransaction>("Update Transaction", dialogParams, dialogOptions).Result;
+
+        if (!result.Canceled)
+        {
+            await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            NavigationService.NotifyStateChanged();
+        }
+    }
+
+    private async void OnDelete(Transaction record)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Warning",
+            "Are you sure you want to delete this record?",
+            "Delete",
+            "Cancel");
+
+        if (result.GetValueOrDefault(false))
+        {
+            try
+            {
+                await AppService.DeleteTransactionAsync(record.Id!.Value);
+                await (grid?.ReloadServerData() ?? Task.CompletedTask);
+                NavigationService.NotifyStateChanged();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+    
+    private void SearchChanged(string Value)
+    {
+        if (Value.EndsWith("."))
+        {
+            return;
+        }
+        _searchString = Value.ToString().ToLower();
+        try
+        {
+            if (_searchString.Length > 18)
+            {
+                DateTimeOffset dateTime = DateTime.Parse(_searchString);
+                _searchString = dateTime.ToString("yyyy-MM-ddTHH:mm:ssK");
+            }
+        }
+        catch
+        {
+            return;
+        }
+        grid?.ReloadServerData();
+    }
+
+    private async Task ExportAllToCSV()
+    {
+        AppService.ODataResult<Transaction>? result = null;
+
+        try
+        {
+            // Fetch all data from the OData service without any filters or restrictions
+            result = await AppService.ListTransactionODataAsync(null, null, null, null, true, "Account,Category");
+
+            if (result != null && result?.Value != null)
+            {
+                var ar = result?.Value.ToList().Select(x => new
+                {
+                    x.Id,
+                    x.Date,
+                    x.Payee,
+                    x.Cleared,
+                    x.Amount,
+                    x.Balance,
+                    x.Description,
+                    AccountName = x.Account.Name,
+                    Category = string.Join(", ", x.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
+                });
+
+                using var memoryStream = new MemoryStream();
+                using (var writer = new StreamWriter(memoryStream))
+                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                {
+                    csv.WriteRecords(ar); // use CSVHelper to write the records to the CSV file
+                }
+                // Convert MemoryStream to ByteArray
+                var byteArray = memoryStream.ToArray();
+
+                // Convert ByteArray to Base64String
+                var base64 = Convert.ToBase64String(byteArray);
+
+                // Trigger file download
+                await JSRuntime.InvokeVoidAsync("downloadFromBase64", base64, "Transaction_"+ System.DateTime.Now.ToString("yyyyMMddHHmmss") +".csv");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

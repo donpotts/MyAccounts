@@ -1,0 +1,225 @@
+@using System.Security.Claims
+@using MyAccounts.Shared.Blazor.Components.Themes
+@inject AppService AppService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IStorageService LocalStorageService
+@inject NavigationService NavigationService
+
+<MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
+<MudAppBar Color="Color.Inherit">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+    <MudText Class="d-flex mr-8">My Accounts</MudText>
+    <MudSpacer />
+    <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert="true" >
+        <MudToolBar>
+            <AuthorizeView>
+                <MudLink Href="/" Class="d-flex px-4" Color="Color.Inherit">Dashboard</MudLink>
+                <MudLink Href="/accounttype" Class="d-flex px-4" Color="Color.Inherit">AccountType</MudLink>
+                <MudLink Href="/account" Class="d-flex px-4" Color="Color.Inherit">Account</MudLink>
+                <MudLink Href="/category" Class="d-flex px-4" Color="Color.Inherit">Category</MudLink>
+                <MudLink Href="/transaction/all" Class="d-flex px-4" Color="Color.Inherit">Transaction</MudLink>
+            </AuthorizeView>
+            <AuthorizeView Roles="Administrator">
+                <MudLink Href="/user" Class="d-flex px-4" Color="Color.Inherit">User</MudLink>
+            </AuthorizeView>
+            <AuthorizeView>
+                <Authorized>
+                    <MudLink Href="/account/changePassword" Class="d-flex px-4" Color="Color.Inherit">Change Password</MudLink>
+                    <MudLink Href="/logout" Class="d-flex px-4" Color="Color.Inherit">Logout (@context.User.Identity!.Name)</MudLink>
+                </Authorized>
+                <NotAuthorized>
+                    <MudLink Href="/register" Class="d-flex px-4" Color="Color.Inherit">Register</MudLink>
+                    <MudLink Href="/login" Class="d-flex px-4" Color="Color.Inherit">Login</MudLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudToolBar>
+    
+    </MudHidden>
+    <ThemesMenu @bind-ThemingDrawerOpen="_themingDrawerOpen"
+            ThemeManager="_themeManager"
+            ThemeManagerChanged="ThemeManagerChanged" />
+
+    <MudLink OnClick="@(() => _themingDrawerOpen = true)" Color="Color.Inherit">
+        <MudTooltip Arrow="true"
+                Placement="Placement.Left"
+                Text="Themes">
+        <MudIcon Icon="@Icons.Material.Outlined.Brush"
+                Color="Color.Inherit"
+                Class="mr-5"/>
+        </MudTooltip>
+    </MudLink>
+    <MudLink Href="https://www.donpotts.com/" Color="Color.Inherit">About</MudLink>
+</MudAppBar>
+<MudDrawer @bind-Open="drawerOpen" ClipMode="DrawerClipMode.Docked" Color="Color.Inherit">
+    <AuthorizeView>
+        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+        <MudText  Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
+        <hr>
+        <hr>
+        @if (ArData != null)
+        {
+            @foreach (var item in ArData)
+            {
+                <div>
+                    <MudText Match="NavLinkMatch.Prefix">@item.Name</MudText>
+                    @foreach (var accountitem in item.Account)
+                    {
+                        decimal totalValue = 0;
+                        var colorClass = "text-green";
+                        if (accountitem.Balance != null && decimal.TryParse(accountitem.Balance.ToString(),NumberStyles.Currency, CultureInfo.CurrentCulture, out totalValue) && totalValue <= 0)
+                        {
+                            colorClass = "text-red";
+                        }
+                        <div style="display: flex; align-items: center;">
+                            <MudNavLink Href=@($"/transaction/{accountitem.Name}") Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountBalance">@accountitem.Name</MudNavLink>
+                            <MudText Class="@colorClass" Match="NavLinkMatch.Prefix">@accountitem.Balance</MudText>
+                            <MudText Match="NavLinkMatch.Prefix">&nbsp;</MudText>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </AuthorizeView>
+</MudDrawer>
+
+@code {
+    private string Totals { get; set; }
+    decimal totalBalance = 0.00M;
+    private bool drawerOpen = true;
+    bool _dark = true;
+    private bool isDarkMode;
+    private MudThemeProvider? mudThemeProvider;
+    private bool _themingDrawerOpen;
+    private MudTheme _theme = new();
+    private bool _isDarkMode = false;
+    decimal totalBalanceValue = 0;
+    private string totalBalanceColorClass = "text-green";
+    public IEnumerable<dynamic> ArData { get; set; }
+
+    private ThemeManagerModel _themeManager = new()
+    {
+        IsDarkMode = false,
+        PrimaryColor = "#594AE2",
+    };
+
+    private async Task UpdateThemeManagerLocalStorage()
+    {
+        await LocalStorageService.SetAsync("themeManager", _themeManager);
+    }
+
+    private async Task ThemeManagerChanged(ThemeManagerModel themeManager)
+    {
+        _themeManager = themeManager;
+
+        _isDarkMode = _themeManager.IsDarkMode;
+
+        _theme = new MudTheme()
+        {
+            Palette = new PaletteLight()
+            {
+                Primary = _themeManager.PrimaryColor,
+                AppbarBackground = _themeManager.PrimaryColor,
+            },
+            PaletteDark = new PaletteDark()
+            {
+                Primary = _themeManager.PrimaryColor,
+            }
+        };
+
+        await UpdateThemeManagerLocalStorage();
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        NavigationService.OnChange += AccountsHasChanged;
+        _themeManager = await LocalStorageService.GetAsync<ThemeManagerModel>("themeManager")
+            ?? new()
+            {
+                IsDarkMode = false,
+                PrimaryColor = "#594AE2",
+            };
+
+        await ThemeManagerChanged(_themeManager);
+        AccountsHasChanged();
+    }
+
+    private async void AccountsHasChanged()
+    {
+        try
+        {
+            AppService.ODataResult<AccountType>? result = null;
+
+            result = await AppService.ListAccountTypeODataAsync(null, null, "Name asc", null, true, "Account");
+            var ar = new List<object>();
+
+            foreach (var accountType in result?.Value)
+            {
+                var accounts = new List<object>();
+                foreach (var account in accountType.Account)
+                {
+                    var culture = new CultureInfo("en-US");
+                    CultureInfo.CurrentCulture = culture;
+                    var balance = await AccountTotals(account.Name);
+                    decimal balanceDecimal;
+                    if (Decimal.TryParse(balance,NumberStyles.Currency, CultureInfo.CurrentCulture, out balanceDecimal))
+                    {
+                        totalBalance += balanceDecimal;
+                    }
+                    accounts.Add(new { account.Name, Balance = balance});
+                }
+                ar.Add(new { accountType.Id, accountType.Name, Account = accounts });
+            }
+
+            if (ar.Any())
+                ArData = ar;
+
+            if (Decimal.TryParse(totalBalance.ToString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out totalBalanceValue) && totalBalanceValue <= 0)
+            {
+                totalBalanceColorClass = "text-red";
+            }
+        }
+        catch { }
+        StateHasChanged();
+    }
+
+    private async Task<string> AccountTotals(string AccountName)
+    {
+        decimal totalsAsDecimal;
+        Totals = await AppService.GetTransactionTotals(AccountName);
+        Decimal.TryParse(Totals, out totalsAsDecimal);
+
+        return totalsAsDecimal.ToString("C");
+    }
+
+    private void DrawerToggle()
+    {
+        drawerOpen = !drawerOpen;
+    }
+                                                    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && mudThemeProvider != null)
+        {
+            isDarkMode = await mudThemeProvider.GetSystemPreference();
+            StateHasChanged();
+
+            await mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+        }
+    }
+
+    protected Task OnSystemPreferenceChanged(bool isDarkMode)
+    {
+        this.isDarkMode = isDarkMode;
+        StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    protected Task OnAccountChanged()
+    {
+        StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+}
