@@ -1,4 +1,4 @@
-# MyAccounts
+# My Accounts
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/donpotts/myaccounts/myaccounts.yml?logo=github)
 
@@ -59,7 +59,7 @@ Username:  adminUser@example.com
 
 Password:  testUser123!
 
-Normal user (Card Recipe)
+Normal user
 
 Username:  normalUser@example.com
 
