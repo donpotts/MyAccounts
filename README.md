@@ -1,4 +1,7 @@
 # MyAccounts
+
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/donpotts/myaccounts/myaccounts.yml?logo=github)
+
 Simple financial account management application.
 
 ## Overview
