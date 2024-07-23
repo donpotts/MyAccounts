@@ -1,25 +1,26 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAccounts", "MyAccounts\MyAccounts.csproj", "{3EF6932C-8366-4A23-856D-8C1011621A29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyAccounts", "MyAccounts\MyAccounts.csproj", "{3EF6932C-8366-4A23-856D-8C1011621A29}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAccounts.Shared", "MyAccounts.Shared\MyAccounts.Shared.csproj", "{D28D53E8-5D8E-43D5-BA71-11983BD1411A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyAccounts.Shared", "MyAccounts.Shared\MyAccounts.Shared.csproj", "{D28D53E8-5D8E-43D5-BA71-11983BD1411A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAccounts.Shared.Blazor", "MyAccounts.Shared.Blazor\MyAccounts.Shared.Blazor.csproj", "{ECEA1104-0955-4A6C-8F14-A365E00054E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyAccounts.Shared.Blazor", "MyAccounts.Shared.Blazor\MyAccounts.Shared.Blazor.csproj", "{ECEA1104-0955-4A6C-8F14-A365E00054E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAccounts.Blazor", "MyAccounts.Blazor\MyAccounts.Blazor.csproj", "{46917BBE-9BD7-46CB-A27F-22B1A4DC2AAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyAccounts.Blazor", "MyAccounts.Blazor\MyAccounts.Blazor.csproj", "{46917BBE-9BD7-46CB-A27F-22B1A4DC2AAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAccounts.Maui.Blazor", "MyAccounts.Maui.Blazor\MyAccounts.Maui.Blazor.csproj", "{CF8C15AF-0570-4E64-BAC7-63F7DFA84988}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyAccounts.Maui.Blazor", "MyAccounts.Maui.Blazor\MyAccounts.Maui.Blazor.csproj", "{CF8C15AF-0570-4E64-BAC7-63F7DFA84988}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7336D7D5-49B3-46E8-AD72-4E9562E0F354}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3EF6932C-8366-4A23-856D-8C1011621A29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -44,5 +45,11 @@ Global
 		{CF8C15AF-0570-4E64-BAC7-63F7DFA84988}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF8C15AF-0570-4E64-BAC7-63F7DFA84988}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CF8C15AF-0570-4E64-BAC7-63F7DFA84988}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {21557AA3-9D54-4582-9406-EBF18510C9F7}
 	EndGlobalSection
 EndGlobal

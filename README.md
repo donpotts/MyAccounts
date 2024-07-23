@@ -34,7 +34,7 @@ This repository contains an ASP.NET Core application with a Blazor WebAssembly (
 ### Installation
 
 1. Clone the repo
-  git clone https://github.com/donpotts/Recipes.git
+  git clone https://github.com/donpotts/MyAccounts.git
 2. Install .NET packages
 3. Install MudBlazor packages
 4. Install any missing packages
