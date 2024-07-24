@@ -22,7 +22,7 @@
         <Nullable>enable</Nullable>
 
         <!-- Display name -->
-        <ApplicationTitle>Banking</ApplicationTitle>
+        <ApplicationTitle>My Accounts</ApplicationTitle>
 
         <!-- App Identifier -->
         <ApplicationId>com.companyname.myaccounts.maui.blazor</ApplicationId>

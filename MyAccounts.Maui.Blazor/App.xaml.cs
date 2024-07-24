@@ -13,7 +13,7 @@ public partial class App : Application
     {
         Window window = base.CreateWindow(activationState);
 
-		window.Title = "Banking";
+		window.Title = "My Accounts";
 
 		return window;
     }

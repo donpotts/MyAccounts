@@ -14,6 +14,7 @@ using MyAccounts.Data;
 using MyAccounts.Models;
 using MyAccounts.Services;
 using MyAccounts.Shared.Models;
+using MyAccounts.Swagger;
 
 Environment.CurrentDirectory = AppContext.BaseDirectory;
 
@@ -52,7 +53,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Banking API",
+        Title = "My Accounts API",
         Version = "v1"
     });
 
@@ -78,6 +79,8 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+
+    options.OperationFilter<IgnoreODataQueryOptionsOperationFilter>();
 });
 
 builder.Services.AddAuthorization();
