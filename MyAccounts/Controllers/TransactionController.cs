@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Attributes;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MyAccounts.Data;
 using MyAccounts.Shared.Models;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace MyAccounts.Controllers;
@@ -22,10 +24,49 @@ public class TransactionController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<IQueryable<Transaction>> Get()
+    public async Task<ActionResult<IQueryable<Transaction>>> GetAsync(ODataQueryOptions<Transaction> options)
     {
-        return Ok(ctx.Transaction.Include(x => x.Account).Include(x => x.Category));
+        var balanceQueryable = ctx.Transaction.Include(x => x.Account).Include(x => x.Category).AsQueryable();
+
+        if (options.Filter?.RawValue.StartsWith("contains(Account/Name") ?? false)
+        {
+            balanceQueryable = (IQueryable<Transaction>)options.Filter.ApplyTo(balanceQueryable, new ODataQuerySettings());
+        }
+
+        var transactions = await balanceQueryable.ToListAsync();
+        CalculateBalances(transactions);
+
+        return Ok(transactions);
     }
+
+    public void CalculateBalances(List<Transaction> transactions)
+    {
+        decimal? balance = 0;
+        foreach (var transaction in transactions.OrderBy(t => t.Date).ThenBy(x => x.Id))
+        {
+            balance += transaction.Amount;
+            transaction.Balance = balance;
+        }
+    }
+
+    //public void CalculateBalances(List<Transaction> transactions)
+    //{
+    //    var groupedTransactions = transactions
+    //        .OrderBy(t => t.Account.Name)
+    //        .ThenBy(t => t.Date)
+    //        .ThenBy(t => t.Id)
+    //        .GroupBy(t => t.Account.Name);
+
+    //    foreach (var accountTransactions in groupedTransactions)
+    //    {
+    //        decimal? balance = 0;
+    //        foreach (var transaction in accountTransactions)
+    //        {
+    //            balance += transaction.Amount;
+    //            transaction.Balance = balance;
+    //        }
+    //    }
+    //}
 
     [HttpGet("totals")]
     [ProducesResponseType(StatusCodes.Status200OK)]
