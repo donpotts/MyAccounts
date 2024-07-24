@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MyAccounts.Data;
+using MyAccounts.Services;
 using MyAccounts.Shared.Models;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -17,8 +18,17 @@ namespace MyAccounts.Controllers;
 [ApiController]
 [Authorize]
 [EnableRateLimiting("Fixed")]
-public class TransactionController(ApplicationDbContext ctx) : ControllerBase
+public class TransactionController : ControllerBase
 {
+    private readonly ApplicationDbContext ctx;
+    private readonly TransactionService transactionService;
+
+    public TransactionController(ApplicationDbContext _ctx, TransactionService _transactionService)
+    {
+        ctx = _ctx;
+        transactionService = _transactionService;
+    }
+
     [HttpGet("")]
     [EnableQuery]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -34,39 +44,10 @@ public class TransactionController(ApplicationDbContext ctx) : ControllerBase
         }
 
         var transactions = await balanceQueryable.ToListAsync();
-        CalculateBalances(transactions);
+        transactionService.CalculateBalances(transactions);
 
         return Ok(transactions);
     }
-
-    public void CalculateBalances(List<Transaction> transactions)
-    {
-        decimal? balance = 0;
-        foreach (var transaction in transactions.OrderBy(t => t.Date).ThenBy(x => x.Id))
-        {
-            balance += transaction.Amount;
-            transaction.Balance = balance;
-        }
-    }
-
-    //public void CalculateBalances(List<Transaction> transactions)
-    //{
-    //    var groupedTransactions = transactions
-    //        .OrderBy(t => t.Account.Name)
-    //        .ThenBy(t => t.Date)
-    //        .ThenBy(t => t.Id)
-    //        .GroupBy(t => t.Account.Name);
-
-    //    foreach (var accountTransactions in groupedTransactions)
-    //    {
-    //        decimal? balance = 0;
-    //        foreach (var transaction in accountTransactions)
-    //        {
-    //            balance += transaction.Amount;
-    //            transaction.Balance = balance;
-    //        }
-    //    }
-    //}
 
     [HttpGet("totals")]
     [ProducesResponseType(StatusCodes.Status200OK)]
