@@ -9,7 +9,14 @@
 <PageTitle>Transaction</PageTitle>
 
 <div class="mb-3">
-    <MudText Typo="Typo.h3">@AccountName</MudText>
+    @if (@AccountName == "all")
+    {
+        <MudText Typo="Typo.h3">All Transactions</MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.h3">@AccountName</MudText>
+    }
 </div>
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
@@ -224,9 +231,12 @@
 
     private async void OnAdd()
     {
+        DialogParameters<AddTransaction> dialogParams = new() ;
+        dialogParams.Add("Account", AccountName);
+        
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
-        var result = await DialogService.Show<AddTransaction>("Add Transaction", dialogOptions).Result;
+        var result = await DialogService.Show<AddTransaction>("Add Transaction", dialogParams, dialogOptions).Result;
 
         if (!result.Canceled)
         {
@@ -314,7 +324,6 @@
                     x.Description,
                     AccountName = x.Account.Name,
                     CategoryName = x.Category.Name,
-
                 });
 
                 using var memoryStream = new MemoryStream();

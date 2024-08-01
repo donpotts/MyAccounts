@@ -24,7 +24,7 @@
          <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
-        @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
+        <PropertyColumn Property="x => x!.Id" Title="Id" />
         <PropertyColumn Property="x => x!.Name" Title="Name" />
         <TemplateColumn Title="Account" Sortable="false" Filterable="false">
             <CellTemplate>
@@ -209,10 +209,9 @@
             {
                 var ar = result?.Value.ToList().Select(x => new
                 {
-                        x.Id,
-    x.Name,
-Account = string.Join(", ", x.Account?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
-
+                    x.Id,
+                    x.Name,
+                    Account = string.Join(", ", x.Account?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
                 });
 
                 using var memoryStream = new MemoryStream();

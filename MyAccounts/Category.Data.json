@@ -1,7 +1,7 @@
 [
   {
     "Id": 1,
-    "Name": "Groceries"
+    "Name": "Uncategorized"
   },
   {
     "Id": 2,
@@ -10,5 +10,33 @@
   {
     "Id": 3,
     "Name": "Vehicle"
+  },
+  {
+    "Id": 4,
+    "Name": "Split"
+  },
+  {
+    "Id": 5,
+    "Name": "Cash Debit"
+  },
+  {
+    "Id": 6,
+    "Name": "Cash Deposit"
+  },
+  {
+    "Id": 7,
+    "Name": "Cash Transfer"
+  },
+  {
+    "Id": 8,
+    "Name": "Groceries"
+  },
+  {
+    "Id": 9,
+    "Name": "Fast Food"
+  },
+  {
+    "Id": 10,
+    "Name": "Dining Out"
   }
 ]

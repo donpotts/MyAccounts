@@ -52,7 +52,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Disabled="@(SumOfAmounts <= 0)">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" >Add</MudButton>
         </DialogActions>
     </MudDialog>
 </EditForm>
@@ -81,7 +81,7 @@
     private string AmountStyle => $"color: {(Amount >= 0 ? "green" : "red")};";
     private string TotalAmountStyle => $"color: {(totalAmount >= 0 ? "green" : "red")};";
     private string TotalSum => $"color: {(SumOfAmounts == 0 ? "green" : "red")};";
-    
+
     AggregateDefinition<TransactionSplit> _amountAggregation = new AggregateDefinition<TransactionSplit>
         {
             Type = AggregateType.Sum,
@@ -92,7 +92,7 @@
             }
         };
 
-    
+
     private string GetAbsoluteUri(string uri)
     {
         if (!uri.StartsWith("/"))
@@ -157,9 +157,18 @@
 
     private async void OnSubmit()
     {
+        if (record.Amount == null || record.Amount == 0)
+        {
+            Snackbar.Add("Amount must be <> 0", Severity.Error);
+            return;
+        }
+            
         try
         {
             record.TransactionId = Id;
+            if (record.CategoryId == null)
+                record.CategoryId = 1;
+                        
             await AppService.InsertTransactionSplitAsync(record);
             await (grid?.ReloadServerData());
             StateHasChanged();

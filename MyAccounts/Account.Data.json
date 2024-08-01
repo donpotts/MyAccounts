@@ -1,21 +1,21 @@
 [
   {
     "Id": 1,
-    "Name": "Account One",
+    "Name": "Account One Checking",
     "Date": "2024-07-21T00:00:00",
-    "Balance": 0.00,
+    "Balance": 500.00,
     "AccountTypeId": 1
   },
   {
     "Id": 2,
-    "Name": "Account Two",
+    "Name": "Account Two Savings",
     "Date": "2024-07-21T00:00:00",
-    "Balance": 0.00,
+    "Balance": 500.00,
     "AccountTypeId": 2
   },
   {
     "Id": 3,
-    "Name": "Account Three",
+    "Name": "Account Three CC",
     "Date": "2024-07-21T00:00:00",
     "Balance": 0.00,
     "AccountTypeId": 3

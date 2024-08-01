@@ -17,13 +17,8 @@
             <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
             <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" />
             <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
-            <MudSelect @bind-Value="record.AccountId" For="@(() => record.AccountId)" Label="Account" AnchorOrigin="Origin.BottomCenter">
-                <MudSelectItem T="long?" Value="null" />
-                @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
-                {
-                    <MudSelectItem Value="@account.Id">@account.Name</MudSelectItem>
-                }
-            </MudSelect>
+            <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
+            @* <MudTextField @bind-Value="record.Account.Name" For="@(() => record.Account.Name)" Label="Account" /> *@
             <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
                 <MudSelectItem T="long?" Value="null" />
                 @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
@@ -41,6 +36,9 @@
 </EditForm>
 
 @code {
+    [Parameter]
+    public string Account { get; set; }
+
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
@@ -77,6 +75,16 @@
             accountArray = await AppService.ListAccountAsync();
             categoryArray = await AppService.ListCategoryAsync();
             record.Date = dateNow;
+
+            @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
+            {
+                Console.WriteLine(account.Name);
+                if (Account == account.Name)
+                {
+                    record.AccountId = account.Id;
+                }
+            }
+
         }
         catch(Exception ex)
         {
@@ -93,6 +101,9 @@
     {
         try
         {
+            if (record.CategoryId == null)
+                record.CategoryId = 1;
+            
             await AppService.InsertTransactionAsync(record);
             MudDialog?.Close();
             NavigationService.NotifyStateChanged();

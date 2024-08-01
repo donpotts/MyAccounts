@@ -4,20 +4,6 @@
     "TransactionId": 1,
     "CategoryId": 1,
     "Amount": 0.00,
-    "Notes": "Lunch"
-  },
-  {
-    "Id": 2,
-    "TransactionId": 1,
-    "CategoryId": 1,
-    "Amount": 0.00,
-    "Notes": "Desert"
-  },
-  {
-    "Id": 3,
-    "TransactionId": 1,
-    "CategoryId": 1,
-    "Amount": 0.00,
     "Notes": ""
   }
 ]
