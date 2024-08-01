@@ -32,7 +32,10 @@
             <MudText Typo="Typo.h6" Class="@colorClass">$@Totals</MudText>
         }
         <MudSpacer />
-        <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
+        @if (!string.IsNullOrEmpty(AccountName) && AccountName == "all")
+        {
+            <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
+        }
         <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
