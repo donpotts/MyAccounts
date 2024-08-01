@@ -32,10 +32,7 @@
             <MudText Typo="Typo.h6" Class="@colorClass">$@Totals</MudText>
         }
         <MudSpacer />
-        @if (!string.IsNullOrEmpty(AccountName) && AccountName == "all")
-        {
-            <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
-        }
+        <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
         <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
@@ -219,7 +216,12 @@
                 }
             }
             if (!string.IsNullOrEmpty(AccountName) && AccountName != "all")
-                filter += filter + $"contains(Account/Name, '{AccountName}')";
+            {
+                 if (!string.IsNullOrEmpty(filter))
+                    filter = $"contains(Account/Name, '{AccountName}') and (" + filter +")" ;
+                else
+                    filter = $"contains(Account/Name, '{AccountName}')";
+            }
             if (string.IsNullOrEmpty(orderby))
                 orderby = "Date ASC";
             result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, true, "Account,Category");
