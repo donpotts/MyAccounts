@@ -36,9 +36,10 @@ builder.Services.Configure<RouteOptions>(options =>
 // Add services to the container.
 ODataConventionModelBuilder modelBuilder = new();
 modelBuilder.EntitySet<AccountType>("AccountType");
+modelBuilder.EntitySet<Category>("Category");
 modelBuilder.EntitySet<Account>("Account");
 modelBuilder.EntitySet<Transaction>("Transaction");
-modelBuilder.EntitySet<Category>("Category");
+modelBuilder.EntitySet<TransactionSplit>("TransactionSplit");
 modelBuilder.EntitySet<ApplicationUserDto>("User");
 
 builder.Services.AddControllers()
@@ -176,7 +177,6 @@ var app = builder.Build();
 //    app.UseSwaggerUI();
 //}
 
-//Always show swagger UI
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -274,6 +274,17 @@ using (var scope = app.Services.CreateScope())
                 ctx.SaveChanges();
             }
         }
+        if (File.Exists("Category.Data.json"))
+        {
+            var json = File.ReadAllText("Category.Data.json");
+            var data = JsonSerializer.Deserialize<Category[]>(json);
+
+            if (data != null)
+            {
+                ctx.Category.AddRange(data);
+                ctx.SaveChanges();
+            }
+        }
         if (File.Exists("Account.Data.json"))
         {
             var json = File.ReadAllText("Account.Data.json");
@@ -296,14 +307,14 @@ using (var scope = app.Services.CreateScope())
                 ctx.SaveChanges();
             }
         }
-        if (File.Exists("Category.Data.json"))
+        if (File.Exists("TransactionSplit.Data.json"))
         {
-            var json = File.ReadAllText("Category.Data.json");
-            var data = JsonSerializer.Deserialize<Category[]>(json);
+            var json = File.ReadAllText("TransactionSplit.Data.json");
+            var data = JsonSerializer.Deserialize<TransactionSplit[]>(json);
 
             if (data != null)
             {
-                ctx.Category.AddRange(data);
+                ctx.TransactionSplit.AddRange(data);
                 ctx.SaveChanges();
             }
         }

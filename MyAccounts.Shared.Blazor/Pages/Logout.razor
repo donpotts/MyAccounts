@@ -1,7 +1,6 @@
 @page "/logout"
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
-@inject NavigationService NavigationService
 
 <PageTitle>Logout</PageTitle>
 
@@ -17,6 +16,5 @@
         await ((IdentityAuthenticationStateProvider)AuthenticationStateProvider).LogoutAsync();
 
         Navigation.NavigateTo("");
-        NavigationService.NotifyStateChanged();
     }
 }

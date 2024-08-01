@@ -40,5 +40,5 @@ public class Transaction
     public Account? Account { get; set; }
 
     [DataMember]
-    public List<Category>? Category { get; set; }
+    public Category? Category { get; set; }
 }

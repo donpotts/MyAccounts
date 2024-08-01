@@ -6,27 +6,27 @@ using System.Text.Json.Serialization;
 namespace MyAccounts.Shared.Models;
 
 [DataContract]
-public class Account
+public class TransactionSplit
 {
     [Key]
     [DataMember]
     public long? Id { get; set; }
 
     [DataMember]
-    public string? Name { get; set; }
+    public long? TransactionId { get; set; }
 
     [DataMember]
-    public DateTime? Date { get; set; }
+    public long? CategoryId { get; set; }
 
     [DataMember]
-    public decimal? Balance { get; set; }
+    public decimal? Amount { get; set; }
 
     [DataMember]
-    public long? AccountTypeId { get; set; }
+    public string? Notes { get; set; }
 
     [DataMember]
-    public AccountType? AccountType { get; set; }
+    public Transaction? Transaction { get; set; }
 
     [DataMember]
-    public List<Category>? Category { get; set; }
+    public Category? Category { get; set; }
 }

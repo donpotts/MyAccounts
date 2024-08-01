@@ -10,7 +10,7 @@
     <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
     <MudText Class="d-flex mr-8">My Accounts</MudText>
     <MudSpacer />
-    <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert="true" >
+    <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert="true">
         <MudToolBar>
             <AuthorizeView>
                 <MudLink Href="/" Class="d-flex px-4" Color="Color.Inherit">Dashboard</MudLink>
@@ -18,6 +18,7 @@
                 <MudLink Href="/account" Class="d-flex px-4" Color="Color.Inherit">Account</MudLink>
                 <MudLink Href="/category" Class="d-flex px-4" Color="Color.Inherit">Category</MudLink>
                 <MudLink Href="/transaction/all" Class="d-flex px-4" Color="Color.Inherit">Transaction</MudLink>
+                <MudLink Href="/transactionsplit" Class="d-flex px-4" Color="Color.Inherit">Transaction Split</MudLink>
             </AuthorizeView>
             <AuthorizeView Roles="Administrator">
                 <MudLink Href="/user" Class="d-flex px-4" Color="Color.Inherit">User</MudLink>
@@ -33,7 +34,7 @@
                 </NotAuthorized>
             </AuthorizeView>
         </MudToolBar>
-    
+
     </MudHidden>
     <ThemesMenu @bind-ThemingDrawerOpen="_themingDrawerOpen"
             ThemeManager="_themeManager"
@@ -48,12 +49,12 @@
                 Class="mr-5"/>
         </MudTooltip>
     </MudLink>
-    <MudLink Href="https://www.donpotts.com/" Color="Color.Inherit">About</MudLink>
+    <MudLink Href="https://www.radendpoint.com/" Color="Color.Inherit">About</MudLink>
 </MudAppBar>
 <MudDrawer @bind-Open="drawerOpen" ClipMode="DrawerClipMode.Docked" Color="Color.Inherit">
     <AuthorizeView>
         <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
-        <MudText  Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
+        <MudText Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
         <hr>
         <hr>
         @if (ArData != null)
@@ -66,7 +67,7 @@
                     {
                         decimal totalValue = 0;
                         var colorClass = "text-green";
-                        if (accountitem.Balance != null && decimal.TryParse(accountitem.Balance.ToString(),NumberStyles.Currency, CultureInfo.CurrentCulture, out totalValue) && totalValue <= 0)
+                        if (accountitem.Balance != null && decimal.TryParse(accountitem.Balance.ToString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out totalValue) && totalValue <= 0)
                         {
                             colorClass = "text-red";
                         }
@@ -85,6 +86,8 @@
 @code {
     private string Totals { get; set; }
     decimal totalBalance = 0.00M;
+    decimal totalBalanceValue = 0;
+
     private bool drawerOpen = true;
     bool _dark = true;
     private bool isDarkMode;
@@ -92,7 +95,6 @@
     private bool _themingDrawerOpen;
     private MudTheme _theme = new();
     private bool _isDarkMode = false;
-    decimal totalBalanceValue = 0;
     private string totalBalanceColorClass = "text-green";
     public IEnumerable<dynamic> ArData { get; set; }
 
@@ -164,12 +166,12 @@
                     var culture = new CultureInfo("en-US");
                     CultureInfo.CurrentCulture = culture;
                     var balance = await AccountTotals(account.Name);
-                    decimal balanceDecimal;
-                    if (Decimal.TryParse(balance,NumberStyles.Currency, CultureInfo.CurrentCulture, out balanceDecimal))
-                    {
-                        totalBalance += balanceDecimal;
-                    }
-                    accounts.Add(new { account.Name, Balance = balance});
+                     decimal balanceDecimal;
+                     if (Decimal.TryParse(balance, NumberStyles.Currency, CultureInfo.CurrentCulture, out balanceDecimal))
+                     {
+                         totalBalance += balanceDecimal;
+                     }
+                     accounts.Add(new { account.Name, Balance = balance });
                 }
                 ar.Add(new { accountType.Id, accountType.Name, Account = accounts });
             }
@@ -188,7 +190,7 @@
 
     private async Task<string> AccountTotals(string AccountName)
     {
-        decimal totalsAsDecimal;
+        decimal totalsAsDecimal = 0;
         Totals = await AppService.GetTransactionTotals(AccountName);
         Decimal.TryParse(Totals, out totalsAsDecimal);
 

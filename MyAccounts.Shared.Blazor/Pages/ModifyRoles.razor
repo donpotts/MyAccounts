@@ -1,6 +1,7 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject NavigationService NavigationService
 @attribute [Authorize]
 
 @if (user == null)
@@ -72,6 +73,7 @@ else
         {
             await AppService.ModifyRolesAsync(Id, model.Roles);
             MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

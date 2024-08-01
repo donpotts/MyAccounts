@@ -1,4 +1,4 @@
-@page "/account"
+@page "/transactionsplit"
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -6,34 +6,29 @@
 @inject IJSRuntime JSRuntime
 @attribute [Authorize]
 
-<PageTitle>Account</PageTitle>
+<PageTitle>TransactionSplit</PageTitle>
 
 <div class="mb-3">
-    <MudText Typo="Typo.h3">Account</MudText>
+    <MudText Typo="Typo.h3">TransactionSplit</MudText>
 </div>
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" OnClick="@(e => OnAdd())">Add</MudButton>
 </MudStack>
 
-<MudDataGrid T="Account" @ref="grid" ServerData="(new Func<GridState<Account>, Task<GridData<Account>>>(ServerReload))" Filterable="true">
+<MudDataGrid T="TransactionSplit" @ref="grid" ServerData="(new Func<GridState<TransactionSplit>, Task<GridData<TransactionSplit>>>(ServerReload))" Filterable="true">
     <ToolBarContent>
-         <MudText Typo="Typo.h6">Account</MudText>
+         <MudText Typo="Typo.h6">Transaction Split</MudText>
          <MudSpacer />
          <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
          <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
         @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
-        <PropertyColumn Property="x => x!.Name" Title="Name" />
-        <PropertyColumn Property="x => x!.Date" Title="Date" />
-        <PropertyColumn Property="x => x!.Balance" Title="Balance" />
-        <PropertyColumn @ref="accountTypeColumn" Property="x => x!.AccountType != null ? x.AccountType.Name : null" Title="AccountType" />
-        <TemplateColumn Title="Category" Sortable="false" Filterable="false">
-            <CellTemplate>
-                @string.Join(", ", context.Item.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? [])
-            </CellTemplate>
-        </TemplateColumn>
+        @* <PropertyColumn @ref="transactionColumn" Property="x => x!.Transaction != null ? x.Transaction.Id : null" Title="Transaction" /> *@
+        <PropertyColumn @ref="categoryColumn" Property="x => x!.Category != null ? x.Category.Name : null" Title="Category" />
+        <PropertyColumn Property="x => x!.Amount" Title="Amount" />
+        <PropertyColumn Property="x => x!.Notes" Title="Notes" />
         <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
             <CellTemplate>
                 <MudStack Row="true">
@@ -44,7 +39,7 @@
         </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="Account" />
+        <MudDataGridPager T="TransactionSplit" />
     </PagerContent>
 </MudDataGrid>
 
@@ -69,8 +64,10 @@
 </script>
 
 @code {
-    private MudDataGrid<Account>? grid;
-    private PropertyColumn<Account, string?>? accountTypeColumn;
+    private MudDataGrid<TransactionSplit>? grid;
+    private PropertyColumn<TransactionSplit, long?>? transactionColumn;
+
+    private PropertyColumn<TransactionSplit, string?>? categoryColumn;
 
     private string? _searchString;
     private string GetAbsoluteUri(string uri)
@@ -92,20 +89,26 @@
         return absolute.ToString();
     }
 
-    private async Task<GridData<Account>> ServerReload(GridState<Account> state)
+    private async Task<GridData<TransactionSplit>> ServerReload(GridState<TransactionSplit> state)
     {
         var top = state.PageSize;
         var skip = state.Page * state.PageSize;
         var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
         var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
 
-        if (!string.IsNullOrEmpty(accountTypeColumn?.PropertyName))
+        if (!string.IsNullOrEmpty(transactionColumn?.PropertyName))
         {
-            orderby = orderby?.Replace(accountTypeColumn.PropertyName, "AccountType/Name");
-            filter = filter?.Replace(accountTypeColumn.PropertyName, "AccountType/Name");
+            orderby = orderby?.Replace(transactionColumn.PropertyName, "Transaction/Id");
+            filter = filter?.Replace(transactionColumn.PropertyName, "Transaction/Id");
         }
 
-        AppService.ODataResult<Account>? result = null;
+        if (!string.IsNullOrEmpty(categoryColumn?.PropertyName))
+        {
+            orderby = orderby?.Replace(categoryColumn.PropertyName, "Category/Name");
+            filter = filter?.Replace(categoryColumn.PropertyName, "Category/Name");
+        }
+
+        AppService.ODataResult<TransactionSplit>? result = null;
 
         try
         {
@@ -116,32 +119,32 @@
 
                if (isNumeric)
                {
-                   filter = $"Id eq {_searchString} or Balance eq {_searchString}";
+                   filter = $"Id eq {_searchString} or Amount eq {_searchString}";
                }
                else if (isDateTime)
                {
-                   filter = $"Date ge cast({_searchString},Edm.DateTimeOffset)";
+                   filter = $"";
                }
                else
                {
-                   filter = $"contains(tolower(Name), '{_searchString}') ";
+                   filter = $"contains(tolower(Notes), '{_searchString}') ";
                }
             }
-            result = await AppService.ListAccountODataAsync(top, skip, orderby, filter, true, "AccountType,Category");
+            result = await AppService.ListTransactionSplitODataAsync(top, skip, orderby, filter, true, "Transaction,Category");
         }
         catch (Exception ex)
         {
             Snackbar.Add(ex.Message, Severity.Error);
         }
 
-        return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<Account>() };
+        return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<TransactionSplit>() };
     }
 
     private async void OnAdd()
     {
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
-        var result = await DialogService.Show<AddAccount>("Add Account", dialogOptions).Result;
+        var result = await DialogService.Show<AddTransactionSplit>("Add TransactionSplit", dialogOptions).Result;
 
         if (!result.Canceled)
         {
@@ -149,12 +152,12 @@
         }
     }
 
-    private async void OnEdit(Account record)
+    private async void OnEdit(TransactionSplit record)
     {
-        DialogParameters<UpdateAccount> dialogParams = new() { { x => x.Id, record.Id!.Value } };
+        DialogParameters<UpdateTransactionSplit> dialogParams = new() { { x => x.Id, record.Id!.Value } };
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
-        var result = await DialogService.Show<UpdateAccount>("Update Account", dialogParams, dialogOptions).Result;
+        var result = await DialogService.Show<UpdateTransactionSplit>("Update TransactionSplit", dialogParams, dialogOptions).Result;
 
         if (!result.Canceled)
         {
@@ -162,7 +165,7 @@
         }
     }
 
-    private async void OnDelete(Account record)
+    private async void OnDelete(TransactionSplit record)
     {
         var result = await DialogService.ShowMessageBox(
             "Warning",
@@ -174,7 +177,7 @@
         {
             try
             {
-                await AppService.DeleteAccountAsync(record.Id!.Value);
+                await AppService.DeleteTransactionSplitAsync(record.Id!.Value);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
             }
             catch (Exception ex)
@@ -209,23 +212,22 @@
 
     private async Task ExportAllToCSV()
     {
-        AppService.ODataResult<Account>? result = null;
+        AppService.ODataResult<TransactionSplit>? result = null;
 
         try
         {
             // Fetch all data from the OData service without any filters or restrictions
-            result = await AppService.ListAccountODataAsync(null, null, null, null, true, "AccountType,Category");
+            result = await AppService.ListTransactionSplitODataAsync(null, null, null, null, true, "Transaction,Category");
 
             if (result != null && result?.Value != null)
             {
                 var ar = result?.Value.ToList().Select(x => new
                 {
                         x.Id,
-    x.Name,
-    x.Date,
-    x.Balance,
-     AccountTypeName = x.AccountType.Name,
-Category = string.Join(", ", x.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
+    x.Amount,
+    x.Notes,
+     TransactionId = x.Transaction.Id,
+     CategoryName = x.Category.Name,
 
                 });
 
@@ -242,7 +244,7 @@ Category = string.Join(", ", x.Category?.Select(x => x.Name?.ToString() ?? strin
                 var base64 = Convert.ToBase64String(byteArray);
 
                 // Trigger file download
-                await JSRuntime.InvokeVoidAsync("downloadFromBase64", base64, "Account_"+ System.DateTime.Now.ToString("yyyyMMddHHmmss") +".csv");
+                await JSRuntime.InvokeVoidAsync("downloadFromBase64", base64, "TransactionSplit_"+ System.DateTime.Now.ToString("yyyyMMddHHmmss") +".csv");
             }
         }
         catch (Exception ex)

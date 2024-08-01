@@ -24,10 +24,11 @@
          <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
+        @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
         <PropertyColumn Property="x => x!.Name" Title="Name" />
-        <TemplateColumn Title="Transaction" Sortable="false" Filterable="false">
+        <TemplateColumn Title="Account" Sortable="false" Filterable="false">
             <CellTemplate>
-                @string.Join(", ", context.Item.Transaction?.Select(x => x.Payee?.ToString() ?? string.Empty) ?? [])
+                @string.Join(", ", context.Item.Account?.Select(x => x.Name?.ToString() ?? string.Empty) ?? [])
             </CellTemplate>
         </TemplateColumn>
         <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
@@ -115,7 +116,7 @@
                    filter = $"contains(tolower(Name), '{_searchString}') ";
                }
             }
-            result = await AppService.ListCategoryODataAsync(top, skip, orderby, filter, true, "Transaction");
+            result = await AppService.ListCategoryODataAsync(top, skip, orderby, filter, true, "Account");
         }
         catch (Exception ex)
         {
@@ -185,6 +186,7 @@
             {
                 DateTimeOffset dateTime = DateTime.Parse(_searchString);
                 _searchString = dateTime.ToString("yyyy-MM-ddTHH:mm:ssK");
+                //Console.WriteLine(_searchString);
             }
         }
         catch
@@ -201,7 +203,7 @@
         try
         {
             // Fetch all data from the OData service without any filters or restrictions
-            result = await AppService.ListCategoryODataAsync(null, null, null, null, true, "Transaction");
+            result = await AppService.ListCategoryODataAsync(null, null, null, null, true, "Account");
 
             if (result != null && result?.Value != null)
             {
@@ -209,7 +211,7 @@
                 {
                         x.Id,
     x.Name,
-Transaction = string.Join(", ", x.Transaction?.Select(x => x.Payee?.ToString() ?? string.Empty) ?? []),
+Account = string.Join(", ", x.Account?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
 
                 });
 

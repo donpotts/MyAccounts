@@ -1,6 +1,8 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject NavigationService NavigationService
+@attribute [Authorize]
 
 <EditForm Model="@record" OnValidSubmit="@OnSubmit">
     <DataAnnotationsValidator />
@@ -79,6 +81,7 @@
             record.Account = accountValues?.Select(x => new Account { Id = x }).ToList();
             await AppService.InsertAccountTypeAsync(record);
             MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

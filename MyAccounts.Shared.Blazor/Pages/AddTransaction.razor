@@ -1,6 +1,8 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject NavigationService NavigationService
+@attribute [Authorize]
 
 <EditForm Model="@record" OnValidSubmit="@OnSubmit">
     <DataAnnotationsValidator />
@@ -15,14 +17,18 @@
             <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
             <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" />
             <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
-            @if (record.Account != null)
-            {
-                <MudTextField @bind-Value="record.Account.Name" For="@(() => record.Account.Name)" Label="Account Name" ReadOnly="true" />
-            }
-            <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+            <MudSelect @bind-Value="record.AccountId" For="@(() => record.AccountId)" Label="Account" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="long?" Value="null" />
+                @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
+                {
+                    <MudSelectItem Value="@account.Id">@account.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="long?" Value="null" />
                 @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
                 {
-                    <MudSelectItem T="long?" Value="@category.Id">@category.Name</MudSelectItem>
+                    <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
                 }
             </MudSelect>
 
@@ -35,16 +41,13 @@
 </EditForm>
 
 @code {
-    [Parameter]
-    public string AccountName { get; set; }
-
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
     private Account[]? accountArray;
     private Category[]? categoryArray;
-    private IEnumerable<long?>? categoryValues;
     private Transaction record = new();
+    private DateTime dateNow = DateTime.Now;
 
     private string GetAbsoluteUri(string uri)
     {
@@ -65,13 +68,6 @@
         return absolute.ToString();
     }
 
-    protected override void OnParametersSet()
-    {
-        record.Date = System.DateTime.Now;
-        record.Account = new();
-        record.Account.Name = AccountName;
-    }
-
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -80,7 +76,7 @@
         {
             accountArray = await AppService.ListAccountAsync();
             categoryArray = await AppService.ListCategoryAsync();
-            categoryValues = record?.Category?.Select(x => x.Id).ToHashSet() ?? [];
+            record.Date = dateNow;
         }
         catch(Exception ex)
         {
@@ -97,9 +93,9 @@
     {
         try
         {
-            record.Category = categoryValues?.Select(x => new Category { Id = x }).ToList();
             await AppService.InsertTransactionAsync(record);
             MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

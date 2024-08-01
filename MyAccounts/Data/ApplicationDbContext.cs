@@ -12,6 +12,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Account> Account => Set<Account>();
     public DbSet<Category> Category => Set<Category>();
     public DbSet<Transaction> Transaction => Set<Transaction>();
+    public DbSet<TransactionSplit> TransactionSplit => Set<TransactionSplit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,8 +28,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasPrecision(19, 4);
         modelBuilder.Entity<Account>()
             .HasOne(x => x.AccountType);
+        modelBuilder.Entity<Account>()
+            .HasMany(x => x.Category);
         modelBuilder.Entity<Category>()
-            .HasMany(x => x.Transaction);
+            .HasMany(x => x.Account);
         modelBuilder.Entity<Transaction>()
             .Property(e => e.Amount)
             .HasConversion<double>();
@@ -44,6 +47,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<Transaction>()
             .HasOne(x => x.Account);
         modelBuilder.Entity<Transaction>()
-            .HasMany(x => x.Category);
+            .HasOne(x => x.Category);
+        modelBuilder.Entity<TransactionSplit>()
+            .Property(e => e.Amount)
+            .HasConversion<double>();
+        modelBuilder.Entity<TransactionSplit>()
+            .Property(e => e.Amount)
+            .HasPrecision(19, 4);
+        modelBuilder.Entity<TransactionSplit>()
+            .HasOne(x => x.Transaction);
+        modelBuilder.Entity<TransactionSplit>()
+            .HasOne(x => x.Category);
     }
 }

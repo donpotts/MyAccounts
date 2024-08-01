@@ -18,12 +18,13 @@
 
 <MudDataGrid T="AccountType" @ref="grid" ServerData="(new Func<GridState<AccountType>, Task<GridData<AccountType>>>(ServerReload))" Filterable="true">
     <ToolBarContent>
-         <MudText Typo="Typo.h6">AccountType</MudText>
+         <MudText Typo="Typo.h6">Account Type</MudText>
          <MudSpacer />
          <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
          <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
+        @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
         <PropertyColumn Property="x => x!.Name" Title="Name" />
         <TemplateColumn Title="Account" Sortable="false" Filterable="false">
             <CellTemplate>
@@ -185,6 +186,7 @@
             {
                 DateTimeOffset dateTime = DateTime.Parse(_searchString);
                 _searchString = dateTime.ToString("yyyy-MM-ddTHH:mm:ssK");
+                //Console.WriteLine(_searchString);
             }
         }
         catch

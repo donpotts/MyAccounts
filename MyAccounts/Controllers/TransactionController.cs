@@ -5,12 +5,9 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Attributes;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using MyAccounts.Data;
 using MyAccounts.Services;
 using MyAccounts.Shared.Models;
-using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace MyAccounts.Controllers;
 
@@ -28,6 +25,7 @@ public class TransactionController : ControllerBase
         ctx = _ctx;
         transactionService = _transactionService;
     }
+
 
     [HttpGet("")]
     [EnableQuery]
@@ -49,24 +47,6 @@ public class TransactionController : ControllerBase
         return Ok(transactions);
     }
 
-    [HttpGet("totals")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<decimal>> GetTotalsAsync([FromQuery] string accountName)
-    {
-        decimal? totalAmount = 0.00M;
-        if (accountName == "all")
-        {
-            totalAmount = await ctx.Transaction.SumAsync(t => t.Amount);
-        }
-        else
-        {
-            totalAmount = await ctx.Transaction.Where(t => t.Account.Name == accountName).SumAsync(t => t.Amount);
-        }
-        return Ok(totalAmount);
-    }
-
     [HttpGet("{key}")]
     [EnableQuery]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -86,6 +66,24 @@ public class TransactionController : ControllerBase
         }
     }
 
+    [HttpGet("totals")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<decimal>> GetTotalsAsync([FromQuery] string accountName)
+    {
+        decimal? totalAmount = 0.00M;
+        if (accountName == "all")
+        {
+            totalAmount = await ctx.Transaction.SumAsync(t => t.Amount);
+        }
+        else
+        {
+            totalAmount = await ctx.Transaction.Where(t => t.Account.Name == accountName).SumAsync(t => t.Amount);
+        }
+        return Ok(totalAmount);
+    }
+
     [HttpPost("")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -97,16 +95,7 @@ public class TransactionController : ControllerBase
             return Conflict();
         }
     
-        var category = transaction.Category;
-        transaction.Category = null;
-
         await ctx.Transaction.AddAsync(transaction);
-
-        if (category != null)
-        {
-            var newValues = await ctx.Category.Where(x => category.Select(y => y.Id).Contains(x.Id)).ToListAsync();
-            transaction.Category = [..newValues];
-        }
 
         await ctx.SaveChangesAsync();
 
@@ -119,7 +108,7 @@ public class TransactionController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Transaction>> PutAsync(long key, Transaction update)
     {
-        var transaction = await ctx.Transaction.Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == key);
+        var transaction = await ctx.Transaction.FirstOrDefaultAsync(x => x.Id == key);
 
         if (transaction == null)
         {
@@ -127,16 +116,6 @@ public class TransactionController : ControllerBase
         }
 
         ctx.Entry(transaction).CurrentValues.SetValues(update);
-
-        if (update.Category != null)
-        {
-            var updateValues = update.Category.Select(x => x.Id);
-            transaction.Category ??= [];
-            transaction.Category.RemoveAll(x => !updateValues.Contains(x.Id));
-            var addValues = updateValues.Where(x => !transaction.Category.Select(y => y.Id).Contains(x));
-            var newValues = await ctx.Category.Where(x => addValues.Contains(x.Id)).ToListAsync();
-            transaction.Category.AddRange(newValues);
-        }
 
         await ctx.SaveChangesAsync();
 
@@ -149,7 +128,7 @@ public class TransactionController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Transaction>> PatchAsync(long key, Delta<Transaction> delta)
     {
-        var transaction = await ctx.Transaction.Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == key);
+        var transaction = await ctx.Transaction.FirstOrDefaultAsync(x => x.Id == key);
 
         if (transaction == null)
         {

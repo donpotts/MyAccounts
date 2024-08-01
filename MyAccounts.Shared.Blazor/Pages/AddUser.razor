@@ -1,6 +1,7 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject NavigationService NavigationService
 @attribute [Authorize]
 
 <EditForm Model="@registerModel" OnValidSubmit="@OnSubmit">
@@ -85,6 +86,7 @@
             }
 
             MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

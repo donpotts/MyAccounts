@@ -1,8 +1,8 @@
 @page "/login"
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
-@inject ISnackbar Snackbar
 @inject NavigationService NavigationService
+@inject ISnackbar Snackbar
 
 <PageTitle>Login</PageTitle>
 
@@ -39,14 +39,14 @@
         {
             await ((IdentityAuthenticationStateProvider)AuthenticationStateProvider)
                 .LoginAsync(loginModel);
+
+            Navigation.NavigateTo("");
+            NavigationService.NotifyStateChanged();    
         }
         catch (Exception ex)
         {
             Snackbar.Add(ex.Message, Severity.Error);
             return;
         }
-
-        Navigation.NavigateTo("");
-        NavigationService.NotifyStateChanged();
     }
 }

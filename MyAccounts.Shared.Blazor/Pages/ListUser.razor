@@ -17,6 +17,7 @@
 
 <MudDataGrid T="ApplicationUserDto" @ref="grid" ServerData="(new Func<GridState<ApplicationUserDto>, Task<GridData<ApplicationUserDto>>>(ServerReload))" Filterable="true">
     <Columns>
+        <PropertyColumn Property="x => x!.Id" Title="Id" />
         <PropertyColumn Property="x => x!.Email" />
         <PropertyColumn Property="x => x!.PhoneNumber" Title="Phone Number" />
         <PropertyColumn Property="x => x!.FirstName" Title="First Name" />

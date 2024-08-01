@@ -1,6 +1,8 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject NavigationService NavigationService
+@attribute [Authorize]
 
 @if (record == null)
 {
@@ -40,10 +42,11 @@ else
                         <MudSelectItem Value="@account.Id">@account.Name</MudSelectItem>
                     }
                 </MudSelect>
-                <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem T="long?" Value="null" />
                     @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
                     {
-                        <MudSelectItem T="long?" Value="@category.Id">@category.Name</MudSelectItem>
+                        <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
                     }
                 </MudSelect>
 
@@ -65,7 +68,6 @@ else
 
     private Account[]? accountArray;
     private Category[]? categoryArray;
-    private IEnumerable<long?>? categoryValues;
     private Transaction? record;
 
     private string GetAbsoluteUri(string uri)
@@ -94,7 +96,6 @@ else
             accountArray = await AppService.ListAccountAsync();
             categoryArray = await AppService.ListCategoryAsync();
             record = await AppService.GetTransactionByIdAsync(Id);
-            categoryValues = record?.Category?.Select(x => x.Id).ToHashSet() ?? [];
         }
         catch (Exception ex)
         {
@@ -116,9 +117,9 @@ else
 
         try
         {
-            record.Category = categoryValues?.Select(x => new Category { Id = x }).ToList();
             await AppService.UpdateTransactionAsync(Id, record);
             MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

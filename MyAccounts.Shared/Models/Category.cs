@@ -16,5 +16,5 @@ public class Category
     public string? Name { get; set; }
 
     [DataMember]
-    public List<Transaction>? Transaction { get; set; }
+    public List<Account>? Account { get; set; }
 }

@@ -8,7 +8,7 @@
 {
     <MudDialog>
         <TitleContent>
-            <MudText Typo="Typo.h6">Update AccountType</MudText>
+            <MudText Typo="Typo.h6">Update TransactionSplit</MudText>
         </TitleContent>
         <DialogContent>
             <MudText>Loading...</MudText>
@@ -25,18 +25,29 @@ else
         <DataAnnotationsValidator />
         <MudDialog>
             <TitleContent>
-                <MudText Typo="Typo.h6">Update AccountType</MudText>
+                <MudText Typo="Typo.h6">Update TransactionSplit</MudText>
             </TitleContent>
             <DialogContent>
                 <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" />
-                <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
-                <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
-                    @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
+                <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+                <MudTextField @bind-Value="record.Notes" For="@(() => record.Notes)" Label="Notes" />
+                <MudSelect @bind-Value="record.TransactionId" For="@(() => record.TransactionId)" Label="Transaction" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem T="long?" Value="null" />
+                    @foreach (var transaction in transactionArray ?? Enumerable.Empty<Transaction>())
                     {
-                        <MudSelectItem T="long?" Value="@account.Id">@account.Name</MudSelectItem>
+                        <MudSelectItem Value="@transaction.Id">@transaction.Id</MudSelectItem>
                     }
                 </MudSelect>
-
+                <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem T="long?" Value="null" />
+                    @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
+                    {
+                        if (@category.Name != "Split")
+                        {
+                            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="OnCancel">Cancel</MudButton>
@@ -53,9 +64,9 @@ else
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
-    private Account[]? accountArray;
-    private IEnumerable<long?>? accountValues;
-    private AccountType? record;
+    private Transaction[]? transactionArray;
+    private Category[]? categoryArray;
+    private TransactionSplit? record;
 
     private string GetAbsoluteUri(string uri)
     {
@@ -80,9 +91,9 @@ else
     {
         try
         {
-            accountArray = await AppService.ListAccountAsync();
-            record = await AppService.GetAccountTypeByIdAsync(Id);
-            accountValues = record?.Account?.Select(x => x.Id).ToHashSet() ?? [];
+            transactionArray = await AppService.ListTransactionAsync();
+            categoryArray = await AppService.ListCategoryAsync();
+            record = await AppService.GetTransactionSplitByIdAsync(Id);
         }
         catch (Exception ex)
         {
@@ -104,8 +115,7 @@ else
 
         try
         {
-            record.Account = accountValues?.Select(x => new Account { Id = x }).ToList();
-            await AppService.UpdateAccountTypeAsync(Id, record);
+            await AppService.UpdateTransactionSplitAsync(Id, record);
             MudDialog?.Close();
             NavigationService.NotifyStateChanged();
         }

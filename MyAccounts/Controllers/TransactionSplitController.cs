@@ -14,16 +14,16 @@ namespace MyAccounts.Controllers;
 [ApiController]
 [Authorize]
 [EnableRateLimiting("Fixed")]
-public class CategoryController(ApplicationDbContext ctx) : ControllerBase
+public class TransactionSplitController(ApplicationDbContext ctx) : ControllerBase
 {
     [HttpGet("")]
     [EnableQuery]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<IQueryable<Category>> Get()
+    public ActionResult<IQueryable<TransactionSplit>> Get()
     {
-        return Ok(ctx.Category.Include(x => x.Account));
+        return Ok(ctx.TransactionSplit.Include(x => x.Transaction).Include(x => x.Category));
     }
 
     [HttpGet("{key}")]
@@ -31,95 +31,76 @@ public class CategoryController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Category>> GetAsync(long key)
+    public async Task<ActionResult<TransactionSplit>> GetAsync(long key)
     {
-        var category = await ctx.Category.Include(x => x.Account).FirstOrDefaultAsync(x => x.Id == key);
+        var transactionSplit = await ctx.TransactionSplit.Include(x => x.Transaction).Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == key);
 
-        if (category == null)
+        if (transactionSplit == null)
         {
             return NotFound();
         }
         else
         {
-            return Ok(category);
+            return Ok(transactionSplit);
         }
     }
 
     [HttpPost("")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<Category>> PostAsync(Category category)
+    public async Task<ActionResult<TransactionSplit>> PostAsync(TransactionSplit transactionSplit)
     {
-        var record = await ctx.Category.FindAsync(category.Id);
+        var record = await ctx.TransactionSplit.FindAsync(transactionSplit.Id);
         if (record != null)
         {
             return Conflict();
         }
     
-        var account = category.Account;
-        category.Account = null;
-
-        await ctx.Category.AddAsync(category);
-
-        if (account != null)
-        {
-            var newValues = await ctx.Account.Where(x => account.Select(y => y.Id).Contains(x.Id)).ToListAsync();
-            category.Account = [..newValues];
-        }
+        await ctx.TransactionSplit.AddAsync(transactionSplit);
 
         await ctx.SaveChangesAsync();
 
-        return Created($"/category/{category.Id}", category);
+        return Created($"/transactionsplit/{transactionSplit.Id}", transactionSplit);
     }
 
     [HttpPut("{key}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Category>> PutAsync(long key, Category update)
+    public async Task<ActionResult<TransactionSplit>> PutAsync(long key, TransactionSplit update)
     {
-        var category = await ctx.Category.Include(x => x.Account).FirstOrDefaultAsync(x => x.Id == key);
+        var transactionSplit = await ctx.TransactionSplit.FirstOrDefaultAsync(x => x.Id == key);
 
-        if (category == null)
+        if (transactionSplit == null)
         {
             return NotFound();
         }
 
-        ctx.Entry(category).CurrentValues.SetValues(update);
-
-        if (update.Account != null)
-        {
-            var updateValues = update.Account.Select(x => x.Id);
-            category.Account ??= [];
-            category.Account.RemoveAll(x => !updateValues.Contains(x.Id));
-            var addValues = updateValues.Where(x => !category.Account.Select(y => y.Id).Contains(x));
-            var newValues = await ctx.Account.Where(x => addValues.Contains(x.Id)).ToListAsync();
-            category.Account.AddRange(newValues);
-        }
+        ctx.Entry(transactionSplit).CurrentValues.SetValues(update);
 
         await ctx.SaveChangesAsync();
 
-        return Ok(category);
+        return Ok(transactionSplit);
     }
 
     [HttpPatch("{key}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Category>> PatchAsync(long key, Delta<Category> delta)
+    public async Task<ActionResult<TransactionSplit>> PatchAsync(long key, Delta<TransactionSplit> delta)
     {
-        var category = await ctx.Category.Include(x => x.Account).FirstOrDefaultAsync(x => x.Id == key);
+        var transactionSplit = await ctx.TransactionSplit.FirstOrDefaultAsync(x => x.Id == key);
 
-        if (category == null)
+        if (transactionSplit == null)
         {
             return NotFound();
         }
 
-        delta.Patch(category);
+        delta.Patch(transactionSplit);
 
         await ctx.SaveChangesAsync();
 
-        return Ok(category);
+        return Ok(transactionSplit);
     }
 
     [HttpDelete("{key}")]
@@ -128,11 +109,11 @@ public class CategoryController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(long key)
     {
-        var category = await ctx.Category.FindAsync(key);
+        var transactionSplit = await ctx.TransactionSplit.FindAsync(key);
 
-        if (category != null)
+        if (transactionSplit != null)
         {
-            ctx.Category.Remove(category);
+            ctx.TransactionSplit.Remove(transactionSplit);
             await ctx.SaveChangesAsync();
         }
 

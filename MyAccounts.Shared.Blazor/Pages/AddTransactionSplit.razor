@@ -1,0 +1,210 @@
+@inject AppService AppService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject HttpClient HttpClient
+
+<EditForm Model="@record" OnValidSubmit="@OnSubmit">
+    <DataAnnotationsValidator />
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">Add Transaction Split</MudText>
+        </TitleContent>
+
+        <DialogContent>
+            <MudText Typo="Typo.h6" Style="@AmountStyle">Transaction Amount: @Amount.ToString("C")</MudText>
+            <MudText Typo="Typo.h6" Style="@TotalAmountStyle">Total Split Amount: @totalAmount.ToString("C")</MudText>
+            <MudDivider />
+            <MudText Typo="Typo.h6" Style="@TotalSum">Sum of Amounts: @SumOfAmounts.ToString("C")</MudText>
+            <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="long?" Value="null" />
+                @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
+                {
+                    if (@category.Name != "Split")
+                    {
+                        <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+            <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+            <MudTextField @bind-Value="record.Notes" For="@(() => record.Notes)" Label="Notes" />
+            <MudDataGrid T="TransactionSplit" @ref="grid" ServerData="(new Func<GridState<TransactionSplit>, Task<GridData<TransactionSplit>>>(ServerReload))" Filterable="true" AutoFit="true">
+            <ToolBarContent>
+                 <MudText Typo="Typo.h6">Transaction Split</MudText>
+                 <MudSpacer />
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn @ref="categoryColumn" Property="x => x!.Category != null ? x.Category.Name : null" Title="Category"/>
+                <PropertyColumn Property="x => x!.Amount" Title="Amount" AggregateDefinition="_amountAggregation" />
+                <PropertyColumn Property="x => x!.Notes" Title="Notes" />
+                <TemplateColumn Style="width: 30px;" StickyRight="true" Sortable="false" Filterable="false">
+                    <CellTemplate Context="cellContext">
+                        <MudStack Row="true">
+                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" Title="Edit" OnClick="@(e => OnEdit(cellContext.Item!))" />
+                            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Title="Delete" OnClick="@(e => OnDelete(cellContext.Item!))" />
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="TransactionSplit" />
+            </PagerContent>
+        </MudDataGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="OnCancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Disabled="@(SumOfAmounts <= 0)">Add</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [Parameter]
+    public long Id { get; set; }
+
+    [Parameter]
+    public decimal Amount { get; set; }
+
+    private decimal totalAmount { get; set; } = 0;
+    private decimal SumOfAmounts => Amount - totalAmount;
+    private MudDataGrid<TransactionSplit>? grid;
+    private PropertyColumn<TransactionSplit, decimal?>? transactionColumn;
+    private PropertyColumn<TransactionSplit, string?>? categoryColumn;
+
+    [CascadingParameter]
+    MudDialogInstance? MudDialog { get; set; }
+
+    private Transaction[]? transactionArray;
+    private Category[]? categoryArray;
+    private TransactionSplit[]? transactionSplitArray;
+    private TransactionSplit record = new();
+
+    private string AmountStyle => $"color: {(Amount >= 0 ? "green" : "red")};";
+    private string TotalAmountStyle => $"color: {(totalAmount >= 0 ? "green" : "red")};";
+    private string TotalSum => $"color: {(SumOfAmounts == 0 ? "green" : "red")};";
+    
+    AggregateDefinition<TransactionSplit> _amountAggregation = new AggregateDefinition<TransactionSplit>
+        {
+            Type = AggregateType.Sum,
+            CustomAggregate = x =>
+            {
+                var tAmount = x.Sum(z => z.Amount);
+                return $"Total: {tAmount:C0}";
+            }
+        };
+
+    
+    private string GetAbsoluteUri(string uri)
+    {
+        if (!uri.StartsWith("/"))
+        {
+            return uri;
+        }
+
+        var baseUri = HttpClient.BaseAddress;
+
+        if (baseUri == null)
+        {
+            throw new Exception("Unable to determine base address");
+        }
+
+        Uri absolute = new(baseUri, uri);
+
+        return absolute.ToString();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        try
+        {
+            transactionArray = await AppService.ListTransactionAsync();
+            categoryArray = await AppService.ListCategoryAsync();
+            await (grid?.ReloadServerData());
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task<GridData<TransactionSplit>> ServerReload(GridState<TransactionSplit> state)
+    {
+        var top = state.PageSize;
+        var skip = state.Page * state.PageSize;
+        var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
+        var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
+
+        AppService.ODataResult<TransactionSplit>? result = null;
+
+        try
+        {
+            result = await AppService.ListTransactionSplitODataAsync(top, skip, orderby, filter, true, "Transaction,Category");
+
+            totalAmount = result.Value.Sum(a => a.Amount) ?? 0;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<TransactionSplit>() };
+    }
+
+    private void OnCancel()
+    {
+        MudDialog?.Cancel();
+    }
+
+    private async void OnSubmit()
+    {
+        try
+        {
+            record.TransactionId = Id;
+            await AppService.InsertTransactionSplitAsync(record);
+            await (grid?.ReloadServerData());
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async void OnEdit(TransactionSplit record)
+    {
+        DialogParameters<UpdateTransactionSplit> dialogParams = new() { { x => x.Id, record.Id!.Value } };
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        var result = await DialogService.Show<UpdateTransactionSplit>("Update TransactionSplit", dialogParams, dialogOptions).Result;
+
+        if (!result.Canceled)
+        {
+            await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            StateHasChanged();
+        }
+    }
+
+    private async void OnDelete(TransactionSplit record)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Warning",
+            "Are you sure you want to delete this record?",
+            "Delete",
+            "Cancel");
+
+        if (result.GetValueOrDefault(false))
+        {
+            try
+            {
+                await AppService.DeleteTransactionSplitAsync(record.Id!.Value);
+                await (grid?.ReloadServerData() ?? Task.CompletedTask);
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+}

@@ -1,6 +1,8 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject NavigationService NavigationService
+@attribute [Authorize]
 
 @if (record == null)
 {
@@ -28,10 +30,10 @@ else
             <DialogContent>
                 <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" />
                 <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
-                <MudSelect T="long?" Label="Transaction" MultiSelection="true" @bind-SelectedValues="transactionValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => transactionArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Payee)))" AnchorOrigin="Origin.BottomCenter">
-                    @foreach (var transaction in transactionArray ?? Enumerable.Empty<Transaction>())
+                <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
                     {
-                        <MudSelectItem T="long?" Value="@transaction.Id">@transaction.Payee</MudSelectItem>
+                        <MudSelectItem T="long?" Value="@account.Id">@account.Name</MudSelectItem>
                     }
                 </MudSelect>
 
@@ -51,8 +53,8 @@ else
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
-    private Transaction[]? transactionArray;
-    private IEnumerable<long?>? transactionValues;
+    private Account[]? accountArray;
+    private IEnumerable<long?>? accountValues;
     private Category? record;
 
     private string GetAbsoluteUri(string uri)
@@ -78,9 +80,9 @@ else
     {
         try
         {
-            transactionArray = await AppService.ListTransactionAsync();
+            accountArray = await AppService.ListAccountAsync();
             record = await AppService.GetCategoryByIdAsync(Id);
-            transactionValues = record?.Transaction?.Select(x => x.Id).ToHashSet() ?? [];
+            accountValues = record?.Account?.Select(x => x.Id).ToHashSet() ?? [];
         }
         catch (Exception ex)
         {
@@ -102,9 +104,10 @@ else
 
         try
         {
-            record.Transaction = transactionValues?.Select(x => new Transaction { Id = x }).ToList();
+            record.Account = accountValues?.Select(x => new Account { Id = x }).ToList();
             await AppService.UpdateCategoryAsync(Id, record);
             MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

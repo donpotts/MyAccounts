@@ -1,6 +1,8 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject NavigationService NavigationService
+@attribute [Authorize]
 
 @if (record == null)
 {
@@ -37,6 +39,12 @@ else
                         <MudSelectItem Value="@accountType.Id">@accountType.Name</MudSelectItem>
                     }
                 </MudSelect>
+                <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
+                    {
+                        <MudSelectItem T="long?" Value="@category.Id">@category.Name</MudSelectItem>
+                    }
+                </MudSelect>
 
             </DialogContent>
             <DialogActions>
@@ -55,6 +63,8 @@ else
     MudDialogInstance? MudDialog { get; set; }
 
     private AccountType[]? accountTypeArray;
+    private Category[]? categoryArray;
+    private IEnumerable<long?>? categoryValues;
     private Account? record;
 
     private string GetAbsoluteUri(string uri)
@@ -81,7 +91,9 @@ else
         try
         {
             accountTypeArray = await AppService.ListAccountTypeAsync();
+            categoryArray = await AppService.ListCategoryAsync();
             record = await AppService.GetAccountByIdAsync(Id);
+            categoryValues = record?.Category?.Select(x => x.Id).ToHashSet() ?? [];
         }
         catch (Exception ex)
         {
@@ -103,8 +115,10 @@ else
 
         try
         {
+            record.Category = categoryValues?.Select(x => new Category { Id = x }).ToList();
             await AppService.UpdateAccountAsync(Id, record);
             MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

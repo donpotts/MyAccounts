@@ -1,6 +1,8 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
+@inject NavigationService NavigationService
+@attribute [Authorize]
 
 <EditForm Model="@record" OnValidSubmit="@OnSubmit">
     <DataAnnotationsValidator />
@@ -19,6 +21,12 @@
                     <MudSelectItem Value="@accountType.Id">@accountType.Name</MudSelectItem>
                 }
             </MudSelect>
+            <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+                @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
+                {
+                    <MudSelectItem T="long?" Value="@category.Id">@category.Name</MudSelectItem>
+                }
+            </MudSelect>
 
         </DialogContent>
         <DialogActions>
@@ -33,6 +41,8 @@
     MudDialogInstance? MudDialog { get; set; }
 
     private AccountType[]? accountTypeArray;
+    private Category[]? categoryArray;
+    private IEnumerable<long?>? categoryValues;
     private Account record = new();
 
     private string GetAbsoluteUri(string uri)
@@ -53,7 +63,7 @@
 
         return absolute.ToString();
     }
-
+    
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -61,7 +71,8 @@
         try
         {
             accountTypeArray = await AppService.ListAccountTypeAsync();
-            record.Date = System.DateTime.Now;
+            categoryArray = await AppService.ListCategoryAsync();
+            categoryValues = record?.Category?.Select(x => x.Id).ToHashSet() ?? [];
         }
         catch(Exception ex)
         {
@@ -78,8 +89,10 @@
     {
         try
         {
+            record.Category = categoryValues?.Select(x => new Category { Id = x }).ToList();
             await AppService.InsertAccountAsync(record);
             MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

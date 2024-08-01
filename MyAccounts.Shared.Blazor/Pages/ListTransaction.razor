@@ -4,13 +4,12 @@
 @inject IDialogService DialogService
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
-@inject NavigationService NavigationService
 @attribute [Authorize]
 
 <PageTitle>Transaction</PageTitle>
 
 <div class="mb-3">
-    <MudText Typo="Typo.h3">Transaction</MudText>
+    <MudText Typo="Typo.h3">@AccountName</MudText>
 </div>
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
@@ -26,8 +25,8 @@
             <MudText Typo="Typo.h6" Class="@colorClass">$@Totals</MudText>
         }
         <MudSpacer />
-         <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
-         <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
+        <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
+        <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
         <PropertyColumn Property="x => x!.Date" Title="Date" />
@@ -59,9 +58,16 @@
         </TemplateColumn>
         <PropertyColumn Property="x => x!.Description" Title="Description" />
         <PropertyColumn @ref="accountColumn" Property="x => x!.Account != null ? x.Account.Name : null" Title="Account" />
-        <TemplateColumn Title="Category" Sortable="false" Filterable="false">
+        <TemplateColumn T="Transaction" Title="Category">
             <CellTemplate>
-                @string.Join(", ", context.Item.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? [])
+                @if (context.Item.Category.Name == "Split")
+                {
+                    <MudButton Color="Color.Primary" OnClick="@(e => ShowEditDialog(context.Item))">@context.Item.Category.Name</MudButton>
+                }
+                else
+                {
+                    <MudText>@context.Item.Category.Name</MudText>
+                }
             </CellTemplate>
         </TemplateColumn>
         <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
@@ -102,9 +108,11 @@
     [Parameter]
     public string AccountName { get; set; } = null;
     private string Totals { get; set; }
+    private bool isDisabled = false;
     private MudDataGrid<Transaction>? grid;
     private PropertyColumn<Transaction, string?>? accountColumn;
-    private bool isDisabled = false;
+
+    private PropertyColumn<Transaction, string?>? categoryColumn;
 
     private string? _searchString;
 
@@ -123,6 +131,20 @@
         else
         {
             return "$0.00";
+        }
+    }
+
+    private async void ShowEditDialog(Transaction transaction)
+    {
+        DialogParameters<AddTransactionSplit> dialogParams = new() { { x => x.Id, transaction.Id!.Value } };
+        dialogParams.Add("Amount", transaction.Amount);
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        var result = await DialogService.Show<AddTransactionSplit>("Add/Update Transaction Split(s)", dialogParams, dialogOptions).Result;
+
+        if (!result.Canceled)
+        {
+            await (grid?.ReloadServerData() ?? Task.CompletedTask);
         }
     }
 
@@ -151,12 +173,17 @@
         var skip = state.Page * state.PageSize;
         var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
         var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
-        Totals = await AppService.GetTransactionTotals(AccountName);
 
         if (!string.IsNullOrEmpty(accountColumn?.PropertyName))
         {
             orderby = orderby?.Replace(accountColumn.PropertyName, "Account/Name");
             filter = filter?.Replace(accountColumn.PropertyName, "Account/Name");
+        }
+
+        if (!string.IsNullOrEmpty(categoryColumn?.PropertyName))
+        {
+            orderby = orderby?.Replace(categoryColumn.PropertyName, "Category/Name");
+            filter = filter?.Replace(categoryColumn.PropertyName, "Category/Name");
         }
 
         AppService.ODataResult<Transaction>? result = null;
@@ -165,27 +192,26 @@
         {
             if (_searchString?.Length > 0)
             {
-               bool isNumeric = double.TryParse(_searchString, out _);
-               bool isDateTime = DateTime.TryParse(_searchString, out _);
+                bool isNumeric = double.TryParse(_searchString, out _);
+                bool isDateTime = DateTime.TryParse(_searchString, out _);
 
-               if (isNumeric)
-               {
-                   filter = $"Id eq {_searchString} or Amount eq {_searchString} or Balance eq {_searchString}";
-               }
-               else if (isDateTime)
-               {
-                   filter = $"Date ge cast({_searchString},Edm.DateTimeOffset)";
-               }
-               else
-               {
-                   filter = $"contains(tolower(Payee), '{_searchString}') or contains(tolower(Description), '{_searchString}') ";
-               }
+                if (isNumeric)
+                {
+                    filter = $"Id eq {_searchString} or Amount eq {_searchString} or Balance eq {_searchString}";
+                }
+                else if (isDateTime)
+                {
+                    filter = $"Date ge cast({_searchString},Edm.DateTimeOffset)";
+                }
+                else
+                {
+                    filter = $"contains(tolower(Payee), '{_searchString}') or contains(tolower(Description), '{_searchString}') ";
+                }
             }
             if (!string.IsNullOrEmpty(AccountName) && AccountName != "all")
                 filter += filter + $"contains(Account/Name, '{AccountName}')";
             if (string.IsNullOrEmpty(orderby))
                 orderby = "Date ASC";
-
             result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, true, "Account,Category");
         }
         catch (Exception ex)
@@ -200,15 +226,11 @@
     {
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
-        DialogParameters parameters = new();
-        parameters.Add("AccountName", AccountName);
-
-        var result = await DialogService.Show<AddTransaction>("Add Transaction", parameters, dialogOptions).Result;
+        var result = await DialogService.Show<AddTransaction>("Add Transaction", dialogOptions).Result;
 
         if (!result.Canceled)
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
-            NavigationService.NotifyStateChanged();
         }
     }
 
@@ -222,7 +244,6 @@
         if (!result.Canceled)
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
-            NavigationService.NotifyStateChanged();
         }
     }
 
@@ -240,7 +261,6 @@
             {
                 await AppService.DeleteTransactionAsync(record.Id!.Value);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
-                NavigationService.NotifyStateChanged();
             }
             catch (Exception ex)
             {
@@ -248,7 +268,7 @@
             }
         }
     }
-    
+
     private void SearchChanged(string Value)
     {
         if (Value.EndsWith("."))
@@ -262,6 +282,7 @@
             {
                 DateTimeOffset dateTime = DateTime.Parse(_searchString);
                 _searchString = dateTime.ToString("yyyy-MM-ddTHH:mm:ssK");
+                //Console.WriteLine(_searchString);
             }
         }
         catch
@@ -292,7 +313,8 @@
                     x.Balance,
                     x.Description,
                     AccountName = x.Account.Name,
-                    Category = string.Join(", ", x.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
+                    CategoryName = x.Category.Name,
+
                 });
 
                 using var memoryStream = new MemoryStream();
@@ -308,7 +330,7 @@
                 var base64 = Convert.ToBase64String(byteArray);
 
                 // Trigger file download
-                await JSRuntime.InvokeVoidAsync("downloadFromBase64", base64, "Transaction_"+ System.DateTime.Now.ToString("yyyyMMddHHmmss") +".csv");
+                await JSRuntime.InvokeVoidAsync("downloadFromBase64", base64, "Transaction_" + System.DateTime.Now.ToString("yyyyMMddHHmmss") + ".csv");
             }
         }
         catch (Exception ex)

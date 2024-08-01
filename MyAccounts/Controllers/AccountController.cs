@@ -23,7 +23,7 @@ public class AccountController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<IQueryable<Account>> Get()
     {
-        return Ok(ctx.Account.Include(x => x.AccountType));
+        return Ok(ctx.Account.Include(x => x.AccountType).Include(x => x.Category));
     }
 
     [HttpGet("{key}")]
@@ -33,7 +33,7 @@ public class AccountController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Account>> GetAsync(long key)
     {
-        var account = await ctx.Account.Include(x => x.AccountType).FirstOrDefaultAsync(x => x.Id == key);
+        var account = await ctx.Account.Include(x => x.AccountType).Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == key);
 
         if (account == null)
         {
@@ -56,7 +56,16 @@ public class AccountController(ApplicationDbContext ctx) : ControllerBase
             return Conflict();
         }
     
+        var category = account.Category;
+        account.Category = null;
+
         await ctx.Account.AddAsync(account);
+
+        if (category != null)
+        {
+            var newValues = await ctx.Category.Where(x => category.Select(y => y.Id).Contains(x.Id)).ToListAsync();
+            account.Category = [..newValues];
+        }
 
         await ctx.SaveChangesAsync();
 
@@ -69,7 +78,7 @@ public class AccountController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Account>> PutAsync(long key, Account update)
     {
-        var account = await ctx.Account.FirstOrDefaultAsync(x => x.Id == key);
+        var account = await ctx.Account.Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == key);
 
         if (account == null)
         {
@@ -77,6 +86,16 @@ public class AccountController(ApplicationDbContext ctx) : ControllerBase
         }
 
         ctx.Entry(account).CurrentValues.SetValues(update);
+
+        if (update.Category != null)
+        {
+            var updateValues = update.Category.Select(x => x.Id);
+            account.Category ??= [];
+            account.Category.RemoveAll(x => !updateValues.Contains(x.Id));
+            var addValues = updateValues.Where(x => !account.Category.Select(y => y.Id).Contains(x));
+            var newValues = await ctx.Category.Where(x => addValues.Contains(x.Id)).ToListAsync();
+            account.Category.AddRange(newValues);
+        }
 
         await ctx.SaveChangesAsync();
 
@@ -89,7 +108,7 @@ public class AccountController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Account>> PatchAsync(long key, Delta<Account> delta)
     {
-        var account = await ctx.Account.FirstOrDefaultAsync(x => x.Id == key);
+        var account = await ctx.Account.Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == key);
 
         if (account == null)
         {

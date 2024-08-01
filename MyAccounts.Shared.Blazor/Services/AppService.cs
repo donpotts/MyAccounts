@@ -95,20 +95,6 @@ public class AppService(
         return await response.Content.ReadFromJsonAsync<ODataResult<T>>();
     }
 
-    public async Task<string> GetTransactionTotals(string AccountName)
-    {
-        var token = await authenticationStateProvider.GetBearerTokenAsync()
-            ?? throw new Exception("Not authorized");
-
-        HttpRequestMessage request = new(HttpMethod.Get, $"/api/transaction/totals?accountName={HttpUtility.UrlEncode(AccountName)}");
-        request.Headers.Authorization = new("Bearer", token);
-
-        var response = await httpClient.SendAsync(request);
-
-        await HandleResponseErrorsAsync(response);
-
-        return await response.Content.ReadAsStringAsync();
-    }
 
     public async Task<Dictionary<string, List<string>>> RegisterUserAsync(RegisterModel registerModel)
     {
@@ -558,6 +544,105 @@ public class AppService(
         var response = await httpClient.SendAsync(request);
 
         await HandleResponseErrorsAsync(response);
+    }
+
+    public async Task<TransactionSplit[]?> ListTransactionSplitAsync()
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, "/api/transactionsplit");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<TransactionSplit[]>();
+    }
+
+    public Task<ODataResult<TransactionSplit>?> ListTransactionSplitODataAsync(
+        int? top = null,
+        int? skip = null,
+        string? orderby = null,
+        string? filter = null,
+        bool count = false,
+        string? expand = null)
+    {
+        return GetODataAsync<TransactionSplit>("TransactionSplit", top, skip, orderby, filter, count, expand);
+    }
+
+    public async Task<TransactionSplit?> GetTransactionSplitByIdAsync(long key)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"/api/transactionsplit/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<TransactionSplit>();
+    }
+
+    public async Task UpdateTransactionSplitAsync(long key, TransactionSplit data)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Put, $"/api/transactionsplit/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(data);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+    }
+
+    public async Task<TransactionSplit?> InsertTransactionSplitAsync(TransactionSplit data)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Post, "/api/transactionsplit");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(data);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<TransactionSplit>();
+    }
+
+    public async Task DeleteTransactionSplitAsync(long key)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Delete, $"/api/transactionsplit/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+    }
+
+    public async Task<string> GetTransactionTotals(string AccountName)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"/api/transaction/totals?accountName={HttpUtility.UrlEncode(AccountName)}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadAsStringAsync();
     }
 
     public async Task<string?> UploadImageAsync(Stream stream, int bufferSize, string contentType)

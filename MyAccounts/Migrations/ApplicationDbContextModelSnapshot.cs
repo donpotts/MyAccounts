@@ -17,19 +17,19 @@ namespace MyAccounts.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.5");
 
-            modelBuilder.Entity("CategoryTransaction", b =>
+            modelBuilder.Entity("AccountCategory", b =>
                 {
+                    b.Property<long>("AccountId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("CategoryId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("TransactionId")
-                        .HasColumnType("INTEGER");
+                    b.HasKey("AccountId", "CategoryId");
 
-                    b.HasKey("CategoryId", "TransactionId");
+                    b.HasIndex("CategoryId");
 
-                    b.HasIndex("TransactionId");
-
-                    b.ToTable("CategoryTransaction");
+                    b.ToTable("AccountCategory");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -329,20 +329,50 @@ namespace MyAccounts.Migrations
 
                     b.HasIndex("AccountId");
 
+                    b.HasIndex("CategoryId");
+
                     b.ToTable("Transaction");
                 });
 
-            modelBuilder.Entity("CategoryTransaction", b =>
+            modelBuilder.Entity("MyAccounts.Shared.Models.TransactionSplit", b =>
                 {
-                    b.HasOne("MyAccounts.Shared.Models.Category", null)
+                    b.Property<long?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("Amount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("REAL");
+
+                    b.Property<long?>("CategoryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("TransactionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("TransactionSplit");
+                });
+
+            modelBuilder.Entity("AccountCategory", b =>
+                {
+                    b.HasOne("MyAccounts.Shared.Models.Account", null)
                         .WithMany()
-                        .HasForeignKey("CategoryId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyAccounts.Shared.Models.Transaction", null)
+                    b.HasOne("MyAccounts.Shared.Models.Category", null)
                         .WithMany()
-                        .HasForeignKey("TransactionId")
+                        .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -413,7 +443,28 @@ namespace MyAccounts.Migrations
                         .WithMany()
                         .HasForeignKey("AccountId");
 
+                    b.HasOne("MyAccounts.Shared.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
                     b.Navigation("Account");
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("MyAccounts.Shared.Models.TransactionSplit", b =>
+                {
+                    b.HasOne("MyAccounts.Shared.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
+                    b.HasOne("MyAccounts.Shared.Models.Transaction", "Transaction")
+                        .WithMany()
+                        .HasForeignKey("TransactionId");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("MyAccounts.Shared.Models.AccountType", b =>

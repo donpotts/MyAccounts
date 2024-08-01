@@ -209,6 +209,30 @@ namespace MyAccounts.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AccountCategory",
+                columns: table => new
+                {
+                    AccountId = table.Column<long>(type: "INTEGER", nullable: false),
+                    CategoryId = table.Column<long>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AccountCategory", x => new { x.AccountId, x.CategoryId });
+                    table.ForeignKey(
+                        name: "FK_AccountCategory_Account_AccountId",
+                        column: x => x.AccountId,
+                        principalTable: "Account",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AccountCategory_Category_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Category",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Transaction",
                 columns: table => new
                 {
@@ -231,36 +255,48 @@ namespace MyAccounts.Migrations
                         column: x => x.AccountId,
                         principalTable: "Account",
                         principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Transaction_Category_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Category",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "CategoryTransaction",
+                name: "TransactionSplit",
                 columns: table => new
                 {
-                    CategoryId = table.Column<long>(type: "INTEGER", nullable: false),
-                    TransactionId = table.Column<long>(type: "INTEGER", nullable: false)
+                    Id = table.Column<long>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    TransactionId = table.Column<long>(type: "INTEGER", nullable: true),
+                    CategoryId = table.Column<long>(type: "INTEGER", nullable: true),
+                    Amount = table.Column<double>(type: "REAL", precision: 19, scale: 4, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CategoryTransaction", x => new { x.CategoryId, x.TransactionId });
+                    table.PrimaryKey("PK_TransactionSplit", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CategoryTransaction_Category_CategoryId",
+                        name: "FK_TransactionSplit_Category_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Category",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_CategoryTransaction_Transaction_TransactionId",
+                        name: "FK_TransactionSplit_Transaction_TransactionId",
                         column: x => x.TransactionId,
                         principalTable: "Transaction",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Account_AccountTypeId",
                 table: "Account",
                 column: "AccountTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccountCategory_CategoryId",
+                table: "AccountCategory",
+                column: "CategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -300,19 +336,32 @@ namespace MyAccounts.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CategoryTransaction_TransactionId",
-                table: "CategoryTransaction",
-                column: "TransactionId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Transaction_AccountId",
                 table: "Transaction",
                 column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transaction_CategoryId",
+                table: "Transaction",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionSplit_CategoryId",
+                table: "TransactionSplit",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionSplit_TransactionId",
+                table: "TransactionSplit",
+                column: "TransactionId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AccountCategory");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -329,7 +378,7 @@ namespace MyAccounts.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "CategoryTransaction");
+                name: "TransactionSplit");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -338,13 +387,13 @@ namespace MyAccounts.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Category");
-
-            migrationBuilder.DropTable(
                 name: "Transaction");
 
             migrationBuilder.DropTable(
                 name: "Account");
+
+            migrationBuilder.DropTable(
+                name: "Category");
 
             migrationBuilder.DropTable(
                 name: "AccountType");
