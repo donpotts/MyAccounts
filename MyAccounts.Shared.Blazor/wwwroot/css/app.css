@@ -6,6 +6,15 @@
     color: green;
 }
 
+.date-range-picker {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.small-date-picker {
+    width: 300px; /* Adjust the width as needed */
+}
+
 h1:focus {
     outline: none;
 }

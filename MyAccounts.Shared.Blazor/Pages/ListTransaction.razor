@@ -19,6 +19,13 @@
     }
 </div>
 
+<div class="date-range-picker">
+    <MudDateRangePicker DateRange="dateRange" DateRangeChanged="OnDateRangeChanged" Label="Select Date Range" Class="small-date-picker" />
+</div>
+
+<MudChart ChartType="ChartType.Pie" InputData="@data" @bind-SelectedIndex="IndexHolder" InputLabels="@labels" Width="300px" Height="300px" />
+
+
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
 </MudStack>
@@ -114,6 +121,13 @@
 @code {
     [Parameter]
     public string AccountName { get; set; } = null;
+
+    private DateRange dateRange = new DateRange(DateTime.Now.AddMonths(-1), DateTime.Now);
+    private List<ChartSeries> chartData = new();
+    private double[] data;
+    private string[] labels;
+    private int IndexHolder;
+
     private string Totals { get; set; }
     private bool isDisabled = false;
     private MudDataGrid<Transaction>? grid;
@@ -123,10 +137,74 @@
 
     private string? _searchString;
 
-    protected override void OnParametersSet()
+    public class TransactionCategoryData
+    {
+        public string Category { get; set; }
+        public decimal TotalAmount { get; set; }
+    }
+
+    private List<ChartSeries> ConvertToChartSeries(List<TransactionCategoryData> data)
+    {
+        return data.Select(d => new ChartSeries
+            {
+                Name = d.Category,
+                Data = new double[] { (double)d.TotalAmount }
+            }).ToList();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ReloadData();
+    }
+
+    private async Task OnDateRangeChanged(DateRange newDateRange)
+    {
+        dateRange = newDateRange;
+        await ReloadData();
+    }
+
+    private async Task ReloadData()
     {
         isDisabled = AccountName == "all";
-        grid?.ReloadServerData();
+        if (grid != null)
+        {
+            await (grid?.ReloadServerData() ?? Task.CompletedTask);
+        }
+
+        string sfilter = "";
+
+        if (!isDisabled)
+            sfilter = $"contains(Account/Name, '{AccountName}') and Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
+        else
+            sfilter = $"Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
+
+        string sorderby = "Date ASC";
+        var myresult = await AppService.ListTransactionODataAsync(null, null, sorderby, sfilter, true, "Account,Category");
+
+        var r = myresult?.Value;
+
+        // Filter out transactions with Amount > 0
+        var filteredTransactions = r.Where(t => t.Amount <= 0);
+
+        var groupedData = filteredTransactions.GroupBy(t => t.Category.Name)
+                                              .Select(g => new TransactionCategoryData
+                                                  {
+                                                      Category = g.Key,
+                                                      TotalAmount = g.Sum(t => (decimal)t.Amount)
+                                                  }).ToList();
+
+        // Calculate the total sum of the data points
+        var totalSum = groupedData.Sum(g => (double)g.TotalAmount);
+
+        // Normalize each data point to be a percentage of the total sum
+        data = groupedData.Select(g => ((double)g.TotalAmount / totalSum) * 100).ToArray();
+        labels = groupedData.Select(g => $"{g.Category}: {g.TotalAmount} ({((double)g.TotalAmount / totalSum) * 100:F2}%)").ToArray();
+
+        // Debugging: Print data and labels to console
+        for (int i = 0; i < data.Length; i++)
+        {
+            Console.WriteLine($"Category: {labels[i]}, Percentage: {data[i]}%");
+        }
     }
 
     private string FormatCurrency(string amount)

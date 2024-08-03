@@ -13,7 +13,7 @@
     <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert="true">
         <MudToolBar>
             <AuthorizeView>
-                <MudLink Href="/" Class="d-flex px-4" Color="Color.Inherit">Dashboard</MudLink>
+                <MudLink Href="/" Class="d-flex px-4" Color="Color.Inherit">Home</MudLink>
                 <MudLink Href="/accounttype" Class="d-flex px-4" Color="Color.Inherit">AccountType</MudLink>
                 <MudLink Href="/account" Class="d-flex px-4" Color="Color.Inherit">Account</MudLink>
                 <MudLink Href="/category" Class="d-flex px-4" Color="Color.Inherit">Category</MudLink>
@@ -53,7 +53,7 @@
 </MudAppBar>
 <MudDrawer @bind-Open="drawerOpen" ClipMode="DrawerClipMode.Docked" Color="Color.Inherit">
     <AuthorizeView>
-        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.House">Home</MudNavLink>
         <MudText Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
         <hr>
         <hr>
