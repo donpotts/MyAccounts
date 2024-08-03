@@ -25,7 +25,6 @@
 
 <MudChart ChartType="ChartType.Pie" InputData="@data" @bind-SelectedIndex="IndexHolder" InputLabels="@labels" Width="300px" Height="300px" />
 
-
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
 </MudStack>
@@ -121,6 +120,12 @@
 @code {
     [Parameter]
     public string AccountName { get; set; } = null;
+
+    int? top = null;
+    int? skip = null;
+    string? orderby = null;
+    string? filter = null;
+
 
     private DateRange dateRange = new DateRange(DateTime.Now.AddMonths(-1), DateTime.Now);
     private List<ChartSeries> chartData = new();
@@ -230,6 +235,7 @@
         if (!result.Canceled)
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            await ReloadData();
         }
     }
 
@@ -254,10 +260,10 @@
 
     private async Task<GridData<Transaction>> ServerReload(GridState<Transaction> state)
     {
-        var top = state.PageSize;
-        var skip = state.Page * state.PageSize;
-        var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
-        var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
+        top = state.PageSize;
+        skip = state.Page * state.PageSize;
+        orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
+        filter = ODataHelpers.GetFilter(state.FilterDefinitions);
 
         if (!string.IsNullOrEmpty(accountColumn?.PropertyName))
         {
@@ -324,6 +330,7 @@
         if (!result.Canceled)
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            await ReloadData();
         }
     }
 
@@ -337,6 +344,7 @@
         if (!result.Canceled)
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            await ReloadData();
         }
     }
 
@@ -354,6 +362,7 @@
             {
                 await AppService.DeleteTransactionAsync(record.Id!.Value);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
+                await ReloadData();
             }
             catch (Exception ex)
             {
@@ -392,7 +401,8 @@
         try
         {
             // Fetch all data from the OData service without any filters or restrictions
-            result = await AppService.ListTransactionODataAsync(null, null, null, null, true, "Account,Category");
+            result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, true, "Account,Category");
+            //result = await (grid?.ReloadServerData() ?? Task.CompletedTask);
 
             if (result != null && result?.Value != null)
             {
