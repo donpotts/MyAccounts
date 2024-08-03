@@ -23,7 +23,14 @@
     <MudDateRangePicker DateRange="dateRange" DateRangeChanged="OnDateRangeChanged" Label="Select Date Range" Class="small-date-picker" />
 </div>
 
-<MudChart ChartType="ChartType.Pie" InputData="@data" @bind-SelectedIndex="IndexHolder" InputLabels="@labels" Width="300px" Height="300px" />
+<MudChart ChartType="ChartType.Pie" InputData="@data" @bind-SelectedIndex="IndexHolder" InputLabels="@labels" Width="300px" Height="300px">
+    @foreach (var item in chartData)
+    {
+        <MudTooltip Text="@item.Name">
+            <MudText>@item.Index</MudText>
+        </MudTooltip>
+    }
+</MudChart>
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
@@ -331,6 +338,7 @@
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
+            StateHasChanged();
         }
     }
 
@@ -345,6 +353,7 @@
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
+            StateHasChanged();
         }
     }
 
@@ -363,6 +372,7 @@
                 await AppService.DeleteTransactionAsync(record.Id!.Value);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
                 await ReloadData();
+                StateHasChanged();
             }
             catch (Exception ex)
             {

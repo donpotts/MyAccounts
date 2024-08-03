@@ -58,6 +58,18 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Remove="wwwroot\index.js" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\index.js" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="wwwroot\index.js" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
