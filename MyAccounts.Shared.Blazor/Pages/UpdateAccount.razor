@@ -102,6 +102,8 @@ else
         try
         {
             accountTypeArray = await AppService.ListAccountTypeAsync();
+            var sortAccount = accountTypeArray.OrderBy(s => s.Name).ToList();
+            accountTypeArray = sortAccount.ToArray();
             categoryArray = await AppService.ListCategoryAsync();
             var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
             categoryArray = sortCategory.ToArray();

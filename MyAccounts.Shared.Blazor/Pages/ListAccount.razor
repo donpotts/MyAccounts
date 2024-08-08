@@ -219,13 +219,12 @@
             {
                 var ar = result?.Value.ToList().Select(x => new
                 {
-                        x.Id,
-    x.Name,
-    x.Date,
-    x.Balance,
-     AccountTypeName = x.AccountType.Name,
-Category = string.Join(", ", x.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
-
+                    x.Id,
+                    x.Name,
+                    x.Date,
+                    x.Balance,
+                    AccountTypeName = x.AccountType.Name,
+                    Category = string.Join(", ", x.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
                 });
 
                 using var memoryStream = new MemoryStream();

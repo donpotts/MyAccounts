@@ -81,6 +81,9 @@ else
         try
         {
             accountArray = await AppService.ListAccountAsync();
+            var sortAccount = accountArray.OrderBy(s => s.Name).ToList();
+            accountArray = sortAccount.ToArray();
+
             record = await AppService.GetAccountTypeByIdAsync(Id);
             accountValues = record?.Account?.Select(x => x.Id).ToHashSet() ?? [];
         }
