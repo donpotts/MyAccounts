@@ -13,37 +13,37 @@
 </div>
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" OnClick="@(e => OnAdd())">Add</MudButton>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())">Add</MudButton>
 </MudStack>
 
 <MudDataGrid T="Account" @ref="grid" ServerData="(new Func<GridState<Account>, Task<GridData<Account>>>(ServerReload))" Filterable="true">
     <ToolBarContent>
          <MudSpacer />
-         <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
-         <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
+         <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
+         <MudButton Color="MudBlazor.Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
         @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
         <PropertyColumn Property="x => x!.Name" Title="Name" />
-        <PropertyColumn Property="x => x!.Date" Title="Date" />
-        <PropertyColumn Property="x => x!.Balance" Title="Balance" />
-        <PropertyColumn @ref="accountTypeColumn" Property="x => x!.AccountType != null ? x.AccountType.Name : null" Title="AccountType" />
-        <TemplateColumn Title="Category" Sortable="false" Filterable="false">
+        @* <PropertyColumn Property="x => x!.Date" Title="Date" />
+        <PropertyColumn Property="x => x!.Balance" Title="Balance" /> *@
+        <PropertyColumn @ref="accountTypeColumn" Property="x => x!.AccountType != null ? x.AccountType.Name : null" Title="Account Type" />
+        @* <TemplateColumn Title="Category" Sortable="false" Filterable="false">
             <CellTemplate>
                 @string.Join(", ", context.Item.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? [])
             </CellTemplate>
-        </TemplateColumn>
+        </TemplateColumn> *@
         <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
             <CellTemplate>
                 <MudStack Row="true">
-                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
-                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@MudBlazor.Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@MudBlazor.Size.Small" Title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
                 </MudStack>
             </CellTemplate>
         </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="Account" />
+        <MudDataGridPager T="Account" PageSizeOptions="new int[] { 10, 20, 50, 100, 1000 }" />
     </PagerContent>
 </MudDataGrid>
 

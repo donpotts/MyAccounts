@@ -35,13 +35,13 @@ public class TransactionController : ControllerBase
     public async Task<ActionResult<IQueryable<Transaction>>> GetAsync(ODataQueryOptions<Transaction> options)
     {
         var balanceQueryable = ctx.Transaction.Include(x => x.Account).Include(x => x.Category).AsQueryable();
+        List<Transaction> transactions = null;
 
-        if (options.Filter?.RawValue.StartsWith("contains(Account/Name") ?? false)
+        if (options.Filter?.RawValue.StartsWith("(contains(Account/Name") ?? false)
         {
             balanceQueryable = (IQueryable<Transaction>)options.Filter.ApplyTo(balanceQueryable, new ODataQuerySettings());
         }
-
-        var transactions = await balanceQueryable.ToListAsync();
+        transactions = await balanceQueryable.ToListAsync();
         transactionService.CalculateBalances(transactions);
 
         return Ok(transactions);
@@ -73,16 +73,24 @@ public class TransactionController : ControllerBase
     public async Task<ActionResult<decimal>> GetTotalsAsync([FromQuery] string accountName)
     {
         decimal? totalAmount = 0.00M;
+        DateTime today = DateTime.Today;
+
         if (accountName == "all")
         {
-            totalAmount = await ctx.Transaction.SumAsync(t => t.Amount);
+            totalAmount = await ctx.Transaction
+                                  .Where(t => t.Date <= today)
+                                  .SumAsync(t => t.Amount);
         }
         else
         {
-            totalAmount = await ctx.Transaction.Where(t => t.Account.Name == accountName).SumAsync(t => t.Amount);
+            totalAmount = await ctx.Transaction
+                                  .Where(t => t.Account.Name == accountName && t.Date <= today)
+                                  .SumAsync(t => t.Amount);
         }
+
         return Ok(totalAmount);
     }
+
 
     [HttpPost("")]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -94,7 +102,7 @@ public class TransactionController : ControllerBase
         {
             return Conflict();
         }
-    
+
         await ctx.Transaction.AddAsync(transaction);
 
         await ctx.SaveChangesAsync();

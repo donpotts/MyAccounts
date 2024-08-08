@@ -12,26 +12,25 @@
         </TitleContent>
         <DialogContent>
             <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
-            <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" />
-            <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" />
-            <MudSelect @bind-Value="record.AccountTypeId" For="@(() => record.AccountTypeId)" Label="AccountType" AnchorOrigin="Origin.BottomCenter">
+            @* <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" />
+            <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" /> *@
+            <MudSelect @bind-Value="record.AccountTypeId" For="@(() => record.AccountTypeId)" Label="Account Type" AnchorOrigin="Origin.BottomCenter">
                 <MudSelectItem T="long?" Value="null" />
                 @foreach (var accountType in accountTypeArray ?? Enumerable.Empty<AccountType>())
                 {
                     <MudSelectItem Value="@accountType.Id">@accountType.Name</MudSelectItem>
                 }
             </MudSelect>
-            <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+            @* <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
                 {
                     <MudSelectItem T="long?" Value="@category.Id">@category.Name</MudSelectItem>
                 }
-            </MudSelect>
-
+            </MudSelect> *@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Add</MudButton>
         </DialogActions>
     </MudDialog>
 </EditForm>
@@ -44,6 +43,19 @@
     private Category[]? categoryArray;
     private IEnumerable<long?>? categoryValues;
     private Account record = new();
+
+    private async Task<IEnumerable<long?>> SearchCategories(string value)
+    {
+        var filteredCategories = categoryArray.Where(c => c.Name != "Split");
+
+        if (string.IsNullOrEmpty(value))
+            return categoryArray.Select(c => (long?)c.Id);
+
+        return categoryArray
+            .Where(c => c.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .Select(c => (long?)c.Id);
+    }
+
 
     private string GetAbsoluteUri(string uri)
     {
@@ -63,7 +75,7 @@
 
         return absolute.ToString();
     }
-    
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -72,6 +84,8 @@
         {
             accountTypeArray = await AppService.ListAccountTypeAsync();
             categoryArray = await AppService.ListCategoryAsync();
+            var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
+            categoryArray = sortCategory.ToArray();
             categoryValues = record?.Category?.Select(x => x.Id).ToHashSet() ?? [];
         }
         catch(Exception ex)

@@ -666,11 +666,39 @@ public class AppService(
         return await response.Content.ReadFromJsonAsync<string>();
     }
 
+    public async Task<string?> UploadCsvAsync(Stream stream, int bufferSize, string contentType)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        MultipartFormDataContent content = [];
+        StreamContent fileContent = new(stream, bufferSize);
+        fileContent.Headers.ContentType = new(contentType);
+        content.Add(fileContent, "file", "CsvImport.csv");
+
+        HttpRequestMessage request = new(HttpMethod.Post, $"/api/csv");
+        request.Headers.Add("Authorization", $"Bearer {token}");
+        request.Content = content;
+        
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<string>();
+    }
+
     public async Task<string?> UploadImageAsync(IBrowserFile image)
     {
         using var stream = image.OpenReadStream(image.Size);
 
         return await UploadImageAsync(stream, Convert.ToInt32(image.Size), image.ContentType);
+    }
+
+    public async Task<string?> UploadCsvAsync(IBrowserFile image)
+    {
+        using var stream = image.OpenReadStream(image.Size);
+
+        return await UploadCsvAsync(stream, Convert.ToInt32(image.Size), image.ContentType);
     }
 
     public async Task ChangePasswordAsync(string oldPassword, string newPassword)

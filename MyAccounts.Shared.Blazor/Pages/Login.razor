@@ -19,12 +19,12 @@
                 <MudTextField @bind-Value="loginModel.Password" For="@(() => loginModel.Password)" Label="Password" InputType="InputType.Password" />
             </MudCardContent>
             <MudCardActions>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Login</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="MudBlazor.Color.Primary" Class="ml-auto">Login</MudButton>
             </MudCardActions>
         </MudCard>
     </EditForm>
     <div class="my-3">
-        <MudText Align="Align.Center">
+        <MudText Align="MudBlazor.Align.Center">
             Don't have an account yet? <MudLink href="register">Sign up</MudLink>
         </MudText>
     </div>

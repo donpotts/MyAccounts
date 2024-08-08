@@ -15,7 +15,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Disabled="true">Update</MudButton>
+            <MudButton Color="MudBlazor.Color.Primary" Disabled="true">Update</MudButton>
         </DialogActions>
     </MudDialog>
 }
@@ -37,7 +37,7 @@ else
                 <MudTextField @bind-Value="updateUser.CompanyName" For="@(() => updateUser.CompanyName)" Label="Company Name" />
                 <MudFileUpload T="IBrowserFile" FilesChanged="@(async args => updateUser.Photo = await UploadImageAsync(args))" Accept=".png,.jpg,.jpeg">
                     <ButtonTemplate Context="btnContext">
-                        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" for="@btnContext">
+                        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" for="@btnContext">
                             Upload Photo
                         </MudButton>
                     </ButtonTemplate>
@@ -49,7 +49,7 @@ else
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="OnCancel">Cancel</MudButton>
-                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Update</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Update</MudButton>
             </DialogActions>
         </MudDialog>
     </EditForm>

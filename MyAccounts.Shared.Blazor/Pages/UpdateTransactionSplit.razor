@@ -15,7 +15,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Disabled="true">Update</MudButton>
+            <MudButton Color="MudBlazor.Color.Primary" Disabled="true">Update</MudButton>
         </DialogActions>
     </MudDialog>
 }
@@ -25,20 +25,20 @@ else
         <DataAnnotationsValidator />
         <MudDialog>
             <TitleContent>
-                <MudText Typo="Typo.h6">Update TransactionSplit</MudText>
+                <MudText Typo="Typo.h6">Update Transaction Split</MudText>
             </TitleContent>
             <DialogContent>
-                <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" />
+                @* <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" /> *@
                 <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
                 <MudTextField @bind-Value="record.Notes" For="@(() => record.Notes)" Label="Notes" />
-                <MudSelect @bind-Value="record.TransactionId" For="@(() => record.TransactionId)" Label="Transaction" AnchorOrigin="Origin.BottomCenter">
+                @* <MudSelect @bind-Value="record.TransactionId" For="@(() => record.TransactionId)" Label="Transaction" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem T="long?" Value="null" />
                     @foreach (var transaction in transactionArray ?? Enumerable.Empty<Transaction>())
                     {
                         <MudSelectItem Value="@transaction.Id">@transaction.Id</MudSelectItem>
                     }
-                </MudSelect>
-                <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                </MudSelect> *@
+                @* <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem T="long?" Value="null" />
                     @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
                     {
@@ -47,11 +47,12 @@ else
                             <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
                         }
                     }
-                </MudSelect>
+                </MudSelect> *@
+                <MudAutocomplete T="long?" @bind-Value="record.CategoryId" Label="Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchCategories" ToStringFunc="@(id => categoryArray.FirstOrDefault(c => c.Id == id)?.Name)" />
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="OnCancel">Cancel</MudButton>
-                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Update</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Update</MudButton>
             </DialogActions>
         </MudDialog>
     </EditForm>
@@ -64,9 +65,21 @@ else
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
-    private Transaction[]? transactionArray;
+    //private Transaction[]? transactionArray;
     private Category[]? categoryArray;
     private TransactionSplit? record;
+
+    private async Task<IEnumerable<long?>> SearchCategories(string value)
+    {
+        var filteredCategories = categoryArray.Where(c => c.Name != "Split");
+
+        if (string.IsNullOrEmpty(value))
+            return categoryArray.Select(c => (long?)c.Id);
+
+        return categoryArray
+            .Where(c => c.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .Select(c => (long?)c.Id);
+    }
 
     private string GetAbsoluteUri(string uri)
     {
@@ -91,8 +104,15 @@ else
     {
         try
         {
-            transactionArray = await AppService.ListTransactionAsync();
+            //Log("Start ListTransactionAsync");
+            //transactionArray = await AppService.ListTransactionAsync();
+            //Log("End ListTransactionAsync");
+
             categoryArray = await AppService.ListCategoryAsync();
+            
+            var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
+            categoryArray = sortCategory.ToArray();
+            
             record = await AppService.GetTransactionSplitByIdAsync(Id);
         }
         catch (Exception ex)
@@ -100,6 +120,11 @@ else
             Snackbar.Add(ex.Message, Severity.Error);
         }
     }
+
+    // private void Log(string message)
+    // {
+    //     Console.WriteLine($"{DateTime.Now}: {message}");
+    // }
 
     private void OnCancel()
     {

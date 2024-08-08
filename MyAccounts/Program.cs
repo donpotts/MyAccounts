@@ -167,6 +167,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 builder.Services.AddScoped<ImageService>();
+builder.Services.AddScoped<CsvService>();
 
 var app = builder.Build();
 

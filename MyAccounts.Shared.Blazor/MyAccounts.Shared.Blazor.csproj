@@ -12,10 +12,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Blazor-ApexCharts" Version="3.4.0" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.5" />
-    <PackageReference Include="MudBlazor" Version="6.19.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
+    <PackageReference Include="MudBlazor" Version="6.20.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +29,12 @@
 
   <ItemGroup>
     <None Include="libman.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Pages\CsvImport.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
   </ItemGroup>
 
 </Project>

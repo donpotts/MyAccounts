@@ -12,7 +12,8 @@
 </div>
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" OnClick="@(e => OnAdd())">Add</MudButton>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())">Add</MudButton>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAddCsv())">Add CSV</MudButton>
 </MudStack>
 
 <MudDataGrid T="ApplicationUserDto" @ref="grid" ServerData="(new Func<GridState<ApplicationUserDto>, Task<GridData<ApplicationUserDto>>>(ServerReload))" Filterable="true">
@@ -35,9 +36,9 @@
         <TemplateColumn StickyRight="true" Sortable="false" Filterable="false">
             <CellTemplate>
                 <MudStack Row="true">
-                    <MudIconButton Icon="@Icons.Material.Outlined.Badge" Size="@Size.Small" Title="Roles" OnClick="@(e => OnModifyRoles(context.Item!))"  />
-                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
-                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Badge" Size="@MudBlazor.Size.Small" Title="Roles" OnClick="@(e => OnModifyRoles(context.Item!))"  />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@MudBlazor.Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@MudBlazor.Size.Small" Title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
                 </MudStack>
             </CellTemplate>
         </TemplateColumn>
@@ -95,6 +96,18 @@
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
         var result = await DialogService.Show<AddUser>("Add User", dialogOptions).Result;
+
+        if (!result.Canceled)
+        {
+            await (grid?.ReloadServerData() ?? Task.CompletedTask);
+        }
+    }
+
+    private async void OnAddCsv()
+    {
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        var result = await DialogService.Show<CsvImport>("CSV Import", dialogOptions).Result;
 
         if (!result.Canceled)
         {

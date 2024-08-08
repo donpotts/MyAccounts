@@ -15,22 +15,21 @@
             <MudTextField @bind-Value="record.Payee" For="@(() => record.Payee)" Label="Payee" />
             <MudCheckBox @bind-Checked="record.Cleared" For="@(() => record.Cleared)" Label="Cleared" />
             <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
-            <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" />
+            @* <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" /> *@
             <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
-            <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
-            @* <MudTextField @bind-Value="record.Account.Name" For="@(() => record.Account.Name)" Label="Account" /> *@
-            <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
+            @* <MudTextField @bind-Value="record.Account.Name" For="@(() => record.Account.Name)" Label="Account" ReadOnly="true" /> *@
+            @* <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
                 <MudSelectItem T="long?" Value="null" />
                 @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
                 {
                     <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
                 }
-            </MudSelect>
-
+            </MudSelect> *@
+            <MudAutocomplete T="long?" @bind-Value="record.CategoryId" Label="Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchCategories" ToStringFunc="@(id => categoryArray.FirstOrDefault(c => c.Id == id)?.Name)" />
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Add</MudButton>
         </DialogActions>
     </MudDialog>
 </EditForm>
@@ -46,6 +45,18 @@
     private Category[]? categoryArray;
     private Transaction record = new();
     private DateTime dateNow = DateTime.Now;
+
+    private async Task<IEnumerable<long?>> SearchCategories(string value)
+    {
+        var filteredCategories = categoryArray.Where(c => c.Name != "Split");
+
+        if (string.IsNullOrEmpty(value))
+            return categoryArray.Select(c => (long?)c.Id);
+
+        return categoryArray
+            .Where(c => c.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .Select(c => (long?)c.Id);
+    }
 
     private string GetAbsoluteUri(string uri)
     {
@@ -74,17 +85,20 @@
         {
             accountArray = await AppService.ListAccountAsync();
             categoryArray = await AppService.ListCategoryAsync();
+            var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
+            categoryArray = sortCategory.ToArray();
             record.Date = dateNow;
 
-            @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
+           
+
+            if (categoryArray != null)
+            foreach (var account in accountArray)
             {
-                Console.WriteLine(account.Name);
                 if (Account == account.Name)
                 {
                     record.AccountId = account.Id;
                 }
             }
-
         }
         catch(Exception ex)
         {

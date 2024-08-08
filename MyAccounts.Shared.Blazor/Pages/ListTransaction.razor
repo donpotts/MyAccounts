@@ -23,20 +23,39 @@
     <MudDateRangePicker DateRange="dateRange" DateRangeChanged="OnDateRangeChanged" Label="Select Date Range" Class="small-date-picker" />
 </div>
 
-<MudChart ChartType="ChartType.Pie" InputData="@data" @bind-SelectedIndex="IndexHolder" InputLabels="@labels" Width="300px" Height="300px">
-    @foreach (var item in chartData)
+@* <MudChart ChartType="MudBlazor.ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px">
+    @foreach (var item in data.Select((value, index) => new { value, index }))
     {
-        <MudTooltip Text="@item.Name">
-            <MudText>@item.Index</MudText>
+        <MudTooltip Text="@($"{labels[item.index]}: {item.value}")">
+            <MudText>@item.value</MudText>
         </MudTooltip>
     }
-</MudChart>
+</MudChart> *@
+
+@if (Data != null && Data.Count > 0)
+{
+    <ApexChart TItem="TransactionCategoryData"
+               Title="Expenses"
+               Width="600"
+               Height="600"
+               @ref="chart"
+               Options=options>
+
+        <ApexPointSeries TItem="TransactionCategoryData"
+                         Items="Data"
+                         Name="Expenses"
+                         SeriesType="SeriesType.Pie"
+                         XValue="e => e.Category"
+                         YValue="e => e.TotalAmount"
+                         ShowDataLabels />
+    </ApexChart>
+}
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
 </MudStack>
 
-<MudDataGrid T="Transaction" @ref="grid" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true">
+<MudDataGrid T="Transaction" @ref="grid" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true" >
     <ToolBarContent>
         @if (!string.IsNullOrEmpty(Totals))
         {
@@ -45,8 +64,8 @@
             <MudText Typo="Typo.h6" Class="@colorClass">$@Totals</MudText>
         }
         <MudSpacer />
-        <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
-        <MudButton Color="Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
+        <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
         <PropertyColumn Property="x => x!.Date" Title="Date" />
@@ -82,7 +101,7 @@
             <CellTemplate>
                 @if (context.Item.Category.Name == "Split")
                 {
-                    <MudButton Color="Color.Primary" OnClick="@(e => ShowEditDialog(context.Item))">@context.Item.Category.Name</MudButton>
+                    <MudButton Color="MudBlazor.Color.Primary" OnClick="@(e => ShowEditDialog(context.Item))">@context.Item.Category.Name</MudButton>
                 }
                 else
                 {
@@ -93,14 +112,14 @@
         <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
             <CellTemplate>
                 <MudStack Row="true">
-                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
-                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@MudBlazor.Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@MudBlazor.Size.Small" Title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
                 </MudStack>
             </CellTemplate>
         </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="Transaction" />
+        <MudDataGridPager T="Transaction" PageSizeOptions="new int[] { 10, 20, 50, 100, 250, 500, 750, 1000 }" />
     </PagerContent>
 </MudDataGrid>
 
@@ -128,13 +147,20 @@
     [Parameter]
     public string AccountName { get; set; } = null;
 
+    private List<TransactionCategoryData> Data { get; set; } = new();
+    private ApexChart<TransactionCategoryData> chart;
+    private ApexChartOptions<TransactionCategoryData> options { get; set; } = new();
+
     int? top = null;
     int? skip = null;
     string? orderby = null;
     string? filter = null;
 
+    private DateRange dateRange = new DateRange(
+    new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
+    new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
+    );
 
-    private DateRange dateRange = new DateRange(DateTime.Now.AddMonths(-1), DateTime.Now);
     private List<ChartSeries> chartData = new();
     private double[] data;
     private string[] labels;
@@ -148,6 +174,17 @@
     private PropertyColumn<Transaction, string?>? categoryColumn;
 
     private string? _searchString;
+    
+    private async Task ResetChart()
+    {
+        options.DataLabels = new DataLabels
+            {
+                Formatter = @"function(value, { seriesIndex, w }) {
+            return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });}"
+            };
+        //await chart.UpdateSeriesAsync(true);
+        await chart.UpdateOptionsAsync(true, true, true, null);
+    }
 
     public class TransactionCategoryData
     {
@@ -167,12 +204,14 @@
     protected override async Task OnParametersSetAsync()
     {
         await ReloadData();
+        StateHasChanged();
     }
 
     private async Task OnDateRangeChanged(DateRange newDateRange)
     {
         dateRange = newDateRange;
         await ReloadData();
+        StateHasChanged();
     }
 
     private async Task ReloadData()
@@ -183,20 +222,45 @@
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
         }
 
-        string sfilter = "";
-
-        if (!isDisabled)
-            sfilter = $"contains(Account/Name, '{AccountName}') and Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
-        else
-            sfilter = $"Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
-
+        string sfilter = BuildFilter();
         string sorderby = "Date ASC";
         var myresult = await AppService.ListTransactionODataAsync(null, null, sorderby, sfilter, true, "Account,Category");
 
-        var r = myresult?.Value;
+        var transactionIds = myresult?.Value.Select(t => t.Id).ToList();
+        var sfilter2 = $"Transaction/Id in ({string.Join(",", transactionIds)})";
+        var myresult2 = await AppService.ListTransactionSplitODataAsync(null, null, null, sfilter2, true, "Transaction,Category");
 
-        // Filter out transactions with Amount > 0
-        var filteredTransactions = r.Where(t => t.Amount <= 0);
+        var groupedData = GroupTransactions(myresult?.Value, myresult2?.Value);
+
+        CalculateDataAndLabels(groupedData);
+    }
+
+    private string BuildFilter()
+    {
+        // Console.WriteLine($"Start Date: {dateRange.Start:yyyy-MM-ddTHH:mm:ssZ}");
+        // Console.WriteLine($"End Date: {dateRange.End:yyyy-MM-ddTHH:mm:ssZ}");
+
+        if (!isDisabled)
+        {
+            return $"(contains(Account/Name, '{AccountName}')) and (Date ge {dateRange.Start:yyyy-MM-ddTHH:mm:ssZ} and Date le {dateRange.End:yyyy-MM-ddTHH:mm:ssZ})";
+        }
+        else
+        {
+            return $"(Date ge {dateRange.Start:yyyy-MM-ddTHH:mm:ssZ} and Date le {dateRange.End:yyyy-MM-ddTHH:mm:ssZ})";
+        }
+    }
+
+    private List<TransactionCategoryData> GroupTransactions(IEnumerable<Transaction> transactions, IEnumerable<TransactionSplit> transactionSplits)
+    {
+        var filteredTransactions = transactions.Where(t => t.Amount <= 0 && t.Category.Name != "Split");
+        var filteredTransactionSplits = transactionSplits.Where(t => t.Amount <= 0);
+
+        var groupedDataSplit = filteredTransactionSplits.GroupBy(t => t.Category.Name)
+                                              .Select(g => new TransactionCategoryData
+                                                  {
+                                                      Category = g.Key,
+                                                      TotalAmount = g.Sum(t => (decimal)t.Amount)
+                                                  }).ToList();
 
         var groupedData = filteredTransactions.GroupBy(t => t.Category.Name)
                                               .Select(g => new TransactionCategoryData
@@ -205,19 +269,44 @@
                                                       TotalAmount = g.Sum(t => (decimal)t.Amount)
                                                   }).ToList();
 
-        // Calculate the total sum of the data points
+        foreach (var split in groupedDataSplit)
+        {
+            var existingCategory = groupedData.FirstOrDefault(g => g.Category == split.Category);
+            if (existingCategory != null)
+            {
+                existingCategory.TotalAmount += split.TotalAmount;
+            }
+            else
+            {
+                groupedData.Add(split);
+            }
+        }
+
+        return groupedData;
+    }
+
+    private void CalculateDataAndLabels(List<TransactionCategoryData> groupedData)
+    {
         var totalSum = groupedData.Sum(g => (double)g.TotalAmount);
 
-        // Normalize each data point to be a percentage of the total sum
         data = groupedData.Select(g => ((double)g.TotalAmount / totalSum) * 100).ToArray();
         labels = groupedData.Select(g => $"{g.Category}: {g.TotalAmount} ({((double)g.TotalAmount / totalSum) * 100:F2}%)").ToArray();
 
-        // Debugging: Print data and labels to console
-        for (int i = 0; i < data.Length; i++)
+        // for (int i = 0; i < data.Length; i++)
+        // {
+        //     Console.WriteLine($"Category: {labels[i]}, Percentage: {data[i]}%");
+        // }
+        
+        Data.Clear();
+        ResetChart();
+        foreach (var item in groupedData)
         {
-            Console.WriteLine($"Category: {labels[i]}, Percentage: {data[i]}%");
+            item.TotalAmount = Math.Abs(item.TotalAmount);
+            item.Category = item.Category.Replace(":"," ") + $" ({(Math.Abs((double)item.TotalAmount / totalSum)) * 100:F2}%)";
+            Data.Add(item);
         }
     }
+
 
     private string FormatCurrency(string amount)
     {
@@ -303,19 +392,33 @@
                 }
                 else
                 {
-                    filter = $"contains(tolower(Payee), '{_searchString}') or contains(tolower(Description), '{_searchString}') ";
+                    filter = $"contains(tolower(Payee), '{_searchString}') or contains(tolower(Description), '{_searchString}')";
                 }
             }
+
             if (!string.IsNullOrEmpty(AccountName) && AccountName != "all")
             {
-                 if (!string.IsNullOrEmpty(filter))
-                    filter = $"contains(Account/Name, '{AccountName}') and (" + filter +")" ;
+                if (!string.IsNullOrEmpty(filter))
+                    filter = $"(contains(Account/Name, '{AccountName}')) and ({filter})";
                 else
-                    filter = $"contains(Account/Name, '{AccountName}')";
+                    filter = $"(contains(Account/Name, '{AccountName}'))";
             }
+
+            // Apply date range filter
+            // if (dateRange != null)
+            // {
+            //     string dateFilter = $"Date ge {dateRange.Start:yyyy-MM-ddTHH:mm:ssZ} and Date le {dateRange.End:yyyy-MM-ddTHH:mm:ssZ}";
+            //     if (!string.IsNullOrEmpty(filter))
+            //         filter = $"{filter} and ({dateFilter})";
+            //     else
+            //         filter = dateFilter;
+            // }
+
             if (string.IsNullOrEmpty(orderby))
-                orderby = "Date ASC";
+                orderby = "Date DESC, Id ASC";
+
             result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, true, "Account,Category");
+                       
         }
         catch (Exception ex)
         {
@@ -324,6 +427,7 @@
 
         return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<Transaction>() };
     }
+
 
     private async void OnAdd()
     {
@@ -411,7 +515,7 @@
         try
         {
             // Fetch all data from the OData service without any filters or restrictions
-            result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, true, "Account,Category");
+            result = await AppService.ListTransactionODataAsync(0, 0, orderby, filter, true, "Account,Category");
             //result = await (grid?.ReloadServerData() ?? Task.CompletedTask);
 
             if (result != null && result?.Value != null)

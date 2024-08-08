@@ -58,5 +58,25 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(x => x.Transaction);
         modelBuilder.Entity<TransactionSplit>()
             .HasOne(x => x.Category);
+
+        // Make Category Name unique
+        modelBuilder.Entity<Category>()
+            .HasIndex(c => c.Name)
+            .IsUnique();
+
+        // Make Account Name unique
+        modelBuilder.Entity<Account>()
+            .HasIndex(a => a.Name)
+            .IsUnique();
     }
+
+    //public List<Category> GetSortedCategories()
+    //{
+    //    return Category.OrderBy(c => c.Name).ToList();
+    //}
+
+    //public List<Account> GetSortedAccounts()
+    //{
+    //    return Account.OrderBy(c => c.Name).ToList();
+    //}
 }

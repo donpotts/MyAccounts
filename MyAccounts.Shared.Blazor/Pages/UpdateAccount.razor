@@ -15,7 +15,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Disabled="true">Update</MudButton>
+            <MudButton Color="MudBlazor.Color.Primary" Disabled="true">Update</MudButton>
         </DialogActions>
     </MudDialog>
 }
@@ -28,28 +28,27 @@ else
                 <MudText Typo="Typo.h6">Update Account</MudText>
             </TitleContent>
             <DialogContent>
-                <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" />
+                @* <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" /> *@
                 <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
-                <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" />
-                <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" />
-                <MudSelect @bind-Value="record.AccountTypeId" For="@(() => record.AccountTypeId)" Label="AccountType" AnchorOrigin="Origin.BottomCenter">
+                @* <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" />
+                <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" /> *@
+                <MudSelect @bind-Value="record.AccountTypeId" For="@(() => record.AccountTypeId)" Label="Account Type" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem T="long?" Value="null" />
                     @foreach (var accountType in accountTypeArray ?? Enumerable.Empty<AccountType>())
                     {
                         <MudSelectItem Value="@accountType.Id">@accountType.Name</MudSelectItem>
                     }
                 </MudSelect>
-                <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+                @* <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
                     @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
                     {
                         <MudSelectItem T="long?" Value="@category.Id">@category.Name</MudSelectItem>
                     }
-                </MudSelect>
-
+                </MudSelect> *@
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="OnCancel">Cancel</MudButton>
-                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Update</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Update</MudButton>
             </DialogActions>
         </MudDialog>
     </EditForm>
@@ -66,6 +65,18 @@ else
     private Category[]? categoryArray;
     private IEnumerable<long?>? categoryValues;
     private Account? record;
+
+    private async Task<IEnumerable<long?>> SearchCategories(string value)
+    {
+        var filteredCategories = categoryArray.Where(c => c.Name != "Split");
+
+        if (string.IsNullOrEmpty(value))
+            return categoryArray.Select(c => (long?)c.Id);
+
+        return categoryArray
+            .Where(c => c.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .Select(c => (long?)c.Id);
+    }
 
     private string GetAbsoluteUri(string uri)
     {
@@ -92,6 +103,8 @@ else
         {
             accountTypeArray = await AppService.ListAccountTypeAsync();
             categoryArray = await AppService.ListCategoryAsync();
+            var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
+            categoryArray = sortCategory.ToArray();
             record = await AppService.GetAccountByIdAsync(Id);
             categoryValues = record?.Category?.Select(x => x.Id).ToHashSet() ?? [];
         }

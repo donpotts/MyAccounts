@@ -12,17 +12,16 @@
         </TitleContent>
         <DialogContent>
             <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
-            <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+            @* <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
                 {
                     <MudSelectItem T="long?" Value="@account.Id">@account.Name</MudSelectItem>
                 }
-            </MudSelect>
-
+            </MudSelect> *@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Add</MudButton>
         </DialogActions>
     </MudDialog>
 </EditForm>

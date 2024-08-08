@@ -15,7 +15,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Disabled="true">Update</MudButton>
+            <MudButton Color="MudBlazor.Color.Primary" Disabled="true">Update</MudButton>
         </DialogActions>
     </MudDialog>
 }
@@ -28,12 +28,12 @@ else
                 <MudText Typo="Typo.h6">Update Transaction</MudText>
             </TitleContent>
             <DialogContent>
-                <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" />
+                @* <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" /> *@
                 <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" />
                 <MudTextField @bind-Value="record.Payee" For="@(() => record.Payee)" Label="Payee" />
                 <MudCheckBox @bind-Checked="record.Cleared" For="@(() => record.Cleared)" Label="Cleared"></MudCheckBox>
                 <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
-                <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" />
+                @* <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" /> *@
                 <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
                 <MudSelect @bind-Value="record.AccountId" For="@(() => record.AccountId)" Label="Account" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem T="long?" Value="null" />
@@ -42,18 +42,18 @@ else
                         <MudSelectItem Value="@account.Id">@account.Name</MudSelectItem>
                     }
                 </MudSelect>
-                <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                @* <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem T="long?" Value="null" />
                     @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
                     {
                         <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
                     }
-                </MudSelect>
-
+                </MudSelect> *@
+                <MudAutocomplete T="long?" @bind-Value="record.CategoryId" Label="Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchCategories" ToStringFunc="@(id => categoryArray.FirstOrDefault(c => c.Id == id)?.Name)" />
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="OnCancel">Cancel</MudButton>
-                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Update</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Update</MudButton>
             </DialogActions>
         </MudDialog>
     </EditForm>
@@ -69,6 +69,19 @@ else
     private Account[]? accountArray;
     private Category[]? categoryArray;
     private Transaction? record;
+
+    private async Task<IEnumerable<long?>> SearchCategories(string value)
+    {
+        var filteredCategories = categoryArray.Where(c => c.Name != "Split");
+
+        if (string.IsNullOrEmpty(value))
+            return categoryArray.Select(c => (long?)c.Id);
+
+        return categoryArray
+            .Where(c => c.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .Select(c => (long?)c.Id);
+    }
+
 
     private string GetAbsoluteUri(string uri)
     {
@@ -95,6 +108,8 @@ else
         {
             accountArray = await AppService.ListAccountAsync();
             categoryArray = await AppService.ListCategoryAsync();
+            var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
+            categoryArray = sortCategory.ToArray();
             record = await AppService.GetTransactionByIdAsync(Id);
         }
         catch (Exception ex)

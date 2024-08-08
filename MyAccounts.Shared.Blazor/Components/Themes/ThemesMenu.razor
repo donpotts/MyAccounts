@@ -8,10 +8,10 @@
             <b>Themes</b>
         </MudText>
         <MudSpacer />
-        <MudIconButton Color="Color.Default"
+        <MudIconButton Color="MudBlazor.Color.Default"
                        Icon="@Icons.Material.Filled.Close"
                        OnClick="@(() => ThemingDrawerOpenChanged.InvokeAsync(false))"
-                       Size="Size.Small" />
+                       Size="MudBlazor.Size.Small" />
     </MudDrawerHeader>
     <MudDivider />
     <div class="ma-6">
@@ -26,7 +26,7 @@
                            OnClick="@(() => ToggleDarkLightMode(false))"
                            Style="background: white;">
                     <ChildContent>
-                        <MudIcon Color="Color.Primary"
+                        <MudIcon Color="MudBlazor.Color.Primary"
                                  Icon="@Icons.Material.Filled.WbSunny" />
                     </ChildContent>
                 </MudButton>

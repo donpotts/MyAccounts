@@ -8,7 +8,7 @@
     <DataAnnotationsValidator />
     <MudDialog>
         <TitleContent>
-            <MudText Typo="Typo.h6">Add AccountType</MudText>
+            <MudText Typo="Typo.h6">Add Account Type</MudText>
         </TitleContent>
         <DialogContent>
             <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
@@ -22,7 +22,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Add</MudButton>
         </DialogActions>
     </MudDialog>
 </EditForm>

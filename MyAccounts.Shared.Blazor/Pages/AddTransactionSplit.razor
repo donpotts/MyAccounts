@@ -15,16 +15,9 @@
             <MudText Typo="Typo.h6" Style="@TotalAmountStyle">Total Split Amount: @totalAmount.ToString("C")</MudText>
             <MudDivider />
             <MudText Typo="Typo.h6" Style="@TotalSum">Sum of Amounts: @SumOfAmounts.ToString("C")</MudText>
-            <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
-                <MudSelectItem T="long?" Value="null" />
-                @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
-                {
-                    if (@category.Name != "Split")
-                    {
-                        <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
-                    }
-                }
-            </MudSelect>
+
+            <MudAutocomplete T="long?" @bind-Value="record.CategoryId" Label="Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchCategories" ToStringFunc="@(id => categoryArray.FirstOrDefault(c => c.Id == id)?.Name)" />
+            
             <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
             <MudTextField @bind-Value="record.Notes" For="@(() => record.Notes)" Label="Notes" />
             <MudDataGrid T="TransactionSplit" @ref="grid" ServerData="(new Func<GridState<TransactionSplit>, Task<GridData<TransactionSplit>>>(ServerReload))" Filterable="true" AutoFit="true">
@@ -39,8 +32,8 @@
                 <TemplateColumn Style="width: 30px;" StickyRight="true" Sortable="false" Filterable="false">
                     <CellTemplate Context="cellContext">
                         <MudStack Row="true">
-                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" Title="Edit" OnClick="@(e => OnEdit(cellContext.Item!))" />
-                            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Title="Delete" OnClick="@(e => OnDelete(cellContext.Item!))" />
+                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@MudBlazor.Size.Small" Title="Edit" OnClick="@(e => OnEdit(cellContext.Item!))" />
+                            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@MudBlazor.Size.Small" Title="Delete" OnClick="@(e => OnDelete(cellContext.Item!))" />
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -52,7 +45,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" >Add</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary" >Add</MudButton>
         </DialogActions>
     </MudDialog>
 </EditForm>
@@ -70,10 +63,24 @@
     private PropertyColumn<TransactionSplit, decimal?>? transactionColumn;
     private PropertyColumn<TransactionSplit, string?>? categoryColumn;
 
+   
+
+    private async Task<IEnumerable<long?>> SearchCategories(string value)
+    {
+        var filteredCategories = categoryArray.Where(c => c.Name != "Split");
+
+        if (string.IsNullOrEmpty(value))
+            return categoryArray.Select(c => (long?)c.Id);
+
+        return categoryArray
+            .Where(c => c.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+            .Select(c => (long?)c.Id);
+    }
+
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
-    private Transaction[]? transactionArray;
+    //private Transaction[]? transactionArray;
     private Category[]? categoryArray;
     private TransactionSplit[]? transactionSplitArray;
     private TransactionSplit record = new();
@@ -118,8 +125,10 @@
 
         try
         {
-            transactionArray = await AppService.ListTransactionAsync();
+            //transactionArray = await AppService.ListTransactionAsync();
             categoryArray = await AppService.ListCategoryAsync();
+            var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
+            categoryArray = sortCategory.ToArray();
             await (grid?.ReloadServerData());
         }
         catch(Exception ex)
@@ -139,8 +148,8 @@
 
         try
         {
+            orderby = "Category/Name asc";
             result = await AppService.ListTransactionSplitODataAsync(top, skip, orderby, filter, true, "Transaction,Category");
-
             totalAmount = result.Value.Sum(a => a.Amount) ?? 0;
         }
         catch (Exception ex)

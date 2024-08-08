@@ -15,7 +15,7 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Disabled="true">Update</MudButton>
+            <MudButton Color="MudBlazor.Color.Primary" Disabled="true">Update</MudButton>
         </DialogActions>
     </MudDialog>
 }
@@ -28,19 +28,18 @@ else
                 <MudText Typo="Typo.h6">Update Category</MudText>
             </TitleContent>
             <DialogContent>
-                <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" />
+                @* <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" /> *@
                 <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
-                <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
+                @* <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
                     @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
                     {
                         <MudSelectItem T="long?" Value="@account.Id">@account.Name</MudSelectItem>
                     }
-                </MudSelect>
-
+                </MudSelect> *@
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="OnCancel">Cancel</MudButton>
-                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Update</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Update</MudButton>
             </DialogActions>
         </MudDialog>
     </EditForm>
