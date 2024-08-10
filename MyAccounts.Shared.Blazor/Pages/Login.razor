@@ -37,6 +37,7 @@
     {
         try
         {
+            Navigation.NavigateTo("Login.razor");
             await ((IdentityAuthenticationStateProvider)AuthenticationStateProvider)
                 .LoginAsync(loginModel);
 

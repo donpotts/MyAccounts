@@ -48,7 +48,9 @@
 
         try
         {
-            return await AppService.UploadCsvAsync(file);
+            await AppService.UploadCsvAsync(file);
+            MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

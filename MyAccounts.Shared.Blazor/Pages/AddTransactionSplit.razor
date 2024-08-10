@@ -142,6 +142,9 @@
         var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
         var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
 
+        // Add filter to match TransactionId with the provided Id parameter
+        filter = string.IsNullOrEmpty(filter) ? $"TransactionId eq {Id}" : $"{filter} and TransactionId eq {Id}";
+
         AppService.ODataResult<TransactionSplit>? result = null;
 
         try

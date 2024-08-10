@@ -4,6 +4,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IStorageService LocalStorageService
 @inject NavigationService NavigationService
+@inject IDialogService DialogService
 
 <MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
 <MudAppBar Color="MudBlazor.Color.Inherit">
@@ -231,4 +232,5 @@
 
         return Task.CompletedTask;
     }
+    
 }

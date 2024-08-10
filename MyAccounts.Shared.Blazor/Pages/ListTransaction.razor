@@ -23,15 +23,6 @@
     <MudDateRangePicker DateRange="dateRange" DateRangeChanged="OnDateRangeChanged" Label="Select Date Range" Class="small-date-picker" />
 </div>
 
-@* <MudChart ChartType="MudBlazor.ChartType.Pie" InputData="@data" InputLabels="@labels" Width="300px" Height="300px">
-    @foreach (var item in data.Select((value, index) => new { value, index }))
-    {
-        <MudTooltip Text="@($"{labels[item.index]}: {item.value}")">
-            <MudText>@item.value</MudText>
-        </MudTooltip>
-    }
-</MudChart> *@
-
 @if (Data != null && Data.Count > 0)
 {
     <ApexChart TItem="TransactionCategoryData"
