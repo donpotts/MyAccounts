@@ -57,7 +57,7 @@
         <hr>
         <hr>
         <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.House">Home</MudNavLink>
-        <MudText Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
+        <MudText Class="@($"{totalBalanceColorClass} indent-10px")">Account Totals = @totalBalance.ToString("C")</MudText>
         <hr>
         <hr>
         @if (ArData != null)
@@ -65,7 +65,7 @@
             @foreach (var item in ArData)
             {
                 <div>
-                    <MudText Match="NavLinkMatch.Prefix">@item.Name</MudText>
+                    <MudText Match="NavLinkMatch.Prefix" Class="indent-10px">@item.Name</MudText>
                     @foreach (var accountitem in item.Account)
                     {
                         decimal totalValue = 0;
