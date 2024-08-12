@@ -15,7 +15,7 @@
     }
     else
     {
-        <MudText Typo="Typo.h3">@AccountName</MudText>
+        <MudText Typo="Typo.h3" >@AccountName</MudText>
     }
 </div>
 
@@ -50,9 +50,9 @@
     <ToolBarContent>
         @if (!string.IsNullOrEmpty(Totals))
         {
-            var colorClass = decimal.TryParse(Totals, out var totalValue) && totalValue <= 0 ? "text-red" : "text-green";
+            var colorClass = decimal.TryParse(Totals.Replace("$",""), out var totalValue) && totalValue <= 0 ? "text-red" : "text-green";
             <MudText Typo="Typo.h6">Today's Balance =&nbsp;</MudText>
-            <MudText Typo="Typo.h6" Class="@colorClass">$@Totals</MudText>
+            <MudText Typo="Typo.h6" Class="@colorClass">@Totals</MudText>
         }
         <MudSpacer />
         <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
@@ -166,7 +166,16 @@
     private PropertyColumn<Transaction, string?>? categoryColumn;
 
     private string? _searchString;
-    
+
+    private async Task<string> AccountTotals(string AccountName)
+    {
+        decimal totalsAsDecimal = 0;
+        Totals = await AppService.GetTransactionTotals(AccountName);
+        Decimal.TryParse(Totals, out totalsAsDecimal);
+
+        return totalsAsDecimal.ToString("C");
+    }
+
     private async Task ResetChart()
     {
         options.DataLabels = new DataLabels
@@ -196,6 +205,7 @@
     protected override async Task OnParametersSetAsync()
     {
         await ReloadData();
+        Totals = await AccountTotals(AccountName);
         StateHasChanged();
     }
 
