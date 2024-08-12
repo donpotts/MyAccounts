@@ -78,13 +78,13 @@ public class TransactionController : ControllerBase
         if (accountName == "all")
         {
             totalAmount = await ctx.Transaction
-                                  .Where(t => t.Date <= today)
+                                  .Where(t => t.Date <= DateOnly.FromDateTime(today))
                                   .SumAsync(t => t.Amount);
         }
         else
         {
             totalAmount = await ctx.Transaction
-                                  .Where(t => t.Account.Name == accountName && t.Date <= today)
+                                  .Where(t => t.Account.Name == accountName && t.Date <= DateOnly.FromDateTime(today))
                                   .SumAsync(t => t.Amount);
         }
 

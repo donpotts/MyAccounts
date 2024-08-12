@@ -29,7 +29,8 @@ else
             </TitleContent>
             <DialogContent>
                 @* <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" /> *@
-                <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" />
+                @* <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" /> *@
+                <MudDatePicker Label="Date" @bind-Date="dateTime"/>
                 <MudTextField @bind-Value="record.Payee" For="@(() => record.Payee)" Label="Payee" />
                 <MudCheckBox @bind-Checked="record.Cleared" For="@(() => record.Cleared)" Label="Cleared"></MudCheckBox>
                 <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
@@ -69,6 +70,8 @@ else
     private Account[]? accountArray;
     private Category[]? categoryArray;
     private Transaction? record;
+    private DateTime dateNow = DateTime.Now;
+    private DateTime? dateTime;
 
     private async Task<IEnumerable<long?>> SearchCategories(string value)
     {
@@ -111,6 +114,8 @@ else
             var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
             categoryArray = sortCategory.ToArray();
             record = await AppService.GetTransactionByIdAsync(Id);
+
+            dateTime = record.Date.HasValue ? record.Date.Value.ToDateTime(new TimeOnly(0, 0)) : (DateTime?)null;
         }
         catch (Exception ex)
         {
@@ -132,6 +137,7 @@ else
 
         try
         {
+            record.Date = DateOnly.FromDateTime(dateTime.Value);
             await AppService.UpdateTransactionAsync(Id, record);
             MudDialog?.Close();
             NavigationService.NotifyStateChanged();

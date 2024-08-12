@@ -24,7 +24,7 @@
     </ToolBarContent>
     <Columns>
         @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
-        @* <PropertyColumn @ref="transactionColumn" Property="x => x!.Transaction != null ? x.Transaction.Id : null" Title="Transaction" /> *@
+        <PropertyColumn @ref="transactionColumn" Property="x => x!.Transaction != null ? x.Transaction.Id : null" Title="TransactionId" />
         <PropertyColumn @ref="categoryColumn" Property="x => x!.Category != null ? x.Category.Name : null" Title="Category" />
         <PropertyColumn Property="x => x!.Amount" Title="Amount" />
         <PropertyColumn Property="x => x!.Notes" Title="Notes" />
@@ -222,12 +222,11 @@
             {
                 var ar = result?.Value.ToList().Select(x => new
                 {
-                        x.Id,
-    x.Amount,
-    x.Notes,
-     TransactionId = x.Transaction.Id,
-     CategoryName = x.Category.Name,
-
+                    x.Id,
+                    x.Amount,
+                    x.Notes,
+                    TransactionId = x.Transaction.Id,
+                    CategoryName = x.Category.Name,
                 });
 
                 using var memoryStream = new MemoryStream();

@@ -59,6 +59,7 @@
         <MudButton Color="MudBlazor.Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
+        <PropertyColumn Property="x => x!.Id" Title="Id" />
         <PropertyColumn Property="x => x!.Date" Title="Date" />
         <PropertyColumn Property="x => x!.Payee" Title="Payee" />
         <TemplateColumn Title="Cleared" Sortable="true">
@@ -233,12 +234,13 @@
 
         if (!isDisabled)
         {
-            return $"(contains(Account/Name, '{AccountName}')) and (Date ge {dateRange.Start:yyyy-MM-ddTHH:mm:ssZ} and Date le {dateRange.End:yyyy-MM-ddTHH:mm:ssZ})";
+            return $"(contains(Account/Name, '{AccountName}')) and ((Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}) or Date eq {dateRange.Start:yyyy-MM-dd})";
         }
         else
         {
-            return $"(Date ge {dateRange.Start:yyyy-MM-ddTHH:mm:ssZ} and Date le {dateRange.End:yyyy-MM-ddTHH:mm:ssZ})";
+            return $"((Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}) or Date eq {dateRange.Start:yyyy-MM-dd})";
         }
+
     }
 
     private List<TransactionCategoryData> GroupTransactions(IEnumerable<Transaction> transactions, IEnumerable<TransactionSplit> transactionSplits)

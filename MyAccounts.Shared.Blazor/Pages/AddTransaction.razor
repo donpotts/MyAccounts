@@ -11,20 +11,11 @@
             <MudText Typo="Typo.h6">Add Transaction</MudText>
         </TitleContent>
         <DialogContent>
-            <MudTextField Format="s" InputType="InputType.DateTimeLocal" @bind-Value="record.Date" For="@(() => record.Date)" Label="Date" />
+            <MudDatePicker Label="Date" @bind-Date="dateTime"/>
             <MudTextField @bind-Value="record.Payee" For="@(() => record.Payee)" Label="Payee" />
             <MudCheckBox @bind-Checked="record.Cleared" For="@(() => record.Cleared)" Label="Cleared" />
             <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
-            @* <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" /> *@
             <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
-            @* <MudTextField @bind-Value="record.Account.Name" For="@(() => record.Account.Name)" Label="Account" ReadOnly="true" /> *@
-            @* <MudSelect @bind-Value="record.CategoryId" For="@(() => record.CategoryId)" Label="Category" AnchorOrigin="Origin.BottomCenter">
-                <MudSelectItem T="long?" Value="null" />
-                @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
-                {
-                    <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
-                }
-            </MudSelect> *@
             <MudAutocomplete T="long?" @bind-Value="record.CategoryId" Label="Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchCategories" ToStringFunc="@(id => categoryArray.FirstOrDefault(c => c.Id == id)?.Name)" />
         </DialogContent>
         <DialogActions>
@@ -33,6 +24,7 @@
         </DialogActions>
     </MudDialog>
 </EditForm>
+
 
 @code {
     [Parameter]
@@ -46,6 +38,8 @@
     private Transaction record = new();
     private DateTime dateNow = DateTime.Now;
 
+    private DateTime? dateTime;
+    
     private async Task<IEnumerable<long?>> SearchCategories(string value)
     {
         var filteredCategories = categoryArray.Where(c => c.Name != "Split");
@@ -87,10 +81,10 @@
             categoryArray = await AppService.ListCategoryAsync();
             var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
             categoryArray = sortCategory.ToArray();
-            record.Date = dateNow;
-
-           
-
+            
+            record.Date = DateOnly.FromDateTime(dateNow);
+            dateTime = dateNow;
+                        
             if (categoryArray != null)
             foreach (var account in accountArray)
             {
@@ -118,6 +112,8 @@
             if (record.CategoryId == null)
                 record.CategoryId = 1;
             
+            record.Date = DateOnly.FromDateTime(dateTime.Value);
+
             await AppService.InsertTransactionAsync(record);
             MudDialog?.Close();
             NavigationService.NotifyStateChanged();

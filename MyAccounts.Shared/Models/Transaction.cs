@@ -13,7 +13,7 @@ public class Transaction
     public long? Id { get; set; }
 
     [DataMember]
-    public DateTime? Date { get; set; }
+    public DateOnly? Date { get; set; }
 
     [DataMember]
     public string? Payee { get; set; }
@@ -41,4 +41,5 @@ public class Transaction
 
     [DataMember]
     public Category? Category { get; set; }
+    
 }
