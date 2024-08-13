@@ -29,7 +29,10 @@ else
             </TitleContent>
             <DialogContent>
                 @* <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" /> *@
-                <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+                <div style="display: flex; align-items: center;">
+                    <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+                    <MudButton OnClick="ToggleSign" class="mt-5">-/+</MudButton>
+                </div>
                 <MudTextField @bind-Value="record.Notes" For="@(() => record.Notes)" Label="Notes" />
                 @* <MudSelect @bind-Value="record.TransactionId" For="@(() => record.TransactionId)" Label="Transaction" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem T="long?" Value="null" />
@@ -68,6 +71,11 @@ else
     //private Transaction[]? transactionArray;
     private Category[]? categoryArray;
     private TransactionSplit? record;
+
+    private void ToggleSign()
+    {
+        record.Amount = -record.Amount;
+    }
 
     private async Task<IEnumerable<long?>> SearchCategories(string value)
     {

@@ -2,6 +2,7 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject NavigationService NavigationService
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
 @attribute [Authorize]
@@ -299,7 +300,7 @@
         // {
         //     Console.WriteLine($"Category: {labels[i]}, Percentage: {data[i]}%");
         // }
-        
+
         Data.Clear();
         ResetChart();
         foreach (var item in groupedData)
@@ -335,6 +336,8 @@
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
+            NavigationService.NotifyStateChanged();
+            await ResetChart();
         }
     }
 
@@ -445,6 +448,8 @@
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
+            NavigationService.NotifyStateChanged();
+            await ResetChart();
             StateHasChanged();
         }
     }
@@ -460,6 +465,8 @@
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
+            NavigationService.NotifyStateChanged();
+            await ResetChart();
             StateHasChanged();
         }
     }
@@ -479,6 +486,8 @@
                 await AppService.DeleteTransactionAsync(record.Id!.Value);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
                 await ReloadData();
+                NavigationService.NotifyStateChanged();
+                await ResetChart();
                 StateHasChanged();
             }
             catch (Exception ex)

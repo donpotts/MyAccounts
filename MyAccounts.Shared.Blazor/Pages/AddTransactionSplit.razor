@@ -1,6 +1,7 @@
 @inject AppService AppService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject NavigationService NavigationService
 @inject HttpClient HttpClient
 
 <EditForm Model="@record" OnValidSubmit="@OnSubmit">
@@ -181,6 +182,7 @@
                         
             await AppService.InsertTransactionSplitAsync(record);
             await (grid?.ReloadServerData());
+            NavigationService.NotifyStateChanged();
             StateHasChanged();
         }
         catch (Exception ex)
@@ -199,6 +201,7 @@
         if (!result.Canceled)
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            NavigationService.NotifyStateChanged();
             StateHasChanged();
         }
     }
@@ -217,6 +220,7 @@
             {
                 await AppService.DeleteTransactionSplitAsync(record.Id!.Value);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
+                NavigationService.NotifyStateChanged();
                 StateHasChanged();
             }
             catch (Exception ex)
