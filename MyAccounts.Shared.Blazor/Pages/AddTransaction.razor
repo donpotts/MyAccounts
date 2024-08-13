@@ -14,7 +14,10 @@
             <MudDatePicker Label="Date" @bind-Date="dateTime"/>
             <MudTextField @bind-Value="record.Payee" For="@(() => record.Payee)" Label="Payee" />
             <MudCheckBox @bind-Checked="record.Cleared" For="@(() => record.Cleared)" Label="Cleared" />
-            <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+            <div style="display: flex; align-items: center;">
+                <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+                <MudButton OnClick="ToggleSign" class="mt-5">-/+</MudButton>
+            </div>
             <MudTextField @bind-Value="record.Description" For="@(() => record.Description)" Label="Description" />
             <MudAutocomplete T="long?" @bind-Value="record.CategoryId" Label="Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchCategories" ToStringFunc="@(id => categoryArray.FirstOrDefault(c => c.Id == id)?.Name)" />
         </DialogContent>
@@ -39,6 +42,11 @@
     private DateTime dateNow = DateTime.Now;
 
     private DateTime? dateTime;
+
+    private void ToggleSign()
+    {
+        record.Amount = -record.Amount;
+    }
     
     private async Task<IEnumerable<long?>> SearchCategories(string value)
     {

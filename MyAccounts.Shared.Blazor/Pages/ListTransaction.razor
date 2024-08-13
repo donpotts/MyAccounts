@@ -518,7 +518,7 @@
         try
         {
             // Fetch all data from the OData service without any filters or restrictions
-            result = await AppService.ListTransactionODataAsync(0, 0, orderby, filter, true, "Account,Category");
+            result = await AppService.ListTransactionODataAsync(null, null, orderby, filter, true, "Account,Category");
             //result = await (grid?.ReloadServerData() ?? Task.CompletedTask);
 
             if (result != null && result?.Value != null)
