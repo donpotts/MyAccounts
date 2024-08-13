@@ -95,7 +95,7 @@
             <CellTemplate>
                 @if (context.Item.Category.Name == "Split")
                 {
-                    <MudButton Color="MudBlazor.Color.Primary" OnClick="@(e => ShowEditDialog(context.Item))">@context.Item.Category.Name</MudButton>
+                    <MudButton Color="MudBlazor.Color.Default" OnClick="@(e => ShowEditDialog(context.Item))">@context.Item.Category.Name</MudButton>
                 }
                 else
                 {
