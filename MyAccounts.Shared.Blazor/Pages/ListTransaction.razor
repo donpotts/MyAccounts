@@ -421,7 +421,7 @@
             // }
 
             if (string.IsNullOrEmpty(orderby))
-                orderby = "Date DESC, Id ASC";
+                orderby = "Date DESC, Id DESC";
 
             result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, true, "Account,Category");
                        
