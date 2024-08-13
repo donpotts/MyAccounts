@@ -5,6 +5,7 @@
 @inject NavigationService NavigationService
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
+@using MyAccounts.Shared.Blazor.Components.Themes
 @attribute [Authorize]
 
 <PageTitle>Transaction</PageTitle>
@@ -47,7 +48,7 @@
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
 </MudStack>
 
-<MudDataGrid T="Transaction" @ref="grid" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true" >
+<MudDataGrid T="Transaction" @ref="grid" Hover="true" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true" RowClass="cursor-pointer" RowClassFunc="@SelectedRow" RowClick="RowClicked" SelectedItem="@selectedItem">
     <ToolBarContent>
         @if (!string.IsNullOrEmpty(Totals))
         {
@@ -167,6 +168,43 @@
     private PropertyColumn<Transaction, string?>? categoryColumn;
 
     private string? _searchString;
+
+    private int selectedRowNumber = -1;
+    private Transaction selectedItem;
+
+    int clickedRow = -1;
+
+    private string SelectedRow(Transaction transaction, int rowNumber)
+    {
+        if (grid.SelectedItem != null && grid.SelectedItem.Equals(transaction))
+        {
+            selectedRowNumber = rowNumber;
+            return "selected";
+        }
+        else if (transaction.Date == DateOnly.FromDateTime(DateTime.Today))
+        {
+            return "selected";
+        }
+        else
+        {
+            return string.Empty;
+        }
+    }
+
+    void RowClicked(DataGridRowClickEventArgs<Transaction> args)
+    {
+        selectedItem = args.Item;
+        
+        if (clickedRow == args.RowIndex)
+        {
+            // clicked twice
+            OnEdit(args.Item);
+        }
+        else
+        {
+            clickedRow = args.RowIndex;
+        }
+    }
 
     private async Task<string> AccountTotals(string AccountName)
     {
@@ -457,7 +495,7 @@
     private async void OnEdit(Transaction record)
     {
         DialogParameters<UpdateTransaction> dialogParams = new() { { x => x.Id, record.Id!.Value } };
-        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true, DisableBackdropClick = true };
 
         var result = await DialogService.Show<UpdateTransaction>("Update Transaction", dialogParams, dialogOptions).Result;
 
