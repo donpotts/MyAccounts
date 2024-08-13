@@ -56,9 +56,12 @@
     <AuthorizeView>
         <hr>
         <hr>
-        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.House">Home</MudNavLink>
-        <div class="indent-10px">
-            <MudText Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
+        @* <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.House">Home</MudNavLink> *@
+        <div>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.House">Home</MudNavLink>
+            <div class="indent-10px">
+                <MudText Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
+            </div>
         </div>
         <hr>
         <hr>
