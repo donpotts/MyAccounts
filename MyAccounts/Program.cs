@@ -297,17 +297,17 @@ using (var scope = app.Services.CreateScope())
                 ctx.SaveChanges();
             }
         }
-        if (File.Exists("Transaction.Data.json"))
-        {
-            var json = File.ReadAllText("Transaction.Data.json");
-            var data = JsonSerializer.Deserialize<Transaction[]>(json);
+        //if (File.Exists("Transaction.Data.json"))
+        //{
+        //    var json = File.ReadAllText("Transaction.Data.json");
+        //    var data = JsonSerializer.Deserialize<Transaction[]>(json);
 
-            if (data != null)
-            {
-                ctx.Transaction.AddRange(data);
-                ctx.SaveChanges();
-            }
-        }
+        //    if (data != null)
+        //    {
+        //        ctx.Transaction.AddRange(data);
+        //        ctx.SaveChanges();
+        //    }
+        //}
         //if (File.Exists("TransactionSplit.Data.json"))
         //{
         //    var json = File.ReadAllText("TransactionSplit.Data.json");
