@@ -48,7 +48,7 @@
 
         try
         {
-            await AppService.UploadCsvAsync(file);
+            AppService.UploadCsvAsync(file);
             MudDialog?.Close();
             NavigationService.NotifyStateChanged();
         }

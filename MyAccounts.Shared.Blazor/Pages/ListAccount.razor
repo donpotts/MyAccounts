@@ -4,6 +4,7 @@
 @inject IDialogService DialogService
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
+@inject NavigationService NavigationService
 @attribute [Authorize]
 
 <PageTitle>Account</PageTitle>
@@ -145,6 +146,7 @@
         if (!result.Canceled)
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            NavigationService.NotifyStateChanged();
         }
     }
 
@@ -158,6 +160,7 @@
         if (!result.Canceled)
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            NavigationService.NotifyStateChanged();
         }
     }
 
@@ -175,6 +178,7 @@
             {
                 await AppService.DeleteAccountAsync(record.Id!.Value);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
+                NavigationService.NotifyStateChanged();
             }
             catch (Exception ex)
             {

@@ -209,7 +209,7 @@
             if (ar.Any())
                 ArData = ar;
 
-            if (Decimal.TryParse(totalBalance.ToString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out totalBalanceValue) && totalBalanceValue <= 0)
+            if (Decimal.TryParse(totalBalance.ToString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out totalBalanceValue) && totalBalanceValue < 0)
             {
                 totalBalanceColorClass = "text-red";
             }
