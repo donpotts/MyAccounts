@@ -4,6 +4,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IStorageService LocalStorageService
 @inject NavigationService NavigationService
+@inject NavigationManager Navigation
 @inject IDialogService DialogService
 
 <MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
@@ -151,6 +152,20 @@
             };
 
         await ThemeManagerChanged(_themeManager);
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        bool userAuth = user.Identity.IsAuthenticated;
+
+        if (userAuth == false)
+        {
+            Navigation.NavigateTo("/login");
+            drawerOpen = false;
+            StateHasChanged();
+            return;
+        }
+
         AccountsHasChanged();
     }
 

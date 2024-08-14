@@ -22,7 +22,7 @@ namespace MyAccounts.Models
                 .Where(x => x.StartsWith(",,") || x.StartsWith(",\"") || x.StartsWith(",S"))
                 .ToList();
 
-            var csvString = string.Join(Environment.NewLine, csvLines);
+            var csvString = string.Join(Environment.NewLine, csvLines).Replace("Payee/Security", "Payee"); ;
             using StringReader reader = new(csvString);
             var transactions = new List<TransactionModel>();
 
