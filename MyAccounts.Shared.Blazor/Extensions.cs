@@ -19,6 +19,7 @@ public static class Extensions
         services.AddAuthorizationCore();
         services.AddScoped<AuthenticationStateProvider, IdentityAuthenticationStateProvider>();
         services.AddScoped<NavigationService, NavigationService>();
+        services.AddScoped<ThemeService>();
         services.AddMudServices();
     }
 

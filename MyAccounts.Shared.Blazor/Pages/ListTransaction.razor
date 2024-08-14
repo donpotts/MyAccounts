@@ -5,6 +5,7 @@
 @inject NavigationService NavigationService
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
+@inject ThemeService ThemeService
 @using MyAccounts.Shared.Blazor.Components.Themes
 @attribute [Authorize]
 
@@ -173,6 +174,7 @@
     private Transaction selectedItem;
 
     int clickedRow = -1;
+    private bool isDarkMode;
 
     private string SelectedRow(Transaction transaction, int rowNumber)
     {
@@ -194,7 +196,7 @@
     void RowClicked(DataGridRowClickEventArgs<Transaction> args)
     {
         selectedItem = args.Item;
-        
+
         if (clickedRow == args.RowIndex)
         {
             // clicked twice
@@ -240,11 +242,26 @@
                 Data = new double[] { (double)d.TotalAmount }
             }).ToList();
     }
-
+     
     protected override async Task OnParametersSetAsync()
     {
+        options = new ApexChartOptions<TransactionCategoryData>
+            {
+                Theme = new Theme()
+            };
+
+        isDarkMode = ThemeService.IsDarkMode;
+        if (isDarkMode)
+        {
+            options.Theme.Mode = Mode.Dark;
+            options.Chart.Background = "var(--mud-palette-background-dark)";
+        }
+        else
+            options.Theme.Mode = Mode.Light;
+
         await ReloadData();
         Totals = await AccountTotals(AccountName);
+
         StateHasChanged();
     }
 

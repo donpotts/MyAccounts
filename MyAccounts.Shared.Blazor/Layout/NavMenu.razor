@@ -6,8 +6,10 @@
 @inject NavigationService NavigationService
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
+@inject ThemeService ThemeService
 
 <MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
+@* <MudThemeProvider Theme="_theme" IsDarkMode="ThemeService.IsDarkMode" /> *@
 <MudAppBar Color="MudBlazor.Color.Inherit">
     <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="MudBlazor.Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
     <MudText Class="d-flex mr-8">My Accounts</MudText>
@@ -104,6 +106,7 @@
     private bool _themingDrawerOpen;
     private MudTheme _theme = new();
     private bool _isDarkMode = false;
+
     private string totalBalanceColorClass = "text-green";
     public IEnumerable<dynamic> ArData { get; set; }
 
@@ -124,6 +127,8 @@
 
         _isDarkMode = _themeManager.IsDarkMode;
 
+        ThemeService.SetDarkMode(_isDarkMode);
+        
         _theme = new MudTheme()
         {
             Palette = new PaletteLight()
