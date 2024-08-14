@@ -270,11 +270,12 @@
                 Data = new double[] { (double)d.TotalAmount }
             }).ToList();
     }
-     
+
     protected override async Task OnParametersSetAsync()
     {
         await ReloadData();
         Totals = await AccountTotals(AccountName);
+        UpdateExpensesPieChart();
         StateHasChanged();
     }
 
