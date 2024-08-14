@@ -163,7 +163,7 @@
 
         bool userAuth = user.Identity.IsAuthenticated;
 
-        if (userAuth == false)
+        if (userAuth != true)
         {
             Navigation.NavigateTo("/login");
             drawerOpen = false;

@@ -176,6 +176,17 @@
     int clickedRow = -1;
     private bool isDarkMode;
 
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.OnChange += UpdateExpensesPieChart;
+    }
+
+    private async void UpdateExpensesPieChart()
+    {
+        await OnParametersSetAsync();
+        await chart.RenderAsync();
+    }
+
     private string SelectedRow(Transaction transaction, int rowNumber)
     {
         if (grid.SelectedItem != null && grid.SelectedItem.Equals(transaction))
@@ -255,13 +266,17 @@
         {
             options.Theme.Mode = Mode.Dark;
             options.Chart.Background = "var(--mud-palette-background-dark)";
+            
         }
         else
+        {
             options.Theme.Mode = Mode.Light;
+            
+        }
 
         await ReloadData();
         Totals = await AccountTotals(AccountName);
-
+        
         StateHasChanged();
     }
 

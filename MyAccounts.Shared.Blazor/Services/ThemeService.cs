@@ -13,6 +13,11 @@ namespace MyAccounts.Shared.Blazor.Services
         public void SetDarkMode(bool isDarkMode)
         {
             IsDarkMode = isDarkMode;
+            NotifyStateChanged(); // Fire the OnChange event
         }
+
+        public event Action OnChange;
+
+        public void NotifyStateChanged() => OnChange?.Invoke();
     }
 }
