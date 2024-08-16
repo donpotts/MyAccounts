@@ -12,6 +12,7 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
     public async Task<string> SaveToUploadsAsync(string? extension, Stream csvFile)
     {
         decimal? SumTransactionSplits = 00.0M;
+        string todaySplit = "Split"+System.DateOnly.FromDateTime(System.DateTime.Now).ToString("yyyyMMdd");
 
         if (string.IsNullOrEmpty(extension) || extension != ".csv")
         {
@@ -41,7 +42,6 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
         {
             await csvFile.CopyToAsync(fs);
         }
-
 
         Uri csvUri = new($"/upload/csv/{fileName}", UriKind.Relative);
 
@@ -107,129 +107,61 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                 Amount = transaction.Amount,
                 CategoryId = categoryId,
                 AccountId = accountId
-
             };
 
             if (transaction.Split == "S")
             {
-                newTransaction.Description = "Split";
+                newTransaction.Description = todaySplit;
             }
 
             ctx.Transaction.Add(newTransaction);
             await ctx.SaveChangesAsync();
 
-            //if (transaction.Split == "S")
-            //{
-            //    if (SumTransactionSplits == 0)
-            //    {
-            //        newTransaction.Amount = 0;
-            //        ctx.Transaction.Add(newTransaction);
-            //        await ctx.SaveChangesAsync();
-            //        transactionId = newTransaction.Id;
-            //        splitAccountId = newTransaction.Account.Id;
-            //        payeeSplit = newTransaction.Payee.ToString();
-            //        transactionDate = newTransaction.Date;
-            //    }
-
-            //    // Create a new TransactionSplit
-            //    var newTransactionSplit = new TransactionSplit
-            //    {
-            //        Amount = transaction.Amount,
-            //        CategoryId = categoryId,
-            //        TransactionId = transactionId,
-            //        Notes = "Transaction Split from Import.",
-            //    };
-
-            //    ctx.TransactionSplit.Add(newTransactionSplit);
-            //    await ctx.SaveChangesAsync();
-
-            //    SumTransactionSplits += transaction.Amount;
-            //}
-            //else
-            //{
-            //    if (SumTransactionSplits < 0)
-            //    {
-            //        var updateTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => t.Id == transactionId);
-
-            //        if (updateTransaction != null)
-            //        {
-            //            updateTransaction.Date = transactionDate;
-            //            updateTransaction.Payee = payeeSplit;
-            //            updateTransaction.AccountId = splitAccountId;
-            //            updateTransaction.Amount = SumTransactionSplits;
-            //            updateTransaction.CategoryId = 4;
-
-            //            SumTransactionSplits = 0;
-            //            splitAccountId = null;
-            //            payeeSplit = null;
-            //            transactionDate = null;
-
-            //            ctx.Transaction.Update(updateTransaction);
-            //            await ctx.SaveChangesAsync();
-            //        }
-            //    }
-            //    else
-            //    {
-            //        ctx.Transaction.Add(newTransaction);
-            //        await ctx.SaveChangesAsync();
-            //    }
-            //}
-            
-
             Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
         }
 
-        //Get all Split without Transaction and group by Date, Payee, Account, sum(Amount)
+        var splitTrans = ctx.Transaction.Where(x => x.Description == todaySplit)
+                                .GroupBy(x => new { x.Date, x.Payee, x.Account.Id });
 
-        //var mySplits = ctx.TransactionSplit.Where(st => st.TransactionId == null)
-        //    .GroupBy(st => new { st.Transaction.Date, st.Transaction.Payee, st.Transaction.Account })
-        //    .Select(g => new
-        //    {
-        //        Date = g.Key.Date,
-        //        Payee = g.Key.Payee,
-        //        Account = g.Key.Account,
-        //        TotalAmount = g.Sum(st => st.Amount)
-        //    })
-        //    .ToList();
-
-        //foreach (var split in mySplits)
-        //{
-        //    var newTransaction = new Transaction
-        //    {
-        //        Date = split.Date,
-        //        Payee = split.Payee,
-        //        Amount = split.TotalAmount,
-        //        CategoryId = 4,
-        //        AccountId = split.Account.Id,
-        //    };
-        //    ctx.Transaction.Add(newTransaction);
-        //}
-        //await ctx.SaveChangesAsync();
-
-        var splitTransactions = ctx.Transaction.Where(st => st.Description == "Split")
-                .GroupBy(st => new { st.Date, st.Payee, st.Account })
-                .Select(g => new
-                {
-                    Date = g.Key.Date,
-                    Payee = g.Key.Payee,
-                    Account = g.Key.Account,
-                    TotalAmount = g.Sum(st => st.Amount)
-                })
-                .ToList();
-
-        foreach (var splitTransaction in splitTransactions)
+        foreach (var group in splitTrans)
         {
-            var newTransaction = new Transaction
+            Console.WriteLine($"Group: Date={group.Key.Date}, Payee={group.Key.Payee}, Account={group.Key.Id}");
+                        
+            var groupSum = group.Sum(x => x.Amount);
+            Console.WriteLine($"Group Sum: {groupSum}");
+
+            var newTrans = new Transaction
             {
-                Date = splitTransaction.Date,
-                Payee = splitTransaction.Payee,
-                Amount = splitTransaction.TotalAmount,
+                Date = group.Key.Date,
+                Payee = group.Key.Payee,
+                AccountId = group.Key.Id,
                 CategoryId = 4,
-                AccountId = splitTransaction.Account.Id,
+                Amount = groupSum,
             };
-            ctx.Transaction.Add(newTransaction);
+
+            await ctx.Transaction.AddAsync(newTrans);
             await ctx.SaveChangesAsync();
+
+            var newTransId = newTrans.Id;
+
+            foreach (var trans in group)
+            {
+                Console.WriteLine($"Transaction: Id={trans.Id}, Amount={trans.Amount}, Description={trans.Description}");
+                await ctx.TransactionSplit.AddAsync(new TransactionSplit
+                {
+                    Amount = trans.Amount,
+                    CategoryId = trans.CategoryId,
+                    TransactionId = newTransId,
+                });
+            }
         }
+        await ctx.SaveChangesAsync();
+
+        var deleteSplitTransactions = ctx.Transaction.Where(x => x.Description == todaySplit);
+
+        ctx.Transaction.RemoveRange(deleteSplitTransactions);
+
+        await ctx.SaveChangesAsync();
 
         return $"/upload/csv/{fileName}";
     }
