@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using MyAccounts.Data;
 using MyAccounts.Services;
 using MyAccounts.Shared.Models;
+using System.Xml.Linq;
 
 namespace MyAccounts.Controllers;
 
@@ -37,7 +38,7 @@ public class TransactionController : ControllerBase
         var balanceQueryable = ctx.Transaction.Include(x => x.Account).Include(x => x.Category).AsQueryable();
         List<Transaction> transactions = null;
 
-        if (options.Filter?.RawValue.StartsWith("(contains(Account/Name") ?? false)
+        if (options.Filter?.RawValue.StartsWith("(Account/Name eq") ?? false)
         {
             balanceQueryable = (IQueryable<Transaction>)options.Filter.ApplyTo(balanceQueryable, new ODataQuerySettings());
         }

@@ -171,7 +171,7 @@
     private string? _searchString;
 
     private int selectedRowNumber = -1;
-    private Transaction selectedItem;
+    private Transaction selectedItem = null;
 
     int clickedRow = -1;
     private bool isDarkMode;
@@ -274,10 +274,11 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        selectedItem = null;
+        //await grid.SetSelectedItemAsync(null);
         await ReloadData();
         Totals = await AccountTotals(AccountName);
         UpdateExpensesPieChart();
-        await grid.SetSelectedItemAsync(null);
         StateHasChanged();
     }
 
@@ -316,7 +317,7 @@
 
         if (!isDisabled)
         {
-            return $"(contains(Account/Name, '{AccountName}')) and ((Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}) or Date eq {dateRange.Start:yyyy-MM-dd})";
+            return $"(Account/Name eq '{AccountName}') and ((Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}) or Date eq {dateRange.Start:yyyy-MM-dd})";
         }
         else
         {
@@ -475,9 +476,9 @@
             if (!string.IsNullOrEmpty(AccountName) && AccountName != "all")
             {
                 if (!string.IsNullOrEmpty(filter))
-                    filter = $"(contains(Account/Name, '{AccountName}')) and ({filter})";
+                    filter = $"(Account/Name eq '{AccountName}') and ({filter})";
                 else
-                    filter = $"(contains(Account/Name, '{AccountName}'))";
+                    filter = $"(Account/Name eq '{AccountName}')";
             }
 
             // Apply date range filter
