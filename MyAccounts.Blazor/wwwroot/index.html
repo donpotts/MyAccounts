@@ -64,8 +64,25 @@
     </div>
 
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script>navigator.serviceWorker.register('service-worker.js');</script> 
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script>navigator.serviceWorker.register('service-worker.js');</script>
+    <script src="_framework/blazor.webassembly.js?v=1.0.1"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
+                registration.onupdatefound = function () {
+                    const installingWorker = registration.installing;
+                    installingWorker.onstatechange = function () {
+                        if (installingWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                window.location.reload();
+                            }
+                        }
+                    };
+                };
+            });
+        }
+    </script>
+
 </body>
 
 </html>

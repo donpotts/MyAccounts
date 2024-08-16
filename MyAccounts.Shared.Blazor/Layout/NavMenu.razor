@@ -10,6 +10,7 @@
 
 <MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
 @* <MudThemeProvider Theme="_theme" IsDarkMode="ThemeService.IsDarkMode" /> *@
+<MudPopoverProvider />
 <MudAppBar Color="MudBlazor.Color.Inherit">
     <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="MudBlazor.Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
     <MudText Class="d-flex mr-8">My Accounts</MudText>
@@ -131,7 +132,7 @@
         
         _theme = new MudTheme()
         {
-            Palette = new PaletteLight()
+            PaletteLight = new PaletteLight()
             {
                 Primary = _themeManager.PrimaryColor,
                 AppbarBackground = _themeManager.PrimaryColor,

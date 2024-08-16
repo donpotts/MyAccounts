@@ -526,7 +526,7 @@
     private async void OnEdit(Transaction record)
     {
         DialogParameters<UpdateTransaction> dialogParams = new() { { x => x.Id, record.Id!.Value } };
-        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true, DisableBackdropClick = true };
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
         var result = await DialogService.Show<UpdateTransaction>("Update Transaction", dialogParams, dialogOptions).Result;
 

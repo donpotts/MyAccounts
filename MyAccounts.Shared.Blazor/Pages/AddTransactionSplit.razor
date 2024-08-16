@@ -70,7 +70,7 @@
     private PropertyColumn<TransactionSplit, decimal?>? transactionColumn;
     private PropertyColumn<TransactionSplit, string?>? categoryColumn;
 
-    private async Task<IEnumerable<long?>> SearchCategories(string value)
+    private async Task<IEnumerable<long?>> SearchCategories(string value, CancellationToken cancellationToken)
     {
         var filteredCategories = categoryArray.Where(c => c.Name != "Split");
 
