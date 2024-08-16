@@ -13,7 +13,7 @@ namespace MyAccounts.Controllers;
 public class CsvController(CsvService csvService) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> PostAsync([FromForm] IFormFile file)
+    public async Task<IActionResult> PostAsync(IFormFile file)
     {
         var extension = file.ContentType switch
         {

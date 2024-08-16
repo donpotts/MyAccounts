@@ -12,7 +12,7 @@ namespace MyAccounts.Controllers;
 public class ImageController(ImageService imageService) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> PostAsync([FromForm] IFormFile image)
+    public async Task<IActionResult> PostAsync(IFormFile image)
     {
         var extension = image.ContentType switch
         {
