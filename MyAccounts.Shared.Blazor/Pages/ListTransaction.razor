@@ -211,10 +211,11 @@
             selectedRowNumber = rowNumber;
             return "selected";
         }
-        // else if (transaction.Date == DateOnly.FromDateTime(DateTime.Today))
-        // {
-        //     return "selected";
-        // }
+        else if (grid.SelectedItem == null && transaction.Date <= DateOnly.FromDateTime(DateTime.Today))
+        {
+            grid.SelectedItem = transaction;
+            return "selected";
+        }
         else
         {
             return string.Empty;
@@ -276,6 +277,7 @@
         await ReloadData();
         Totals = await AccountTotals(AccountName);
         UpdateExpensesPieChart();
+        await grid.SetSelectedItemAsync(null);
         StateHasChanged();
     }
 
@@ -379,7 +381,6 @@
             Data.Add(item);
         }
     }
-
 
     private string FormatCurrency(string amount)
     {

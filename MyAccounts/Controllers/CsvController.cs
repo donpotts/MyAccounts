@@ -35,5 +35,4 @@ public class CsvController(CsvService csvService) : ControllerBase
             return StatusCode(500, $"\"{ex.Message}\"");
         }
     }
-
 }
