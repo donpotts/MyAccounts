@@ -64,7 +64,9 @@
         <div>
             <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.House">Home</MudNavLink>
             <div class="indent-10px">
-                <MudText Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
+                <a href="/transaction/all">
+                    <MudText Class="@totalBalanceColorClass">Account Totals = @totalBalance.ToString("C")</MudText>
+                </a>
             </div>
         </div>
         <hr>

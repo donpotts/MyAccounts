@@ -7,11 +7,12 @@
 @inject IJSRuntime JSRuntime
 @inject ThemeService ThemeService
 @using MyAccounts.Shared.Blazor.Components.Themes
+
 @attribute [Authorize]
 
 <PageTitle>Transaction</PageTitle>
 
-<div class="mb-3">
+<div class="mb-3"> 
     @if (@AccountName == "all")
     {
         <MudText Typo="Typo.h3">All Transactions</MudText>
@@ -30,10 +31,11 @@
 {
     <ApexChart TItem="TransactionCategoryData"
                Title="Expenses"
-               Width="600"
-               Height="600"
+               Width="700"
+               Height="700"
                @ref="chart"
-               Options=options>
+               Options=options
+               OnDataPointSelection="HandleDataPointSelection">
 
         <ApexPointSeries TItem="TransactionCategoryData"
                          Items="Data"
@@ -41,7 +43,7 @@
                          SeriesType="SeriesType.Pie"
                          XValue="e => e.Category"
                          YValue="e => e.TotalAmount"
-                         ShowDataLabels />
+                         ShowDataLabels/>
     </ApexChart>
 }
 
@@ -142,6 +144,8 @@
     [Parameter]
     public string AccountName { get; set; } = null;
 
+    public string CategoryName { get; set; } = null;
+
     private List<TransactionCategoryData> Data { get; set; } = new();
     private ApexChart<TransactionCategoryData> chart;
     private ApexChartOptions<TransactionCategoryData> options { get; set; } = new();
@@ -181,12 +185,25 @@
         ThemeService.OnChange += UpdateExpensesPieChart;
     }
 
-    private async void UpdateExpensesPieChart()
+    private async void HandleDataPointSelection(SelectedData<TransactionCategoryData> selectedData)
     {
-        options = new ApexChartOptions<TransactionCategoryData>
-            {
-                Theme = new Theme()
-            };
+        var dataId = selectedData.DataPoint.Items.FirstOrDefault()?.Category;
+        if (dataId != null)
+        {
+            var categoryWithoutPercent = dataId.Split('(')[0].Trim();
+            dataId = categoryWithoutPercent;
+            CategoryName = dataId;
+            //await ReloadData();
+            //StateHasChanged();
+        }
+    }
+
+    private async void UpdateExpensesPieChart()
+    {        
+        var options = new ApexChartOptions<TransactionCategoryData>
+        {
+            Theme = new Theme()
+        };
 
         isDarkMode = ThemeService.IsDarkMode;
         if (isDarkMode)
@@ -253,7 +270,6 @@
                 Formatter = @"function(value, { seriesIndex, w }) {
             return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });}"
             };
-        //await chart.UpdateSeriesAsync(true);
         await chart.UpdateOptionsAsync(true, true, true, null);
     }
 
@@ -314,6 +330,7 @@
     {
         // Console.WriteLine($"Start Date: {dateRange.Start:yyyy-MM-ddTHH:mm:ssZ}");
         // Console.WriteLine($"End Date: {dateRange.End:yyyy-MM-ddTHH:mm:ssZ}");
+        Console.WriteLine("Category="+CategoryName);
 
         if (!isDisabled)
         {
@@ -469,7 +486,7 @@
                 }
                 else
                 {
-                    filter = $"contains(tolower(Payee), '{_searchString}') or contains(tolower(Description), '{_searchString}')";
+                    filter = $"contains(tolower(Payee), '{_searchString}') or contains(tolower(Description), '{_searchString}') or contains(tolower(Category/Name), '{_searchString}') or contains(tolower(Account/Name), '{_searchString}')";
                 }
             }
 
