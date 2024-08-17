@@ -131,7 +131,7 @@
         _isDarkMode = _themeManager.IsDarkMode;
 
         ThemeService.SetDarkMode(_isDarkMode);
-        
+
         _theme = new MudTheme()
         {
             PaletteLight = new PaletteLight()
@@ -199,18 +199,25 @@
                     var culture = new CultureInfo("en-US");
                     CultureInfo.CurrentCulture = culture;
                     var balance = await AccountTotals(account.Name);
-                     decimal balanceDecimal;
-                     if (Decimal.TryParse(balance, NumberStyles.Currency, CultureInfo.CurrentCulture, out balanceDecimal))
-                     {
-                         totalBalance += balanceDecimal;
-                     }
-                     accounts.Add(new { account.Name, Balance = balance });
+                    decimal balanceDecimal;
+                    if (Decimal.TryParse(balance, NumberStyles.Currency, CultureInfo.CurrentCulture, out balanceDecimal))
+                    {
+                        totalBalance += balanceDecimal;
+                    }
+                    accounts.Add(new { account.Name, Balance = balance });
                 }
                 ar.Add(new { accountType.Id, accountType.Name, Account = accounts });
             }
 
             if (ar.Any())
                 ArData = ar;
+
+            var allTotals = await AccountTotals("all");
+            decimal allBalanceDecimal;
+            if (Decimal.TryParse(allTotals, NumberStyles.Currency, CultureInfo.CurrentCulture, out allBalanceDecimal))
+            {
+                totalBalance = allBalanceDecimal;
+            }
 
             if (Decimal.TryParse(totalBalance.ToString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out totalBalanceValue) && totalBalanceValue < 0)
             {

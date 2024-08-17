@@ -103,7 +103,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddFixedWindowLimiter("Fixed", opt =>
     {
         opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 100;
+        opt.PermitLimit = 1000;
         opt.QueueLimit = 0;
         opt.AutoReplenishment = true;
     });
