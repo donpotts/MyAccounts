@@ -4,7 +4,7 @@
 @inject NavigationService NavigationService
 @attribute [Authorize]
 
-<EditForm Model="@record" OnValidSubmit="@OnSubmit">
+<EditForm Model="@record" OnValidSubmit="@OnSubmit" >
     <DataAnnotationsValidator />
     <MudDialog>
         <TitleContent>
@@ -23,11 +23,10 @@
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="MudBlazor.Color.Primary" >Add</MudButton>
         </DialogActions>
     </MudDialog>
 </EditForm>
-
 
 @code {
     [Parameter]
@@ -47,7 +46,7 @@
     {
         record.Amount = -record.Amount;
     }
-    
+
     private async Task<IEnumerable<long?>> SearchCategories(string value, CancellationToken cancellationToken)
     {
         var filteredCategories = categoryArray.Where(c => c.Name != "Split");
@@ -89,18 +88,18 @@
             categoryArray = await AppService.ListCategoryAsync();
             var sortCategory = categoryArray.OrderBy(s => s.Name).ToList();
             categoryArray = sortCategory.ToArray();
-            
+
             record.Date = DateOnly.FromDateTime(dateNow);
             dateTime = dateNow;
-                        
+
             if (categoryArray != null)
-            foreach (var account in accountArray)
-            {
-                if (Account == account.Name)
+                foreach (var account in accountArray)
                 {
-                    record.AccountId = account.Id;
+                    if (Account == account.Name)
+                    {
+                        record.AccountId = account.Id;
+                    }
                 }
-            }
         }
         catch(Exception ex)
         {
@@ -118,11 +117,32 @@
         try
         {
             if (record.CategoryId == null)
-                record.CategoryId = 1;
-            
+            {
+                Snackbar.Add("Category must be selected!", Severity.Warning);
+                return;
+            }
+
             record.Date = DateOnly.FromDateTime(dateTime.Value);
 
             await AppService.InsertTransactionAsync(record);
+
+            if (categoryArray != null)
+            {
+                ToggleSign();
+                var category = categoryArray.FirstOrDefault(c => record.CategoryId == c.Id);
+                if (category != null)
+                {
+                    string cleanAccountName = category.Name.Replace("Transfer:[", "").Replace("]", "");
+
+                    var account = accountArray?.FirstOrDefault(a => cleanAccountName == a.Name);
+                    if (account != null)
+                    {
+                        record.AccountId = account.Id;
+                        await AppService.InsertTransactionAsync(record);
+                    }
+                }
+            }
+
             MudDialog?.Close();
             NavigationService.NotifyStateChanged();
         }
