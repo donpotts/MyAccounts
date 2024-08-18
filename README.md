@@ -18,24 +18,7 @@ This repository contains an ASP.NET Core application with a Blazor WebAssembly (
 - ASP.NET Core 8 Identity: A membership system that adds login functionality to your application.
 - Entity Framework Core SQLite: A lightweight database provider for Entity Framework Core.
 - OData Support: A standard for building and consuming RESTful APIs.
-- Import CSV (Quicken Export All Transactions)
-
-All Transactions Report Created: 2024-08-16 11:13:23 -0500
-,
-﻿Filter Criteria:,All Dates
-,All Accounts
-,Any Status
-,All Accounts
-,
-﻿,"Scheduled","Split","Date","Payee","Category","Amount","Account"
-﻿,,,"8/6/2024","Food Store","Groceries","-7.61","My Checking"
-﻿,,"S","8/5/2024","All Stuff","Clothing","-19.71","His Debit"
-﻿,,"S","8/5/2024","All Stuff","Groceries","-49.30","His Debit"
-﻿,,"S","8/5/2024","All Stuff","Stupid Stuff","-5.99","His Debit"
-﻿,,"S","8/5/2024","All Stuff","Cash","-100.00","His Debit"
-﻿,,,"8/1/2024","Food Store","Groceries","-15.92","My Checking"
-﻿,,,"8/2/2024","Food Store","Groceries","-25.92","My Checking"
-﻿,,,"8/3/2024","Food Store","Groceries","-35.92","My Checking"
+- Import CSV: Use "MyAccounts-2024-08-16-import.csv" for CSV format (Quicken Export All Transactions).
 
 ## Getting Started
 
