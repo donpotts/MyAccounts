@@ -26,6 +26,18 @@
     color: white !important;
 }
 
+.default-color {
+    color: var(--mud-palette-text-primary) !important;
+}
+
+.text-green {
+    color: green;
+}
+
+.text-red {
+    color: red;
+}
+
 .date-range-picker {
     display: flex;
     justify-content: flex-start;
