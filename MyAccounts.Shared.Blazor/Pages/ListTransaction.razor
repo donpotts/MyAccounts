@@ -99,7 +99,8 @@
             <CellTemplate Context="context">
                 @if (@context.Item.Balance != null)
                 {
-                    <div class="@(context.Item == selectedItem ? "default-color" : (context.Item.Balance > 0 ? "text-green" : "text-red"))">
+                    <div class="@(context.Item == selectedItem ? " default-color" : (context.Item.Balance>
+                        0 ? "text-green" : "text-red"))">
                         @FormatCurrency(context.Item.Balance.ToString() ?? "$0.00")
                     </div>
                 }
@@ -156,9 +157,7 @@
 @code {
     [Parameter]
     public string AccountName { get; set; } = null;
-
     public string CategoryName { get; set; } = null;
-
     private List<TransactionCategoryData> Data { get; set; } = new();
     private ApexChart<TransactionCategoryData> chart;
     private ApexChartOptions<TransactionCategoryData> options { get; set; } = new();
@@ -167,7 +166,6 @@
     int? skip = null;
     string? orderby = null;
     string? filter = null;
-
     private DateRange dateRange = new DateRange(
     new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
     new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
@@ -306,7 +304,6 @@
     protected override async Task OnParametersSetAsync()
     {
         selectedItem = null;
-        //await grid.SetSelectedItemAsync(null);
         await ReloadData();
         Totals = await AccountTotals(AccountName);
         UpdateExpensesPieChart();
