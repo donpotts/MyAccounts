@@ -18,6 +18,7 @@ This repository contains an ASP.NET Core application with a Blazor WebAssembly (
 - ASP.NET Core 8 Identity: A membership system that adds login functionality to your application.
 - Entity Framework Core SQLite: A lightweight database provider for Entity Framework Core.
 - OData Support: A standard for building and consuming RESTful APIs.
+- Import CSV: Use "MyAccounts-2024-08-16-import.csv" for CSV format (Quicken Export All Transactions).
 
 ## Getting Started
 
