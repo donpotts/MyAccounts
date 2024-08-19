@@ -27,7 +27,7 @@
 }
 
 .default-color {
-    color: var(--mud-palette-text-primary) !important;
+    color: var(--mud-palette-text-dark) !important;
 }
 
 .text-green {

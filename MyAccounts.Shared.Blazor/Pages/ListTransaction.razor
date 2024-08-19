@@ -27,10 +27,12 @@
     <MudDateRangePicker DateRange="dateRange" DateRangeChanged="OnDateRangeChanged" Label="Select Date Range" Class="small-date-picker" />
 </div>
 
+<MudText Typo="Typo.h6">Total Expenses: @totalSum.ToString("C")</MudText>
+
 @if (Data != null && Data.Count > 0)
 {
     <ApexChart TItem="TransactionCategoryData"
-               Title="Expenses"
+               Title=""
                Width="700"
                Height="700"
                @ref="chart"
@@ -190,6 +192,8 @@
 
     int clickedRow = -1;
     private bool isDarkMode;
+
+    private double totalSum;
 
     protected override async Task OnInitializedAsync()
     {
@@ -356,7 +360,7 @@
 
     private List<TransactionCategoryData> GroupTransactions(IEnumerable<Transaction> transactions, IEnumerable<TransactionSplit> transactionSplits)
     {
-        var filteredTransactions = transactions.Where(t => t.Amount <= 0 && t.Category.Name != "Split");
+        var filteredTransactions = transactions.Where(t => t.Amount <= 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["));
         var filteredTransactionSplits = transactionSplits.Where(t => t.Amount <= 0);
 
         var groupedDataSplit = filteredTransactionSplits.GroupBy(t => t.Category.Name)
@@ -391,7 +395,7 @@
 
     private void CalculateDataAndLabels(List<TransactionCategoryData> groupedData)
     {
-        var totalSum = groupedData.Sum(g => (double)g.TotalAmount);
+        totalSum = groupedData.Sum(g => (double)g.TotalAmount);
 
         data = groupedData.Select(g => ((double)g.TotalAmount / totalSum) * 100).ToArray();
         labels = groupedData.Select(g => $"{g.Category}: {g.TotalAmount} ({((double)g.TotalAmount / totalSum) * 100:F2}%)").ToArray();
@@ -406,14 +410,15 @@
         foreach (var item in groupedData)
         {
             item.TotalAmount = Math.Abs(item.TotalAmount);
-            item.Category = item.Category.Replace(":"," ") + $" ({(Math.Abs((double)item.TotalAmount / totalSum)) * 100:F2}%)";
+            item.Category = item.Category.Replace(":", " ") + $" ({(Math.Abs((double)item.TotalAmount / totalSum)) * 100:F2}%)";
             Data.Add(item);
         }
     }
 
+
     private string FormatCurrency(string amount)
     {
-        if (double.TryParse(amount, out double parsedAmount))
+        if (decimal.TryParse(amount, out decimal parsedAmount))
         {
             return parsedAmount.ToString("C");
         }
