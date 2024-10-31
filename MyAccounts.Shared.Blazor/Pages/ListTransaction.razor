@@ -206,6 +206,10 @@
             var categoryWithoutPercent = dataId.Split('(')[0].Trim();
             dataId = categoryWithoutPercent;
             CategoryName = dataId;
+            if (grid != null)
+            {
+                await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            }
             //await ReloadData();
             //StateHasChanged();
         }
@@ -278,12 +282,12 @@
 
     private async Task ResetChart()
     {
-        options.DataLabels = new DataLabels
-            {
-                Formatter = @"function(value, { seriesIndex, w }) {
-            return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });}"
-            };
-        await chart.UpdateOptionsAsync(true, true, true, null);
+        // options.DataLabels = new DataLabels
+        //     {
+        //         Formatter = @"function(value, { seriesIndex, w }) {
+        //     return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });}"
+        //     };
+        // await chart.UpdateOptionsAsync(true, true, true, null);
     }
 
     public class TransactionCategoryData
@@ -325,9 +329,10 @@
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
         }
 
-        string sfilter = BuildFilter();
+        filter = BuildFilter();
+
         string sorderby = "Date ASC";
-        var myresult = await AppService.ListTransactionODataAsync(null, null, sorderby, sfilter, true, "Account,Category");
+        var myresult = await AppService.ListTransactionODataAsync(null, null, sorderby, filter, true, "Account,Category");
 
         var transactionIds = myresult?.Value.Select(t => t.Id).ToList();
         var sfilter2 = $"Transaction/Id in ({string.Join(",", transactionIds)})";
@@ -514,11 +519,21 @@
             // Apply date range filter
             // if (dateRange != null)
             // {
-            //     string dateFilter = $"Date ge {dateRange.Start:yyyy-MM-ddTHH:mm:ssZ} and Date le {dateRange.End:yyyy-MM-ddTHH:mm:ssZ}";
+            //     string dateFilter = $"Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
             //     if (!string.IsNullOrEmpty(filter))
             //         filter = $"{filter} and ({dateFilter})";
             //     else
             //         filter = dateFilter;
+            // }
+
+            // if (!string.IsNullOrEmpty(CategoryName))
+            // {
+            //     if (!string.IsNullOrEmpty(filter))
+            //         filter = filter + $" and contains(Category/Name, '{CategoryName}')";
+            //     else
+            //         filter = $"contains(Category/Name, '{CategoryName}')";
+
+            //     CategoryName = null;
             // }
 
             if (string.IsNullOrEmpty(orderby))
