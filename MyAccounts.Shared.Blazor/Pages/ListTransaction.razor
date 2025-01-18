@@ -32,12 +32,12 @@
 @if (Data != null && Data.Count > 0)
 {
     <ApexChart TItem="TransactionCategoryData"
-               Title=""
-               Width="700"
-               Height="700"
-               @ref="chart"
-               Options=options
-               OnDataPointSelection="HandleDataPointSelection">
+    Title=""
+    Width="700"
+    Height="700"
+    @ref="chart"
+    Options=options
+    OnDataPointSelection="HandleDataPointSelection">
 
         <ApexPointTooltip>
             <MudCard>
@@ -50,12 +50,12 @@
 
         <ChildContent>
             <ApexPointSeries TItem="TransactionCategoryData"
-                             Items="Data"
-                             Name="Expenses"
-                             SeriesType="SeriesType.Pie"
-                             XValue="e => e.Category"
-                             YValue="e => e.TotalAmount"
-                             ShowDataLabels/>
+            Items="Data"
+            Name="Expenses"
+            SeriesType="SeriesType.Pie"
+            XValue="e => e.Category"
+            YValue="e => e.TotalAmount"
+            ShowDataLabels/>
         </ChildContent>
     </ApexChart>
 }
@@ -85,7 +85,7 @@
                 <MudCheckBox Value="@context.Item.Cleared" Disabled="true" />
             </CellTemplate>
         </TemplateColumn>
-       <TemplateColumn Title="Amount" Sortable="true">
+        <TemplateColumn Title="Amount" Sortable="true">
             <CellTemplate Context="context">
                 @if (@context.Item.Amount != null)
                 {
@@ -136,21 +136,21 @@
 
 <script>
     window.downloadFromBase64 = function (base64, filename) {
-        var a = document.createElement("a");
-        document.body.appendChild(a);
-        a.style = "display: none";
-        var byteCharacters = atob(base64);
-        var byteNumbers = new Array(byteCharacters.length);
-        for (var i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        var byteArray = new Uint8Array(byteNumbers);
-        var blob = new Blob([byteArray], { type: "application/octet-stream" });
-        var url = window.URL.createObjectURL(blob);
-        a.href = url;
-        a.download = filename;
-        a.click();
-        window.URL.revokeObjectURL(url);
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    var byteCharacters = atob(base64);
+    var byteNumbers = new Array(byteCharacters.length);
+    for (var i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    var byteArray = new Uint8Array(byteNumbers);
+    var blob = new Blob([byteArray], { type: "application/octet-stream" });
+    var url = window.URL.createObjectURL(blob);
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
     };
 </script>
 
@@ -196,6 +196,12 @@
     protected override async Task OnInitializedAsync()
     {
         ThemeService.OnChange += UpdateExpensesPieChart;
+        chart = new ApexChart<TransactionCategoryData>();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    { 
+        if (firstRender && Data != null) { await chart.RenderAsync(); }
     }
 
     private async void HandleDataPointSelection(SelectedData<TransactionCategoryData> selectedData)
@@ -211,7 +217,7 @@
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
             }
             //await ReloadData();
-            //StateHasChanged();
+            StateHasChanged();
         }
     }
 
@@ -234,7 +240,8 @@
             options.Theme.Mode = Mode.Light;
             options.Chart.Background = "var(--mud-palette-background)";
         }
-        ResetChart();
+        await ResetChart();
+        
         StateHasChanged();
     }
 
@@ -282,12 +289,12 @@
 
     private async Task ResetChart()
     {
-        // options.DataLabels = new DataLabels
-        //     {
-        //         Formatter = @"function(value, { seriesIndex, w }) {
-        //     return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });}"
-        //     };
-        // await chart.UpdateOptionsAsync(true, true, true, null);
+        options.DataLabels = new DataLabels
+            {
+                Formatter = @"function(value, { seriesIndex, w }) {
+            return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });}"
+            };
+        await chart.UpdateOptionsAsync(true, true, true, null);
     }
 
     public class TransactionCategoryData
@@ -318,6 +325,7 @@
     {
         dateRange = newDateRange;
         await ReloadData();
+        UpdateExpensesPieChart();
         StateHasChanged();
     }
 
@@ -395,7 +403,7 @@
         return groupedData;
     }
 
-    private void CalculateDataAndLabels(List<TransactionCategoryData> groupedData)
+    private async void CalculateDataAndLabels(List<TransactionCategoryData> groupedData)
     {
         totalSum = groupedData.Sum(g => (double)g.TotalAmount);
 
@@ -408,7 +416,7 @@
         // }
 
         Data.Clear();
-        ResetChart();
+        await ResetChart();
         foreach (var item in groupedData)
         {
             item.TotalAmount = Math.Abs(item.TotalAmount);
@@ -517,14 +525,14 @@
             }
 
             // Apply date range filter
-            // if (dateRange != null)
-            // {
-            //     string dateFilter = $"Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
-            //     if (!string.IsNullOrEmpty(filter))
-            //         filter = $"{filter} and ({dateFilter})";
-            //     else
-            //         filter = dateFilter;
-            // }
+            if (dateRange != null)
+            {
+                string dateFilter = $"Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
+                if (!string.IsNullOrEmpty(filter))
+                    filter = $"{filter} and ({dateFilter})";
+                else
+                    filter = dateFilter;
+            }
 
             // if (!string.IsNullOrEmpty(CategoryName))
             // {
