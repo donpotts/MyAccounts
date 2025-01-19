@@ -320,7 +320,7 @@ public class AppService(
         return GetODataAsync<Account>("Account", top, skip, orderby, filter, count, expand);
     }
 
-    public async Task<Account?> GetAccountByIdAsync(long key)
+    public async Task<Account?> GetAccountByIdAsync(long? key)
     {
         var token = await authenticationStateProvider.GetBearerTokenAsync()
             ?? throw new Exception("Not authorized");
@@ -687,6 +687,28 @@ public class AppService(
         return await response.Content.ReadFromJsonAsync<string>();
     }
 
+    public async Task<string?> UploadBankAccountCsvAsync(Stream stream, int bufferSize, string contentType, string accountName)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        MultipartFormDataContent content = [];
+        StreamContent fileContent = new(stream, bufferSize);
+        fileContent.Headers.ContentType = new(contentType);
+        content.Add(fileContent, "file", "CsvImport.csv");
+        content.Add(new StringContent(accountName), "accountName");
+
+        HttpRequestMessage request = new(HttpMethod.Post, $"/api/bankcsv");
+        request.Headers.Add("Authorization", $"Bearer {token}");
+        request.Content = content;
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<string>();
+    }
+
     public async Task<string?> UploadImageAsync(IBrowserFile image)
     {
         using var stream = image.OpenReadStream(image.Size);
@@ -699,6 +721,13 @@ public class AppService(
         using var stream = image.OpenReadStream(image.Size);
 
         return await UploadCsvAsync(stream, Convert.ToInt32(image.Size), image.ContentType);
+    }
+
+    public async Task<string?> UploadBankAccountCsvAsync(IBrowserFile image, string accountName)
+    {
+        using var stream = image.OpenReadStream(image.Size);
+
+        return await UploadBankAccountCsvAsync(stream, Convert.ToInt32(image.Size), image.ContentType, accountName);
     }
 
     public async Task ChangePasswordAsync(string oldPassword, string newPassword)

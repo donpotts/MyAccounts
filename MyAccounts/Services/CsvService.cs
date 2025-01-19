@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MyAccounts.Data;
 using MyAccounts.Models;
 using MyAccounts.Shared.Models;
+using static MudBlazor.CategoryTypes;
 
 namespace MyAccounts.Services;
 
@@ -9,7 +10,7 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
 {
     private readonly string webRootPath = environment.WebRootPath;
 
-    public async Task<string> SaveToUploadsAsync(string? extension, Stream csvFile)
+    public async Task<string> SaveToUploadsAsync(string? extension, Stream csvFile, string accountName)
     {
         decimal? SumTransactionSplits = 00.0M;
         string todaySplit = "Split"+System.DateOnly.FromDateTime(System.DateTime.Now).ToString("yyyyMMdd");
@@ -48,6 +49,54 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
         string csvFilePath = filePath;
 
         var transactions = await QuickenTransactionImporter.ReadQuickenTransactionsAsync(csvFilePath);
+        var bankTransactions = await BankTransactionImporter.ReadBankTransactionsAsync(csvFilePath);
+
+        if (bankTransactions != null)
+        {
+            foreach (var bankTransaction in bankTransactions)
+            {
+                Console.WriteLine($"{bankTransaction.Date} - {bankTransaction.Time} - {bankTransaction.Amount} - {bankTransaction.Description} - {bankTransaction.Type}");
+                long? catId;
+                if (bankTransaction.Amount > 0)
+                {
+                    catId = 6;
+                }
+                else
+                {
+                    catId = 5;
+                }
+
+                var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount == bankTransaction.Amount && t.Date == bankTransaction.Date));
+                var newTransaction = new Transaction
+                {
+                    Date = bankTransaction.Date,
+                    Payee = bankTransaction.Description,
+                    Amount = bankTransaction.Amount,
+                    AccountId = 4,
+                    CategoryId = catId,
+                };
+                if (existingTransaction != null)
+                {
+                    // Update existing transaction
+                    existingTransaction.Date = newTransaction.Date;
+                    existingTransaction.Payee = newTransaction.Payee;
+                    existingTransaction.Amount = newTransaction.Amount;
+                    existingTransaction.CategoryId = newTransaction.CategoryId;
+                    existingTransaction.AccountId = newTransaction.AccountId;
+
+                    ctx.Transaction.Update(existingTransaction);
+                    Console.WriteLine($"Updated Transaction: {existingTransaction.Date} - {existingTransaction.Payee} - {existingTransaction.Amount} - {existingTransaction.CategoryId} - {existingTransaction.AccountId}");
+                }
+                else
+                {
+                    // Insert new transaction
+                    ctx.Transaction.Add(newTransaction);
+                    Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
+                }
+
+                await ctx.SaveChangesAsync();
+            }
+        }
 
         long? transactionId = null;
         long? splitAccountId = null;
@@ -114,10 +163,30 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                 newTransaction.Description = todaySplit;
             }
 
-            ctx.Transaction.Add(newTransaction);
+            var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount == newTransaction.Amount && t.Date == newTransaction.Date));
+
+            if (existingTransaction != null)
+            {
+                // Update existing transaction
+                existingTransaction.Date = newTransaction.Date;
+                existingTransaction.Payee = newTransaction.Payee;
+                existingTransaction.Amount = newTransaction.Amount;
+                existingTransaction.CategoryId = newTransaction.CategoryId;
+                existingTransaction.AccountId = newTransaction.AccountId;
+
+                ctx.Transaction.Update(existingTransaction);
+                Console.WriteLine($"Updated Transaction: {existingTransaction.Date} - {existingTransaction.Payee} - {existingTransaction.Amount} - {existingTransaction.CategoryId} - {existingTransaction.AccountId}");
+            }
+            else
+            {
+                // Insert new transaction
+                ctx.Transaction.Add(newTransaction);
+                Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
+            }
+
             await ctx.SaveChangesAsync();
 
-            Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
+            //Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
         }
 
         var splitTrans = ctx.Transaction.Where(x => x.Description == todaySplit)

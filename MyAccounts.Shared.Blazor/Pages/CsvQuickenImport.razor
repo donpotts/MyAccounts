@@ -1,0 +1,62 @@
+@inject AppService AppService
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+@inject NavigationService NavigationService
+@attribute [Authorize]
+
+<EditForm Model="@registerModel">
+    <DataAnnotationsValidator />
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">CSV Quicken Import</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudFileUpload T="IBrowserFile" FilesChanged="@(async args => registerModel.Photo = await UploadCsvAsync(args))" Accept=".csv">
+                <ActivatorContent>
+                    <MudButton HtmlTag="label" Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                        Upload CSV
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="OnClose">Close</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance? MudDialog { get; set; }
+
+    private RegisterModel registerModel = new();
+
+    private void OnClose()
+    {
+        MudDialog?.Close();
+        NavigationService.NotifyStateChanged();
+
+    }
+
+    private async Task<string?> UploadCsvAsync(IBrowserFile file)
+    {
+        if (file.ContentType != "text/csv")
+        {
+            Snackbar.Add("Only CSV files can be uploaded.", Severity.Error);
+            return null;
+        }
+
+        try
+        {
+            AppService.UploadCsvAsync(file);
+            MudDialog?.Close();
+            NavigationService.NotifyStateChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+
+        return null;
+    }
+}

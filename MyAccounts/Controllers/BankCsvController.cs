@@ -10,10 +10,10 @@ namespace MyAccounts.Controllers;
 [ApiController]
 [Authorize]
 [EnableRateLimiting("Fixed")]
-public class CsvController(CsvService csvService) : ControllerBase
+public class BankCsvController(CsvService csvService) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> PostAsync(IFormFile file)
+    public async Task<IActionResult> PostAsync(IFormFile file, [FromForm] string accountName)
     {
         var extension = file.ContentType switch
         {
@@ -24,7 +24,7 @@ public class CsvController(CsvService csvService) : ControllerBase
         try
         {
             using var stream = file.OpenReadStream();
-            return Ok($"\"{await csvService.SaveToUploadsAsync(extension, stream, "")}\"");
+            return Ok($"\"{await csvService.SaveToUploadsAsync(extension, stream, accountName)}\"");
         }
         catch (ArgumentException ex)
         {

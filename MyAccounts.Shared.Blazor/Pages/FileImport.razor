@@ -1,0 +1,33 @@
+@page "/fileimport"
+@inject IDialogService DialogService
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>File Import</PageTitle>
+
+<div class="mb-3">
+    <MudText Typo="Typo.h3">File Import</MudText>
+</div>
+
+<MudStack AlignItems="AlignItems.Center" Class="mb-3">
+    @* <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" Style="width: 140px;" OnClick="@(e => OnAddBankCsv())">Add Bank CSV</MudButton> *@
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" Style="width: 140px;" OnClick="@(e => OnAddQuickenCsv())">Add Quicken Export CSV</MudButton>
+</MudStack>
+
+@code 
+{
+    string accountName = "";
+
+    private async void OnAddBankCsv()
+    {
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        var result = await DialogService.Show<CsvBankImport>("CSV Import", dialogOptions).Result;
+    }
+
+    private async void OnAddQuickenCsv()
+    {
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        var result = await DialogService.Show<CsvQuickenImport>("CSV Import", dialogOptions).Result;
+    }
+}
