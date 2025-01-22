@@ -5,7 +5,7 @@
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
 @inject NavigationService NavigationService
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Account</PageTitle>
 

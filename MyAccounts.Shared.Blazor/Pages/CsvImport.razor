@@ -2,7 +2,7 @@
 @inject ISnackbar Snackbar
 @inject HttpClient HttpClient
 @inject NavigationService NavigationService
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Administrator")]
 
 <EditForm Model="@registerModel">
     <DataAnnotationsValidator />

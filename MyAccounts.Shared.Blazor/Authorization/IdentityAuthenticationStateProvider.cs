@@ -74,7 +74,7 @@ public class IdentityAuthenticationStateProvider(HttpClient httpClient, IStorage
         accessTokenResponse = await response.Content.ReadFromJsonAsync<AccessTokenResponse>()
             ?? throw new Exception("The login attempt failed.");
 
-        expiresAt = date.AddSeconds(accessTokenResponse.ExpiresIn);
+        expiresAt = date.AddHours(accessTokenResponse.ExpiresIn);
 
         HttpRequestMessage meRequest = new(HttpMethod.Get, "/api/user/@me");
         meRequest.Headers.Authorization = new("Bearer", accessTokenResponse.AccessToken);
@@ -196,7 +196,7 @@ public class IdentityAuthenticationStateProvider(HttpClient httpClient, IStorage
                 throw new Exception("The login attempt failed.");
             }
 
-            expiresAt = date.AddSeconds(accessTokenResponse.ExpiresIn);
+            expiresAt = date.AddHours(accessTokenResponse.ExpiresIn);
         }
 
         return accessTokenResponse.AccessToken;

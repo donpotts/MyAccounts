@@ -17,7 +17,7 @@
     <MudSpacer />
     <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert="true">
         <MudToolBar>
-            <AuthorizeView>
+            <AuthorizeView Roles="Administrator">
                 <MudLink Href="/" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Home</MudLink>
                 <MudLink Href="/accounttype" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Account Type</MudLink>
                 <MudLink Href="/account" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Account</MudLink>
@@ -58,7 +58,7 @@
     <MudLink Href="https://www.donpotts.com/" Color="MudBlazor.Color.Inherit">About</MudLink>
 </MudAppBar>
 <MudDrawer @bind-Open="drawerOpen" ClipMode="DrawerClipMode.Docked" Color="MudBlazor.Color.Inherit">
-    <AuthorizeView>
+    <AuthorizeView Roles="Administrator">
         <hr>
         <hr>
         @* <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.House">Home</MudNavLink> *@

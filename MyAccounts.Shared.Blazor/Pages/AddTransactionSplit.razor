@@ -3,6 +3,7 @@
 @inject IDialogService DialogService
 @inject NavigationService NavigationService
 @inject HttpClient HttpClient
+@attribute [Authorize(Roles = "Administrator")]
 
 <EditForm Model="@record" OnValidSubmit="@OnSubmit">
     <DataAnnotationsValidator />
