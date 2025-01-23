@@ -15,6 +15,7 @@ using MyAccounts.Models;
 using MyAccounts.Services;
 using MyAccounts.Shared.Models;
 using MyAccounts.Swagger;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 
 Environment.CurrentDirectory = AppContext.BaseDirectory;
 
@@ -96,6 +97,12 @@ builder.Services.AddRazorPages();
 builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
+{
+    options.BearerTokenExpiration = TimeSpan.FromDays(7);
+});
+
 
 builder.Services.AddRateLimiter(options =>
 {
