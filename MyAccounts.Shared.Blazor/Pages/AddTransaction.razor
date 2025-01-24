@@ -13,7 +13,7 @@
         <DialogContent>
             <MudDatePicker Label="Date" @bind-Date="dateTime"/>
             <MudTextField @bind-Value="record.Payee" For="@(() => record.Payee)" Label="Payee" />
-            <MudCheckBox @bind-Checked="record.Cleared" For="@(() => record.Cleared)" Label="Cleared" />
+            <MudCheckBox @bind-Value="record.Cleared" Label="Cleared"></MudCheckBox>
             <div style="display: flex; align-items: center;">
                 <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
                 <MudButton OnClick="ToggleSign" class="mt-5">-/+</MudButton>
