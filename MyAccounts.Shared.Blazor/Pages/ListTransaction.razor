@@ -3,6 +3,8 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationService NavigationService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
 @inject ThemeService ThemeService
@@ -133,7 +135,6 @@
         <MudDataGridPager T="Transaction" PageSizeOptions="new int[] { 10, 20, 50, 100, 250, 500, 750, 1000 }" />
     </PagerContent>
 </MudDataGrid>
-
 <script>
     window.downloadFromBase64 = function (base64, filename) {
     var a = document.createElement("a");
@@ -241,7 +242,7 @@
             options.Chart.Background = "var(--mud-palette-background)";
         }
         await ResetChart();
-        
+
         StateHasChanged();
     }
 
@@ -340,15 +341,26 @@
         filter = BuildFilter();
 
         string sorderby = "Date ASC";
-        var myresult = await AppService.ListTransactionODataAsync(null, null, sorderby, filter, true, "Account,Category");
+        try
+        {
+            var myresult = await AppService.ListTransactionODataAsync(null, null, sorderby, filter, true, "Account,Category");
 
-        var transactionIds = myresult?.Value.Select(t => t.Id).ToList();
-        var sfilter2 = $"Transaction/Id in ({string.Join(",", transactionIds)})";
-        var myresult2 = await AppService.ListTransactionSplitODataAsync(null, null, null, sfilter2, true, "Transaction,Category");
+            var transactionIds = myresult?.Value.Select(t => t.Id).ToList();
+            var sfilter2 = $"Transaction/Id in ({string.Join(",", transactionIds)})";
+            var myresult2 = await AppService.ListTransactionSplitODataAsync(null, null, null, sfilter2, true, "Transaction,Category");
 
-        var groupedData = GroupTransactions(myresult?.Value, myresult2?.Value);
+            var groupedData = GroupTransactions(myresult?.Value, myresult2?.Value);
 
-        CalculateDataAndLabels(groupedData);
+            CalculateDataAndLabels(groupedData);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            await ((IdentityAuthenticationStateProvider)AuthenticationStateProvider).LogoutAsync();
+            Navigation.NavigateTo("/login");
+            
+            StateHasChanged();
+        }
     }
 
     private string BuildFilter()
@@ -525,14 +537,14 @@
             }
 
             // Apply date range filter
-            if (dateRange != null)
-            {
-                string dateFilter = $"Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
-                if (!string.IsNullOrEmpty(filter))
-                    filter = $"{filter} and ({dateFilter})";
-                else
-                    filter = dateFilter;
-            }
+            // if (dateRange != null)
+            // {
+            //     string dateFilter = $"Date ge {dateRange.Start:yyyy-MM-dd} and Date le {dateRange.End:yyyy-MM-dd}";
+            //     if (!string.IsNullOrEmpty(filter))
+            //         filter = $"{filter} and ({dateFilter})";
+            //     else
+            //         filter = dateFilter;
+            // }
 
             // if (!string.IsNullOrEmpty(CategoryName))
             // {
@@ -557,7 +569,6 @@
 
         return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<Transaction>() };
     }
-
 
     private async void OnAdd()
     {

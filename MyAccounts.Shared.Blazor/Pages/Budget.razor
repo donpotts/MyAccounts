@@ -1,0 +1,379 @@
+@page "/budget"
+@using BlazorDatasheet.DataStructures.Geometry
+@using BlazorDatasheet.Core.Data
+@using BlazorDatasheet.Core.Formats
+@using BlazorDatasheet.Core.Formats.DefaultConditionalFormats
+@using BlazorDatasheet.Core.Validation
+@using System.Drawing
+@using BlazorDatasheet.Core.Commands.Data
+@using BlazorDatasheet.Core.Commands.Formatting
+@using ClosedXML.Excel
+@using System.IO
+@using System.Timers
+@inject IJSRuntime JSRuntime
+
+<MudPaper Height="500px" Class="overflow-scroll">
+    <Datasheet @ref="_datasheet"
+    ShowFormulaDependents="ShowFormulaDependents"
+    FrozenLeftCount="6"
+    FrozenTopCount="1"
+    FrozenRightCount="1"
+    FrozenBottomCount="1"
+    Theme="@Theme"
+    ShowColHeadings="ShowColHeadings"
+    ShowRowHeadings="ShowRowHeadings"
+    StickyHeaders="StickyHeadings"
+    Sheet="Sheet" />
+</MudPaper>
+
+<MudFileUpload T="IBrowserFile" Accept=".xlsx" FilesChanged="UploadExcelFile">
+    <ActivatorContent>
+        <MudButton Variant="Variant.Filled"
+        Color="MudBlazor.Color.Primary">
+            Excel Budget
+        </MudButton>
+    </ActivatorContent>
+    <SelectedTemplate>
+        @if (context != null)
+        {
+            <MudText>@context.Name</MudText>
+        }
+        else
+        {
+            <MudText>No File</MudText>
+        }
+    </SelectedTemplate>
+</MudFileUpload>
+
+<h3>Processing Data...</h3>
+<p>Progress: @progress%</p>
+
+<MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Class="my-2">
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="InsertRowAfterSelection">Insert row</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="InsertColAfterSelection">Insert col</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="RemoveCol">RemoveCol</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="RemoveRow">RemoveRow</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="() => Sheet.Commands.Undo()">Undo</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="() => Sheet.Commands.Redo()">Redo</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.Selection.Value = "Bob")">Set to Bob</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.SetFormat(Sheet.Selection.Regions, new CellFormat() { BackgroundColor = "red" }))">
+        Set bg to red
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.SetFormat(Sheet.Selection.Regions, new CellFormat() { BackgroundColor = "blue" }))">
+        Set bg to blue
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.SetFormat(Sheet.Selection.Regions, new CellFormat() { ForegroundColor = "green" }))">
+        Set
+        font colour to green
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => SetBorder(Sheet.Selection.Regions, 2, "black"))">Thick border</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => SetBorder(Sheet.Selection.Regions, 1, "black"))">Thin border</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.Cells.Merge(Sheet.Selection.Regions))">Merge cells</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@SortSelectionDesc">Sort Desc</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@SortSelectionAsc">Sort ASc</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.SetFormat(Sheet.Selection.Regions, new CellFormat() { NumberFormat = "C2" }))">
+        Currency
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => _datasheet.SetActiveAsync(true))">Set sheet active</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="ClearBg">Clear BG</MudButton>
+</MudStack>
+
+<MudStack Spacing="0">
+    <MudCheckBox @bind-Value="StickyHeadings" Label="Sticky headings"></MudCheckBox>
+    <MudCheckBox @bind-Value="ShowRowHeadings" Label="Show row headings"></MudCheckBox>
+    <MudCheckBox @bind-Value="ShowColHeadings" Label="Show col headings"></MudCheckBox>
+    <MudCheckBox @bind-Value="IsDarkMode" Label="Darkmode"></MudCheckBox>
+    <MudCheckBox @bind-Value="ShowFormulaDependents" Label="Show formula dependents"></MudCheckBox>
+</MudStack>
+
+@code {
+    private Sheet Sheet;
+    private string Theme => IsDarkMode ? "dark" : "default";
+    private bool _isDarkMode;
+    private string FilterValue { get; set; }
+
+    private bool StickyHeadings { get; set; } = true;
+    private bool ShowRowHeadings { get; set; } = true;
+    private bool ShowColHeadings { get; set; } = true;
+    private bool IsDarkMode { get; set; }
+    private Datasheet _datasheet = default!;
+    private bool ShowFormulaDependents { get; set; }
+
+    private int progress = 0;
+    private Timer timer;
+    private int totalRows;
+    private int crow;
+
+    IList<IBrowserFile> files = new List<IBrowserFile>();
+
+
+    protected override void OnInitialized()
+    {
+        Sheet = new Sheet(55, 55);
+        Sheet.ScreenUpdating = false;
+        Sheet.BatchUpdates();
+        Sheet.Commands.PauseHistory();
+        Sheet.EndBatchUpdates();
+        Sheet.Commands.ResumeHistory();
+        Sheet.ScreenUpdating = true;
+    }
+
+
+
+    private async void UploadExcelFile(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        using var stream = new MemoryStream();
+        await file.OpenReadStream().CopyToAsync(stream);
+        stream.Position = 0;
+
+        using var workbook = new XLWorkbook(stream);
+        var worksheet = workbook.Worksheet(1);
+
+        var lastRow = worksheet.LastRowUsed().RowNumber();
+        var lastCol = worksheet.LastColumnUsed().ColumnNumber();
+
+        for (int row = 1; row <= lastRow; row++)
+        {
+            for (int col = 1; col <= lastCol; col++)
+            {
+                var cell = worksheet.Cell(row, col);
+                Console.WriteLine($"Cell[{row},{col}] - Value: {cell.Value}");
+            }
+        }
+
+        Sheet.ScreenUpdating = false;
+        Sheet.BatchUpdates();
+        Sheet.Commands.PauseHistory();
+
+
+        for (int row = 1; row <= lastRow; row++)
+        {
+            for (int col = 1; col <= lastCol; col++)
+            {
+                var cell = worksheet.Cell(row, col);
+
+                // // Set formulas
+                if (cell.HasFormula)
+                {
+                    Sheet.Cells[row - 1, col - 1].Formula = "=" + cell.FormulaA1;
+                    Console.WriteLine(cell.FormulaA1);
+                    Console.WriteLine(cell.FormulaR1C1);
+                    Console.WriteLine(cell.FormulaReference);
+                }
+
+                Sheet.Cells[row - 1, col - 1].Value = cell.Value;
+
+                // // Set custom cell sizes
+                Sheet.Columns.SetSize(col - 1, (int)100);
+                Sheet.Rows.SetSize(row - 1, (int)25);
+
+                var bgColor = cell.Style.Fill.BackgroundColor;
+                var fgColor = cell.Style.Font.FontColor;
+
+                if (bgColor.ColorType == XLColorType.Theme)
+                {
+                    bgColor = workbook.Theme.ResolveThemeColor(bgColor.ThemeColor);
+                }
+
+                if (fgColor.ColorType == XLColorType.Theme)
+                {
+                    fgColor = workbook.Theme.ResolveThemeColor(fgColor.ThemeColor);
+                }
+
+                Sheet.Cells[row - 1, col - 1].Format = new CellFormat
+                    {
+                        //BackgroundColor = bgColor.Color.ToString(),
+                        ForegroundColor = ColorTranslator.ToHtml(fgColor.Color),
+                        BackgroundColor = ColorTranslator.ToHtml(bgColor.Color),
+                        
+
+                    };
+
+                // // Set formulas
+                if (cell.HasFormula)
+                {
+                    Sheet.Cells[row - 1, col - 1].Formula = "="+cell.FormulaA1;
+                    Console.WriteLine(cell.FormulaA1);
+                    Console.WriteLine(cell.FormulaR1C1);
+                    Console.WriteLine(cell.FormulaReference);
+                }
+                // Allow UI to update
+                // if (col % 10 == 0) // Adjust the condition as needed
+                // {
+                //     await InvokeAsync(StateHasChanged);
+                //     await Task.Yield();
+                // }
+            }
+        }
+
+       
+       
+        // timer = new Timer(10000); // 1 second interval
+        // timer.Elapsed += UpdateProgress;
+        // timer.Start();
+        // // Step 1: Read Excel data into memory
+        // var excelData = new List<List<CellData>>();
+        // totalRows = excelData.Count;
+        // for (int row = 1; row <= lastRow; row++)
+        // {
+        //     var rowData = new List<CellData>();
+        //     for (int col = 1; col <= lastCol; col++)
+        //     {
+        //         var cell = worksheet.Cell(row, col);
+        //         var cellData = new CellData
+        //             {
+        //                 Value = cell.Value,
+        //                 Width = (int)100,
+        //                 Height = (int)30,
+        //                 //BackgroundColor = cell.Style.Fill.BackgroundColor.Color.ToString(),
+        //                 ForegroundColor = cell.Style.Font.FontColor.Color.ToString()
+        //             };
+        //         rowData.Add(cellData);
+        //     }
+        //     excelData.Add(rowData);
+        //     crow = row;
+        // }
+
+        
+        
+        // // Step 2: Loop through in-memory data and update sheet values
+        // for (int row = 0; row < excelData.Count; row++)
+        // {
+        //     for (int col = 0; col < excelData[row].Count; col++)
+        //     {
+        //         var cellData = excelData[row][col];
+        //         Sheet.Cells[row, col].Value = cellData.Value;
+        //         Sheet.Columns.SetSize(col, cellData.Width);
+        //         Sheet.Rows.SetSize(row, cellData.Height);
+        //         Sheet.Cells[row, col].Format = new CellFormat
+        //             {
+        //                 //BackgroundColor = cellData.BackgroundColor,
+        //                 ForegroundColor = cellData.ForegroundColor
+        //             };
+
+        //         crow = row;
+        //     }
+            
+            
+        // }
+        // timer.Stop();
+
+        //Sheet.Cells[6, 5].Formula = "=SUM(F2:F5)";
+
+        Sheet.EndBatchUpdates();
+        Sheet.Commands.ResumeHistory();
+        Sheet.ScreenUpdating = true;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void UpdateProgress(object sender, ElapsedEventArgs e)
+    {
+        progress = (int)((double)crow / totalRows * 100);
+        Console.WriteLine(progress);
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    public class CellData
+    {
+        public object Value { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public string BackgroundColor { get; set; }
+        public string ForegroundColor { get; set; }
+    }
+
+    private void SortSelectionDesc()
+    {
+        if (Sheet.Selection.ActiveRegion == null)
+            return;
+        Sheet.Commands.ExecuteCommand(
+            new SortRangeCommand(Sheet.Selection.ActiveRegion, new ColumnSortOptions(0, false))
+        );
+    }
+
+    private void SortSelectionAsc()
+    {
+        if (Sheet.Selection.ActiveRegion == null)
+            return;
+        Sheet.Commands.ExecuteCommand(
+            new SortRangeCommand(Sheet.Selection.ActiveRegion, new ColumnSortOptions(0, true))
+        );
+    }
+
+    private void InsertRowAfterSelection()
+    {
+        if (Sheet.Selection.ActiveRegion == null)
+        {
+            return;
+        }
+
+        Sheet.Rows.InsertAt(Sheet.Selection.ActiveRegion.TopLeft.row);
+    }
+
+    private void InsertColAfterSelection()
+    {
+        if (Sheet.Selection.ActiveRegion == null)
+        {
+            return;
+        }
+
+        Sheet.Columns.InsertAt(Sheet.Selection.ActiveRegion.TopLeft.col);
+    }
+
+    private void RemoveCol()
+    {
+        if (Sheet.Selection.ActiveRegion == null)
+        {
+            return;
+        }
+
+        Sheet.Columns.RemoveAt(Sheet.Selection.ActiveRegion.Left);
+    }
+
+    private void RemoveRow()
+    {
+        if (Sheet.Selection.ActiveRegion == null)
+        {
+            return;
+        }
+
+        Sheet.Rows.RemoveAt(Sheet.Selection.ActiveRegion.Top);
+    }
+
+    private void SetBorder(IReadOnlyList<IRegion> selectionRegions, int width, string color)
+    {
+        var format = new CellFormat()
+            {
+                BorderBottom = new Border()
+                {
+                    Width = width,
+                    Color = color
+                },
+                BorderLeft = new Border()
+                {
+                    Width = width,
+                    Color = color
+                },
+                BorderRight = new Border()
+                {
+                    Width = width,
+                    Color = color
+                },
+                BorderTop = new Border()
+                {
+                    Width = width,
+                    Color = color
+                }
+            };
+        Sheet.SetFormat(selectionRegions, format);
+    }
+
+    private void ClearBg()
+        {
+            Sheet.SetFormat(Sheet.Selection.Regions, new CellFormat() { BackgroundColor = null });
+        }
+    }

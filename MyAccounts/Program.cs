@@ -43,6 +43,12 @@ modelBuilder.EntitySet<Transaction>("Transaction");
 modelBuilder.EntitySet<TransactionSplit>("TransactionSplit");
 modelBuilder.EntitySet<ApplicationUserDto>("User");
 
+modelBuilder.EntitySet<BudgetAccount>("BudgetAccount");
+modelBuilder.EntitySet<BudgetTransaction>("BudgetTransaction");
+modelBuilder.EntitySet<BudgetMonthlyBalance>("BudgetMonthlyBalance");
+modelBuilder.EntitySet<BudgetIncome>("BudgetIncome");
+modelBuilder.EntitySet<BudgetMiscellanousExpense>("BudgetMiscellanousExpense");
+
 builder.Services.AddControllers()
     .AddOData(options => options.EnableQueryFeatures().AddRouteComponents("odata", modelBuilder.GetEdmModel()))
     .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);

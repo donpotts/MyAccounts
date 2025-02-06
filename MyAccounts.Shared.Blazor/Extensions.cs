@@ -4,6 +4,7 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
+using BlazorDatasheet.Extensions;
 
 namespace MyAccounts.Shared.Blazor;
 
@@ -21,6 +22,7 @@ public static class Extensions
         services.AddScoped<NavigationService, NavigationService>();
         services.AddScoped<ThemeService>();
         services.AddMudServices();
+        services.AddBlazorDatasheet();
     }
 
     public static void AddBrowserStorageService(this IServiceCollection services)
