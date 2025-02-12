@@ -4,6 +4,7 @@
 @using Size = MudBlazor.Size
 @inject ISnackbar Snackbar
 @inject AppService AppService
+@inject IDialogService DialogService
 @attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Statement Import</PageTitle>
@@ -117,11 +118,49 @@
     private HashSet<Transaction> _selectedTransactions = [];
     private MudDataGrid<Transaction>? _transactionsDataGrid;
     private decimal? _unclearedSum = 0;
+    private bool _isCancelled = false;
 
     protected override async Task OnInitializedAsync()
     {
         base.OnInitialized();
         _accounts = await AppService.ListAccountAsync();
+    }
+
+    private async Task ShowTransactionDialog(BankRecord bankRecord)
+    {
+        _isCancelled = false;
+        var parameters = new DialogParameters
+    {
+        { "Message", $"<strong>Add transaction?</strong><br>{bankRecord.Amount} on {bankRecord.Date}" },
+        { "Details", $"<strong>Amount:</strong> {bankRecord.Amount}<br><strong>Date:</strong> {bankRecord.Date}<br><strong>Description:</strong><br>{bankRecord.Description}" },
+        { "AddTransaction", new Func<Task>(async () => await AddTransaction(bankRecord)) },
+        { "Cancel", new Action(Cancel) }
+    };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false };
+        var dialog = DialogService.Show<AddBankTransaction>("Missing Transaction", parameters, options);
+        await dialog.Result;
+    }
+
+    private async Task AddTransaction(BankRecord bankRecord)
+    {
+        var newTransaction = new Transaction
+            {
+                Date = bankRecord.Date,
+                Amount = bankRecord.Amount,
+                Description = "From Bank CSV Import!",
+                AccountId = _selectedAccount.Value,
+                Cleared = false,
+                Payee = bankRecord.Description,
+                CategoryId = 1,
+            };
+
+        await AppService.InsertTransactionAsync(newTransaction);
+    }
+
+    private void Cancel()
+    {
+        _isCancelled = true;
     }
 
     private void ClearState()
@@ -213,7 +252,33 @@
 
         _unclearedSum = result?.Value?.Where(transaction => !transaction.Cleared).Sum(transaction => transaction.Amount) ?? 0;
 
+        var newTransactions = result?.Value ?? Enumerable.Empty<Transaction>();
+
+        await CheckTransactionsAsync(newTransactions);
+
         return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<Transaction>() };
+    }
+
+    private async Task CheckTransactionsAsync(IEnumerable<Transaction> transactions)
+    {
+        foreach (var bankRecord in _bankRecords)
+        {
+            if (_isCancelled)
+            {
+                break;
+            }
+
+            var matchingTransaction = transactions?
+                .FirstOrDefault(transaction => transaction.Date != null
+                    && bankRecord.Date != null
+                    && bankRecord.Date.Month == transaction.Date.Value.Month
+                    && transaction.Amount == bankRecord.Amount);
+
+            if (matchingTransaction == null)
+            {
+                await ShowTransactionDialog(bankRecord);
+            }
+        }
     }
 
     private void ClearedTransactionsChanged(bool cleared, Transaction transaction)
