@@ -89,7 +89,7 @@
                             colorClass = "text-red";
                         }
                         <div style="display: flex; align-items: center;">
-                            <MudNavLink Href=@($"/transaction/{accountitem.Name}") Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountBalance">@accountitem.Name</MudNavLink>
+                            <MudNavLink Href=@($"/transaction/{accountitem.Name}") Match="NavLinkMatch.Prefix" Icon="@GetIcon(item.Name)">@accountitem.Name</MudNavLink>
                             <MudText Class="@colorClass" Match="NavLinkMatch.Prefix">@accountitem.Balance</MudText>
                             <MudText Match="NavLinkMatch.Prefix">&nbsp;</MudText>
                         </div>
@@ -121,6 +121,26 @@
         IsDarkMode = false,
         PrimaryColor = "#594AE2",
     };
+
+    private string GetIcon(string itemName)
+    {
+        if (itemName.StartsWith("Checking"))
+        {
+            return Icons.Material.Filled.AccountBalance;
+        }
+        else if (itemName.StartsWith("Savings"))
+        {
+            return Icons.Material.Filled.Savings;
+        }
+        else if (itemName.StartsWith("Credit"))
+        {
+            return Icons.Material.Filled.CreditCard;
+        }
+        else
+        {
+            return Icons.Material.Filled.ManageAccounts;
+        }
+    }
 
     private async Task UpdateThemeManagerLocalStorage()
     {
