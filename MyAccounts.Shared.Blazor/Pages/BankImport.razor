@@ -1,0 +1,268 @@
+﻿@page "/bankimport"
+@using CsvHelper.Configuration
+@using Color = MudBlazor.Color
+@using Size = MudBlazor.Size
+@inject ISnackbar Snackbar
+@inject AppService AppService
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Statement Import</PageTitle>
+
+<div class="mb-3">
+    <MudText Typo="Typo.h3">Statement Import</MudText>
+    <MudText Typo="Typo.body1">Import bank transactions from a CSV bank statement file and match them with existing transactions.</MudText>
+</div>
+
+<div>
+    <MudFileUpload T="IBrowserFile" Accept=".csv" FilesChanged="ProcessFileAsync" Disabled="_isProcessing || _isSaving">
+        <ActivatorContent>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary">
+                @if (_isProcessing)
+                {
+                    <MudProgressCircular class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2" Typo="Typo.button">Processing</MudText>
+                }
+                else
+                {
+                    <MudIcon Class="ms-n1" Size="Size.Small" Icon="@Icons.Material.Filled.UploadFile" />
+                    <MudText Class="ms-2" Typo="Typo.button">Import Bank CSV</MudText>
+                }
+            </MudButton>
+        </ActivatorContent>
+    </MudFileUpload>
+</div>
+
+@if (_bankRecords.Count > 0)
+{
+    <div class="mt-10">
+        <MudText Typo="Typo.h4" Class="mb-2">Bank Records</MudText>
+        <MudDataGrid Items="_bankRecords" Hover="true" SortMode="SortMode.None">
+            <Columns>
+                <PropertyColumn Property="x => x.Date" />
+                <PropertyColumn Property="x => x.Time" />
+                <PropertyColumn Property="x => x.Amount" Format="C" />
+                <PropertyColumn Property="x => x.Type" />
+                <PropertyColumn Property="x => x.Description" />
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager />
+            </PagerContent>
+        </MudDataGrid>
+    </div>
+
+    <div class="mt-10">
+        <MudText Typo="Typo.h4" Class="mb-2">Transactions</MudText>
+        <MudSelect T="long?" Label="Account" Value="_selectedAccount" ValueChanged="@(async value => await AccountChangedAsync(value))" Class="mb-2" Disabled="_isSaving">
+            @foreach (var account in _accounts ?? Enumerable.Empty<Account>())
+            {
+                <MudSelectItem Value="account.Id">@account.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudDataGrid T="Transaction" @ref="_transactionsDataGrid" ServerData="LoadServerDataAsync" Hover SortMode="SortMode.None" EditMode="DataGridEditMode.Cell" ReadOnly="false">
+            <Columns>
+                <PropertyColumn Property="x => x.Cleared">
+                    <EditTemplate>
+                        <MudCheckBox T="bool" Value="context.Item.Cleared" ValueChanged="@(value => ClearedTransactionsChanged(value, context.Item))" Disabled="_isSaving" />
+                    </EditTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.Id" Editable="false" />
+                <PropertyColumn Property="x => x.Date" Editable="false" />
+                <PropertyColumn Property="x => x.Amount" Format="C" Editable="false" />
+                <PropertyColumn Property="x => x.Payee" Editable="false" />
+                <PropertyColumn Property="x => x.Description" Editable="false" />
+                <PropertyColumn Property="x => x.Category!.Name" Title="Category" Editable="false" />
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager />
+            </PagerContent>
+        </MudDataGrid>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-2" OnClick="SaveChangesAsync" Disabled="_isSaving">
+            @if (_isSaving)
+            {
+                <MudProgressCircular class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2" Typo="Typo.button">Saving Changes</MudText>
+            }
+            else
+            {
+                <MudIcon Class="ms-n1" Size="Size.Small" Icon="@Icons.Material.Filled.Save" />
+                <MudText Class="ms-2" Typo="Typo.button">Save Changes</MudText>
+            }
+        </MudButton>
+       
+        <MudText Typo="Typo.h6">Total Uncleared Amount: @string.Format("{0:C}", _unclearedSum)</MudText>
+        
+    </div>
+}
+
+@code {
+    private class BankRecord
+    {
+        public DateOnly Date { get; set; }
+
+        public TimeOnly Time { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public string? Type { get; set; }
+
+        public string? Description { get; set; }
+    }
+
+    private Account[]? _accounts;
+    private bool _isProcessing = false;
+    private bool _isSaving = false;
+    private List<BankRecord> _bankRecords = [];
+    private long? _selectedAccount;
+    private HashSet<Transaction> _selectedTransactions = [];
+    private MudDataGrid<Transaction>? _transactionsDataGrid;
+    private decimal? _unclearedSum = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        _accounts = await AppService.ListAccountAsync();
+    }
+
+    private void ClearState()
+    {
+        _bankRecords.Clear();
+        _selectedAccount = null;
+        _selectedTransactions.Clear();
+        StateHasChanged();
+    }
+
+    private async Task ProcessFileAsync(IBrowserFile? file)
+    {
+        if (file == null)
+        {
+            return;
+        }
+
+        _isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            if (file.ContentType != "text/csv")
+            {
+                Snackbar.Add("The imported file is not a CSV.", Severity.Error);
+                return;
+            }
+
+            ClearState();
+
+            using (var fs = file.OpenReadStream())
+            using (StreamReader reader = new(fs))
+            using (CsvReader csv = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { TrimOptions = TrimOptions.Trim }))
+            {
+                await foreach (var record in csv.GetRecordsAsync<BankRecord>())
+                {
+                    _bankRecords.Add(record);
+                }
+            }
+
+            if (_bankRecords.Count == 0)
+            {
+                Snackbar.Add("The imported file contains no records.", Severity.Warning);
+                return;
+            }
+
+            _bankRecords = _bankRecords.OrderByDescending(r => r.Date).ThenByDescending(r => r.Time).ToList();
+        }
+        catch(CsvHelperException)
+        {
+            _bankRecords.Clear();
+            Snackbar.Add("There was an error while processing the file.", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AccountChangedAsync(long? id)
+    {
+        _selectedAccount = id;
+        _selectedTransactions.Clear();
+
+        if (_transactionsDataGrid != null)
+        {
+            await _transactionsDataGrid.ReloadServerData();
+        }
+        StateHasChanged();
+    }
+
+    private async Task<GridData<Transaction>> LoadServerDataAsync(GridState<Transaction> state)
+    {
+        _selectedTransactions.Clear();
+
+        if (!_selectedAccount.HasValue)
+        {
+            return new() { TotalItems = 0, Items = Enumerable.Empty<Transaction>() };
+        }
+
+        var top = state.PageSize;
+        var skip = state.Page * state.PageSize;
+        var orderby = "Date DESC, Id DESC";
+        var specificDate = _bankRecords.OrderByDescending(record => record.Date).Select(record => record.Date).FirstOrDefault().AddDays(1);
+        var filter = $"Cleared eq false and AccountId eq {_selectedAccount} and Date lt {specificDate:yyyy-MM-dd}";
+        
+        var result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, false, "Category");
+
+        _unclearedSum = result?.Value?.Where(transaction => !transaction.Cleared).Sum(transaction => transaction.Amount) ?? 0;
+
+        return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<Transaction>() };
+    }
+
+    private void ClearedTransactionsChanged(bool cleared, Transaction transaction)
+    {
+        transaction.Cleared = cleared;
+
+        if (cleared)
+        {
+            _selectedTransactions.Add(transaction);
+        }
+        else
+        {
+            _selectedTransactions.Remove(transaction);
+        }
+    }
+
+    private async Task SaveChangesAsync()
+    {
+        _isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            if (_selectedTransactions.Count == 0)
+            {
+                Snackbar.Add("There are no changes to save.", Severity.Info);
+                return;
+            }
+
+            foreach (var transaction in _selectedTransactions)
+            {
+                await AppService.UpdateTransactionAsync(transaction.Id!.Value, transaction);
+            }
+
+            Snackbar.Add("The changes have been saved.", Severity.Success);
+
+            if (_transactionsDataGrid != null)
+            {
+                await _transactionsDataGrid.ReloadServerData();
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("There was an error while saving changes.", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+}
