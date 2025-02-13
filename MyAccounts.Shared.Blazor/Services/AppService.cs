@@ -82,25 +82,26 @@ public class AppService(
         {
             queryString.Add("$expand", expand);
         }
-        //var uri = $"/odata/{entity}";
+        
         var uri = $"/odata/{entity}?{queryString}";
-        //var uri = $"/api/BudgetAccount?{queryString}";
-
+        
         HttpRequestMessage request = new(HttpMethod.Get, uri);
         request.Headers.Authorization = new("Bearer", token);
 
         var response = await httpClient.SendAsync(request);
 
-        //var json = await response.Content.ReadAsStringAsync();
-        //Console.WriteLine("Response Content="+ json);
-        //await HandleResponseErrorsAsync(response);
-        //try
-        //{
-        //    var myresult = await response.Content.ReadFromJsonAsync<string>();
-        //}
-        //catch {
-        //    Console.WriteLine("ERROR!");
-        //}
+        
+        await HandleResponseErrorsAsync(response);
+        try
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("Response Content=" + json);
+        }
+        catch(Exception ex) {
+            Console.WriteLine("ERROR! Inner:", ex.InnerException);
+            Console.WriteLine("ERROR! Msg:", ex.Message);
+            Console.WriteLine("ERROR! Stack:", ex.StackTrace);
+        }
 
         return await response.Content.ReadFromJsonAsync<ODataResult<T>>();
     }
