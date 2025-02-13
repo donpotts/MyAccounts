@@ -257,7 +257,7 @@
         var top = state.PageSize;
         var skip = state.Page * state.PageSize;
         var orderby = "Date DESC, Id DESC";
-        var specificDate = _bankRecords.OrderByDescending(record => record.Date).Select(record => record.Date).FirstOrDefault().AddDays(1);
+        var specificDate = _bankRecords.OrderByDescending(record => record.Date).Select(record => record.Date).FirstOrDefault().AddDays(5);
         var filter = $"Cleared eq false and AccountId eq {_selectedAccount} and Date lt {specificDate:yyyy-MM-dd}";
 
         var result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, false, "Category");
