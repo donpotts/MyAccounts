@@ -71,7 +71,7 @@
 
         try
         {
-            result = await AppService.ListBudgetAccountODataAsync(100, skip, orderby, filter, true, "");
+            result = await AppService.ListBudgetAccountODataAsync(100, 0, "", "", true, "");
         }
         catch (Exception ex)
         {
