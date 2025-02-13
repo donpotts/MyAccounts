@@ -69,6 +69,79 @@ namespace MyAccounts.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "BudgetAccount",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    AccountName = table.Column<string>(type: "TEXT", nullable: true),
+                    Apr = table.Column<decimal>(type: "TEXT", nullable: true),
+                    StartDate = table.Column<string>(type: "TEXT", nullable: true),
+                    DueDate = table.Column<string>(type: "TEXT", nullable: true),
+                    CreditLimit = table.Column<string>(type: "TEXT", nullable: true),
+                    MinPayment = table.Column<double>(type: "REAL", precision: 19, scale: 4, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BudgetAccount", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BudgetExpense",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Category = table.Column<string>(type: "TEXT", nullable: false),
+                    APR = table.Column<decimal>(type: "TEXT", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CreditLimit = table.Column<decimal>(type: "TEXT", nullable: false),
+                    MinPay = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Interest = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Balance = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Pay = table.Column<decimal>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BudgetExpense", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BudgetIncome",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Source = table.Column<string>(type: "TEXT", nullable: false),
+                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    DateReceived = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BudgetIncome", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BudgetMonth",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<int>(type: "INTEGER", nullable: false),
+                    TotalIncome = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalExpenses = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalRemaining = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Interest = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Payment = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Balance = table.Column<decimal>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BudgetMonth", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Category",
                 columns: table => new
                 {
@@ -238,7 +311,7 @@ namespace MyAccounts.Migrations
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Date = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Date = table.Column<DateOnly>(type: "TEXT", nullable: true),
                     Payee = table.Column<string>(type: "TEXT", nullable: true),
                     AccountId = table.Column<long>(type: "INTEGER", nullable: true),
                     CategoryId = table.Column<long>(type: "INTEGER", nullable: true),
@@ -294,6 +367,12 @@ namespace MyAccounts.Migrations
                 column: "AccountTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Account_Name",
+                table: "Account",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AccountCategory_CategoryId",
                 table: "AccountCategory",
                 column: "CategoryId");
@@ -333,6 +412,12 @@ namespace MyAccounts.Migrations
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Category_Name",
+                table: "Category",
+                column: "Name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -376,6 +461,18 @@ namespace MyAccounts.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "BudgetAccount");
+
+            migrationBuilder.DropTable(
+                name: "BudgetExpense");
+
+            migrationBuilder.DropTable(
+                name: "BudgetIncome");
+
+            migrationBuilder.DropTable(
+                name: "BudgetMonth");
 
             migrationBuilder.DropTable(
                 name: "TransactionSplit");

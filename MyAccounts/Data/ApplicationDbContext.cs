@@ -15,10 +15,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<TransactionSplit> TransactionSplit => Set<TransactionSplit>();
 
     public DbSet<BudgetAccount> BudgetAccount => Set<BudgetAccount>();
-    public DbSet<BudgetTransaction> BudgetTransaction => Set<BudgetTransaction>();
-    public DbSet<BudgetMonthlyBalance> BudgetMonthlyBalance => Set<BudgetMonthlyBalance>();
-    public DbSet<BudgetIncome> TransacBudgetIncometion => Set<BudgetIncome>();
-    public DbSet<BudgetMiscellanousExpense> BudgetMiscellanousExpense => Set<BudgetMiscellanousExpense>();
+    public DbSet<BudgetExpense> BudgetExpense => Set<BudgetExpense>();
+    public DbSet<BudgetIncome> BudgetIncome => Set<BudgetIncome>();
+    public DbSet<BudgetMonth> BudgetMonth => Set<BudgetMonth>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

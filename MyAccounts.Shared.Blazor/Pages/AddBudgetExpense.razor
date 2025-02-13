@@ -6,15 +6,18 @@
     <DataAnnotationsValidator />
     <MudDialog>
         <TitleContent>
-            <MudText Typo="Typo.h6">Add Budget Account</MudText>
+            <MudText Typo="Typo.h6">Add Budget Expense</MudText>
         </TitleContent>
         <DialogContent>
-            <MudTextField @bind-Value="record.AccountName" For="@(() => record.AccountName)" Label="Account Name" />
-            <MudNumericField @bind-Value="record.Apr" For="@(() => record.Apr)" Label="APR" />
+            <MudTextField @bind-Value="record.Category" For="@(() => record.Category)" Label="Category" />
+            <MudNumericField @bind-Value="record.APR" For="@(() => record.APR)" Label="APR" />
             <MudTextField @bind-Value="record.StartDate" For="@(() => record.StartDate)" Label="Start Date" />
             <MudTextField @bind-Value="record.DueDate" For="@(() => record.DueDate)" Label="Due Date" />
             <MudTextField @bind-Value="record.CreditLimit" For="@(() => record.CreditLimit)" Label="Credit Limit" />
-            <MudNumericField @bind-Value="record.MinPayment" For="@(() => record.MinPayment)" Label="Min Payment" />
+            <MudNumericField @bind-Value="record.MinPay" For="@(() => record.MinPay)" Label="Min Payment" />
+            <MudNumericField @bind-Value="record.Interest" For="@(() => record.Interest)" Label="Interest" />
+            <MudNumericField @bind-Value="record.Balance" For="@(() => record.Balance)" Label="Balance" />
+            <MudNumericField @bind-Value="record.Pay" For="@(() => record.Pay)" Label="Payment" />
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
@@ -27,7 +30,7 @@
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
-    private BudgetAccount record = new();
+    private BudgetExpense record = new();
 
     private string GetAbsoluteUri(string uri)
     {
@@ -70,7 +73,7 @@
     {
         try
         {
-            await AppService.InsertBudgetAccountAsync(record);
+            await AppService.InsertBudgetExpenseAsync(record);
             MudDialog?.Close();
         }
         catch (Exception ex)

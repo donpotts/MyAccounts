@@ -473,6 +473,174 @@ public class AppService(
         await HandleResponseErrorsAsync(response);
     }
 
+    public async Task<BudgetExpense[]?> ListBudgetExpenseAsync()
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, "/api/budgetexpense");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetExpense[]>();
+    }
+
+    public Task<ODataResult<BudgetExpense>?> ListBudgetExpenseODataAsync(
+        int? top = null,
+        int? skip = null,
+        string? orderby = null,
+        string? filter = null,
+        bool count = false,
+        string? expand = null)
+    {
+        return GetODataAsync<BudgetExpense>("BudgetExpense", top, skip, orderby, filter, count, expand);
+    }
+
+    public async Task<BudgetExpense?> GetBudgetExpenseByIdAsync(long key)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"/api/budgetexpense/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetExpense>();
+    }
+
+    public async Task UpdateBudgetExpenseAsync(long key, BudgetExpense data)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Put, $"/api/budgetexpense/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(data);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+    }
+
+    public async Task<BudgetExpense?> InsertBudgetExpenseAsync(BudgetExpense data)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Post, "/api/budgetexpense");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(data);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetExpense>();
+    }
+
+    public async Task DeleteBudgetExpenseAsync(long key)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Delete, $"/api/budgetexpense/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+    }
+
+    public async Task<BudgetMonth[]?> ListBudgetMonthAsync()
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, "/api/budgetmonth");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetMonth[]>();
+    }
+
+    public Task<ODataResult<BudgetMonth>?> ListBudgetMonthODataAsync(
+        int? top = null,
+        int? skip = null,
+        string? orderby = null,
+        string? filter = null,
+        bool count = false,
+        string? expand = null)
+    {
+        return GetODataAsync<BudgetMonth>("BudgetMonth", top, skip, orderby, filter, count, expand);
+    }
+
+    public async Task<BudgetMonth?> GetBudgetMonthByIdAsync(long key)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"/api/budgetmonth/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetMonth>();
+    }
+
+    public async Task UpdateBudgetMonthAsync(long key, BudgetMonth data)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Put, $"/api/budgetmonth/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(data);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+    }
+
+    public async Task<BudgetMonth?> InsertBudgetMonthAsync(BudgetMonth data)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Post, "/api/budgetmonth");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(data);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetMonth>();
+    }
+
+    public async Task DeleteBudgetMonthAsync(long key)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Delete, $"/api/budgetmonth/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+    }
+
     public async Task<Category[]?> ListCategoryAsync()
     {
         var token = await authenticationStateProvider.GetBearerTokenAsync()

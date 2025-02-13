@@ -239,111 +239,6 @@ namespace MyAccounts.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("MyAccounts.Models.BudgetIncome", b =>
-                {
-                    b.Property<int>("IncomeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("IncomeDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("IncomeId");
-
-                    b.ToTable("TransacBudgetIncometion");
-                });
-
-            modelBuilder.Entity("MyAccounts.Models.BudgetMiscellanousExpense", b =>
-                {
-                    b.Property<int>("ExpenseId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ExpenseDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ExpenseType")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("ExpenseId");
-
-                    b.ToTable("BudgetMiscellanousExpense");
-                });
-
-            modelBuilder.Entity("MyAccounts.Models.BudgetMonthlyBalance", b =>
-                {
-                    b.Property<int>("BalanceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Balance")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("BudgetAccountId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Interest")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Payment")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("BalanceId");
-
-                    b.HasIndex("BudgetAccountId");
-
-                    b.ToTable("BudgetMonthlyBalance");
-                });
-
-            modelBuilder.Entity("MyAccounts.Models.BudgetTransaction", b =>
-                {
-                    b.Property<int>("TransactionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("BudgetAccountId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("TransactionDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TransactionType")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("TransactionId");
-
-                    b.HasIndex("BudgetAccountId");
-
-                    b.ToTable("BudgetTransaction");
-                });
-
             modelBuilder.Entity("MyAccounts.Shared.Models.Account", b =>
                 {
                     b.Property<long?>("Id")
@@ -396,6 +291,9 @@ namespace MyAccounts.Migrations
                     b.Property<string>("AccountName")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("Apr")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CreditLimit")
                         .HasColumnType("TEXT");
 
@@ -412,6 +310,98 @@ namespace MyAccounts.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("BudgetAccount");
+                });
+
+            modelBuilder.Entity("MyAccounts.Shared.Models.BudgetExpense", b =>
+                {
+                    b.Property<long?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("APR")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CreditLimit")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Interest")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("MinPay")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Pay")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BudgetExpense");
+                });
+
+            modelBuilder.Entity("MyAccounts.Shared.Models.BudgetIncome", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateReceived")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BudgetIncome");
+                });
+
+            modelBuilder.Entity("MyAccounts.Shared.Models.BudgetMonth", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Interest")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Name")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Payment")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalExpenses")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalIncome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalRemaining")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BudgetMonth");
                 });
 
             modelBuilder.Entity("MyAccounts.Shared.Models.Category", b =>
@@ -564,28 +554,6 @@ namespace MyAccounts.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("MyAccounts.Models.BudgetMonthlyBalance", b =>
-                {
-                    b.HasOne("MyAccounts.Shared.Models.BudgetAccount", "BudgetAccount")
-                        .WithMany()
-                        .HasForeignKey("BudgetAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BudgetAccount");
-                });
-
-            modelBuilder.Entity("MyAccounts.Models.BudgetTransaction", b =>
-                {
-                    b.HasOne("MyAccounts.Shared.Models.BudgetAccount", "BudgetAccount")
-                        .WithMany()
-                        .HasForeignKey("BudgetAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BudgetAccount");
                 });
 
             modelBuilder.Entity("MyAccounts.Shared.Models.Account", b =>

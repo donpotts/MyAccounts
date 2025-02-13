@@ -16,6 +16,9 @@ public class BudgetAccount
     public string? AccountName { get; set; }
 
     [DataMember]
+    public decimal? Apr { get; set; }
+
+    [DataMember]
     public string? StartDate { get; set; }
 
     [DataMember]
@@ -26,4 +29,5 @@ public class BudgetAccount
 
     [DataMember]
     public decimal? MinPayment { get; set; }
+
 }
