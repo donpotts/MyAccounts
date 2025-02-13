@@ -16,6 +16,7 @@ using MyAccounts.Services;
 using MyAccounts.Shared.Models;
 using MyAccounts.Swagger;
 using Microsoft.AspNetCore.Authentication.BearerToken;
+using CsvHelper;
 
 Environment.CurrentDirectory = AppContext.BaseDirectory;
 
@@ -310,28 +311,58 @@ using (var scope = app.Services.CreateScope())
                 ctx.SaveChanges();
             }
         }
-        //if (File.Exists("Transaction.Data.json"))
-        //{
-        //    var json = File.ReadAllText("Transaction.Data.json");
-        //    var data = JsonSerializer.Deserialize<Transaction[]>(json);
+        if (File.Exists("Transaction.Data.json"))
+        {
+            var json = File.ReadAllText("Transaction.Data.json");
 
-        //    if (data != null)
-        //    {
-        //        ctx.Transaction.AddRange(data);
-        //        ctx.SaveChanges();
-        //    }
-        //}
-        //if (File.Exists("TransactionSplit.Data.json"))
-        //{
-        //    var json = File.ReadAllText("TransactionSplit.Data.json");
-        //    var data = JsonSerializer.Deserialize<TransactionSplit[]>(json);
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new DateOnlyConverter());
 
-        //    if (data != null)
-        //    {
-        //        ctx.TransactionSplit.AddRange(data);
-        //        ctx.SaveChanges();
-        //    }
-        //}
+            var data = JsonSerializer.Deserialize<Transaction[]>(json, options);
+
+            if (data != null)
+            {
+                using (var writer = new StreamWriter("transactions.csv"))
+                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                {
+                    // Write the header
+                    csv.WriteField("Date");
+                    csv.WriteField("Time");
+                    csv.WriteField("Amount");
+                    csv.WriteField("Type");
+                    csv.WriteField("Description");
+                    csv.NextRecord();
+
+                    foreach (var transaction in data)
+                    {
+                        transaction.Date = DateOnly.FromDateTime(DateTime.Now);
+                    
+                        csv.WriteField(transaction.Date);
+                        csv.WriteField("00:00:00");
+                        csv.WriteField(transaction.Amount);
+                        csv.WriteField("Deposit");
+                        csv.WriteField(transaction.Description);
+                        csv.NextRecord();
+                    }
+                }
+
+                ctx.Transaction.AddRange(data);
+                ctx.SaveChanges();
+
+               
+            }
+        }
+        if (File.Exists("TransactionSplit.Data.json"))
+        {
+            var json = File.ReadAllText("TransactionSplit.Data.json");
+            var data = JsonSerializer.Deserialize<TransactionSplit[]>(json);
+
+            if (data != null)
+            {
+                ctx.TransactionSplit.AddRange(data);
+                ctx.SaveChanges();
+            }
+        }
     }
 }
 app.UseRateLimiter();

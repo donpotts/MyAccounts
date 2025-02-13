@@ -90,9 +90,9 @@
                 <MudText Class="ms-2" Typo="Typo.button">Save Changes</MudText>
             }
         </MudButton>
-       
+
         <MudText Typo="Typo.h6">Total Uncleared Amount: @string.Format("{0:C}", _unclearedSum)</MudText>
-        
+
     </div>
 }
 
@@ -134,12 +134,19 @@
         { "Message", $"<strong>Add transaction?</strong><br>{bankRecord.Amount} on {bankRecord.Date}" },
         { "Details", $"<strong>Amount:</strong> {bankRecord.Amount}<br><strong>Date:</strong> {bankRecord.Date}<br><strong>Description:</strong><br>{bankRecord.Description}" },
         { "AddTransaction", new Func<Task>(async () => await AddTransaction(bankRecord)) },
+        { "NextTransaction", new Func<Task>(async () => await NextTransaction(bankRecord)) },
         { "Cancel", new Action(Cancel) }
     };
 
         var options = new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false };
         var dialog = DialogService.Show<AddBankTransaction>("Missing Transaction", parameters, options);
-        await dialog.Result;
+        var dr = await dialog.Result;
+
+        if (!dr.Canceled)
+        {
+            _isCancelled = false;
+        }
+        
     }
 
     private async Task AddTransaction(BankRecord bankRecord)
@@ -150,12 +157,17 @@
                 Amount = bankRecord.Amount,
                 Description = "From Bank CSV Import!",
                 AccountId = _selectedAccount.Value,
-                Cleared = false,
+                Cleared = true,
                 Payee = bankRecord.Description,
                 CategoryId = 1,
             };
 
         await AppService.InsertTransactionAsync(newTransaction);
+    }
+
+    private async Task NextTransaction(BankRecord bankRecord)
+    {
+        StateHasChanged();
     }
 
     private void Cancel()
@@ -247,7 +259,7 @@
         var orderby = "Date DESC, Id DESC";
         var specificDate = _bankRecords.OrderByDescending(record => record.Date).Select(record => record.Date).FirstOrDefault().AddDays(1);
         var filter = $"Cleared eq false and AccountId eq {_selectedAccount} and Date lt {specificDate:yyyy-MM-dd}";
-        
+
         var result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, false, "Category");
 
         _unclearedSum = result?.Value?.Where(transaction => !transaction.Cleared).Sum(transaction => transaction.Amount) ?? 0;
@@ -267,6 +279,7 @@
             {
                 break;
             }
+            _isCancelled = false;
 
             var matchingTransaction = transactions?
                 .FirstOrDefault(transaction => transaction.Date != null
@@ -274,7 +287,7 @@
                     && bankRecord.Date.Month == transaction.Date.Value.Month
                     && transaction.Amount == bankRecord.Amount);
 
-            if (matchingTransaction == null)
+            if (matchingTransaction == null && !_isCancelled)
             {
                 await ShowTransactionDialog(bankRecord);
             }
@@ -298,6 +311,7 @@
     private async Task SaveChangesAsync()
     {
         _isSaving = true;
+        _isCancelled = true;
         StateHasChanged();
 
         try

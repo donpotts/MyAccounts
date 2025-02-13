@@ -12,6 +12,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="AddTransactionAndClose" Color="MudBlazor.Color.Primary">Add</MudButton>
+        <MudButton OnClick="NextTransactionAndClose" Color="MudBlazor.Color.Primary">Next</MudButton>
         <MudButton OnClick="CancelDialog" Color="MudBlazor.Color.Error">Cancel</MudButton>
     </DialogActions>
 </MudDialog>
@@ -21,11 +22,18 @@
     [Parameter] public string Message { get; set; }
     [Parameter] public string Details { get; set; }
     [Parameter] public Func<Task> AddTransaction { get; set; }
+    [Parameter] public Func<Task> NextTransaction { get; set; }
     [Parameter] public Action Cancel { get; set; }
 
     private async Task AddTransactionAndClose()
     {
         await AddTransaction.Invoke();
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async Task NextTransactionAndClose()
+    {
+        await NextTransaction.Invoke();
         MudDialog.Close(DialogResult.Ok(true));
     }
 

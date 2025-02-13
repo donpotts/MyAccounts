@@ -6,9 +6,9 @@
     "AccountId": 1,
     "CategoryId": 6,
     "Cleared": false,
-    "Amount": 500.00,
+    "Amount": 525.00,
     "Balance": 0.00,
-    "Description": "Initial Deposit"
+    "Description": "Account One Checking Initial Deposit"
   },
   {
     "Id": 2,
@@ -17,19 +17,19 @@
     "AccountId": 2,
     "CategoryId": 6,
     "Cleared": false,
-    "Amount": 500.00,
+    "Amount": 300.00,
     "Balance": 0.00,
-    "Description": "Initial Deposit"
+    "Description": "Account Two Savings Initial Deposit"
   },
   {
     "Id": 3,
     "Date": "2024-07-20T00:00:00",
-    "Payee": "Cash",
+    "Payee": "Food Store",
     "AccountId": 3,
     "CategoryId": 5,
     "Cleared": false,
-    "Amount": -500.00,
+    "Amount": -250.00,
     "Balance": 0.00,
-    "Description": ""
+    "Description": "Account Three CC Initial Charge"
   }
 ]
