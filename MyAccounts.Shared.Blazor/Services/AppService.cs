@@ -82,15 +82,25 @@ public class AppService(
         {
             queryString.Add("$expand", expand);
         }
-
+        //var uri = $"/odata/{entity}";
         var uri = $"/odata/{entity}?{queryString}";
+        //var uri = $"/api/BudgetAccount?{queryString}";
 
         HttpRequestMessage request = new(HttpMethod.Get, uri);
         request.Headers.Authorization = new("Bearer", token);
 
         var response = await httpClient.SendAsync(request);
 
-        await HandleResponseErrorsAsync(response);
+        //var json = await response.Content.ReadAsStringAsync();
+        //Console.WriteLine("Response Content="+ json);
+        //await HandleResponseErrorsAsync(response);
+        //try
+        //{
+        //    var myresult = await response.Content.ReadFromJsonAsync<string>();
+        //}
+        //catch {
+        //    Console.WriteLine("ERROR!");
+        //}
 
         return await response.Content.ReadFromJsonAsync<ODataResult<T>>();
     }
@@ -371,6 +381,90 @@ public class AppService(
             ?? throw new Exception("Not authorized");
 
         HttpRequestMessage request = new(HttpMethod.Delete, $"/api/account/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+    }
+
+    public async Task<BudgetAccount[]?> ListBudgetAccountAsync()
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, "/api/budgetaccount");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetAccount[]>();
+    }
+
+    public Task<ODataResult<BudgetAccount>?> ListBudgetAccountODataAsync(
+        int? top = null,
+        int? skip = null,
+        string? orderby = null,
+        string? filter = null,
+        bool count = false,
+        string? expand = null)
+    {
+        return GetODataAsync<BudgetAccount>("BudgetAccount", top, skip, orderby, filter, count, expand);
+    }
+
+    public async Task<BudgetAccount?> GetBudgetAccountByIdAsync(long key)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"/api/budgetaccount/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetAccount>();
+    }
+
+    public async Task UpdateBudgetAccountAsync(long key, BudgetAccount data)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Put, $"/api/budgetaccount/{key}");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(data);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+    }
+
+    public async Task<BudgetAccount?> InsertBudgetAccountAsync(BudgetAccount data)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Post, "/api/budgetaccount");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(data);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BudgetAccount>();
+    }
+
+    public async Task DeleteBudgetAccountAsync(long key)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Delete, $"/api/budgetaccount/{key}");
         request.Headers.Authorization = new("Bearer", token);
 
         var response = await httpClient.SendAsync(request);

@@ -74,6 +74,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<Account>()
             .HasIndex(a => a.Name)
             .IsUnique();
+        modelBuilder.Entity<BudgetAccount>()
+            .Property(e => e.MinPayment)
+            .HasConversion<double>();
+        modelBuilder.Entity<BudgetAccount>()
+            .Property(e => e.MinPayment)
+            .HasPrecision(19, 4);
     }
 
     //public List<Category> GetSortedCategories()

@@ -363,6 +363,18 @@ using (var scope = app.Services.CreateScope())
                 ctx.SaveChanges();
             }
         }
+
+        if (File.Exists("BudgetAccount.Data.json"))
+        {
+            var json = File.ReadAllText("BudgetAccount.Data.json");
+            var data = JsonSerializer.Deserialize<BudgetAccount[]>(json);
+
+            if (data != null)
+            {
+                ctx.BudgetAccount.AddRange(data);
+                ctx.SaveChanges();
+            }
+        }
     }
 }
 app.UseRateLimiter();

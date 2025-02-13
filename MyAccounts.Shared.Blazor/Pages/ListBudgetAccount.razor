@@ -1,0 +1,130 @@
+@page "/budgetaccount"
+@inject AppService AppService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject HttpClient HttpClient
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
+<PageTitle>Budget Accounts</PageTitle>
+
+<div class="mb-3">
+    <MudText Typo="Typo.h3">Budget Accounts</MudText>
+</div>
+
+<MudStack AlignItems="AlignItems.End" Class="mb-3">
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())">Add</MudButton>
+</MudStack>
+
+<MudDataGrid T="BudgetAccount" @ref="grid" ServerData="(new Func<GridState<BudgetAccount>, Task<GridData<BudgetAccount>>>(ServerReload))" Filterable="true">
+    <Columns>
+        <PropertyColumn Property="x => x!.Id" Title="Id" />
+        <PropertyColumn Property="x => x!.AccountName" Title="Account Name" />
+        <PropertyColumn Property="x => x!.StartDate" Title="Start Date" />
+        <PropertyColumn Property="x => x!.DueDate" Title="Due Date" />
+        <PropertyColumn Property="x => x!.CreditLimit" Title="Credit Limit" />
+        <PropertyColumn Property="x => x!.MinPayment" Title="Min Payment" />
+        <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
+            <CellTemplate>
+                <MudStack Row="true">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@MudBlazor.Size.Small" title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@MudBlazor.Size.Small" title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
+                </MudStack>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="BudgetAccount" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    private MudDataGrid<BudgetAccount>? grid;
+    private string? _searchString;
+    private string GetAbsoluteUri(string uri)
+    {
+        if (!uri.StartsWith("/"))
+        {
+            return uri;
+        }
+
+        var baseUri = HttpClient.BaseAddress;
+
+        if (baseUri == null)
+        {
+            throw new Exception("Unable to determine base address");
+        }
+
+        Uri absolute = new(baseUri, uri);
+
+        return absolute.ToString();
+    }
+
+    private async Task<GridData<BudgetAccount>> ServerReload(GridState<BudgetAccount> state)
+    {
+        var top = state.PageSize;
+        var skip = state.Page * state.PageSize;
+        var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
+        var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
+
+        AppService.ODataResult<BudgetAccount>? result = null;
+
+        try
+        {
+            result = await AppService.ListBudgetAccountODataAsync(100, skip, orderby, filter, true, "");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+
+        return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<BudgetAccount>() };
+    }
+
+    private async void OnAdd()
+    {
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        var result = await DialogService.Show<AddBudgetAccount>("Add BudgetAccount", dialogOptions).Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await (grid?.ReloadServerData() ?? Task.CompletedTask);
+        }
+    }
+
+    private async void OnEdit(BudgetAccount record)
+    {
+        DialogParameters<UpdateBudgetAccount> dialogParams = new() { { x => x.Id, record.Id!.Value } };
+        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
+
+        var result = await DialogService.Show<UpdateBudgetAccount>("Update BudgetAccount", dialogParams, dialogOptions).Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await (grid?.ReloadServerData() ?? Task.CompletedTask);
+        }
+    }
+
+    private async void OnDelete(BudgetAccount record)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Warning",
+            "Are you sure you want to delete this record?",
+            "Delete",
+            "Cancel");
+
+        if (result.GetValueOrDefault(false))
+        {
+            try
+            {
+                await AppService.DeleteBudgetAccountAsync(record.Id!.Value);
+                await (grid?.ReloadServerData() ?? Task.CompletedTask);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+}

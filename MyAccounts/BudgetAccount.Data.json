@@ -1,0 +1,18 @@
+[
+  {
+    "Id": 1,
+    "AccountName": "MT Bank",
+    "StartDate": "2025-01-01",
+    "DueDate": "1st",
+    "CreditLimit": "0.00",
+    "MinPayment": 2377.13
+  },
+  {
+    "Id": 2,
+    "AccountName": "HOA",
+    "StartDate": "",
+    "DueDate": "2025-01-01",
+    "CreditLimit": "1st",
+    "MinPayment": 0.00
+  }
+]
