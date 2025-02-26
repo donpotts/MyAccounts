@@ -6,7 +6,7 @@
 {
     <MudDialog>
         <TitleContent>
-            <MudText Typo="Typo.h6">Update Budget Account</MudText>
+            <MudText Typo="Typo.h6">Update Budget Income</MudText>
         </TitleContent>
         <DialogContent>
             <MudText>Loading...</MudText>
@@ -23,16 +23,12 @@ else
         <DataAnnotationsValidator />
         <MudDialog>
             <TitleContent>
-                <MudText Typo="Typo.h6">Update Budget Account</MudText>
+                <MudText Typo="Typo.h6">Update Budget Income</MudText>
             </TitleContent>
             <DialogContent>
-                <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" />
-                <MudTextField @bind-Value="record.AccountName" For="@(() => record.AccountName)" Label="Account Name" />
-                <MudNumericField @bind-Value="record.Apr" For="@(() => record.Apr)" Label="APR" />
-                <MudTextField @bind-Value="record.StartDate" For="@(() => record.StartDate)" Label="Start Date" />
-                <MudTextField @bind-Value="record.DueDate" For="@(() => record.DueDate)" Label="Due Date" />
-                <MudTextField @bind-Value="record.CreditLimit" For="@(() => record.CreditLimit)" Label="Credit Limit" />
-                <MudNumericField @bind-Value="record.MinPayment" For="@(() => record.MinPayment)" Label="Min Payment" />
+                <MudTextField @bind-Value="record.Source" For="@(() => record.Source)" Label="Source" />
+                <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+                <MudTextField @bind-Value="record.DateReceived" For="@(() => record.DateReceived)" Label="Date" />
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="OnCancel">Cancel</MudButton>
@@ -49,7 +45,7 @@ else
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
-    private BudgetAccount? record;
+    private BudgetIncome? record;
 
     private string GetAbsoluteUri(string uri)
     {
@@ -74,7 +70,7 @@ else
     {
         try
         {
-            record = await AppService.GetBudgetAccountByIdAsync(Id);
+            record = await AppService.GetBudgetIncomeByIdAsync(Id);
         }
         catch (Exception ex)
         {
@@ -96,7 +92,7 @@ else
 
         try
         {
-            await AppService.UpdateBudgetAccountAsync(Id, record);
+            await AppService.UpdateBudgetIncomeAsync(Id, record);
             MudDialog?.Close();
         }
         catch (Exception ex)

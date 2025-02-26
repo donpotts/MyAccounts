@@ -6,25 +6,22 @@
 @inject IJSRuntime JSRuntime
 @attribute [Authorize]
 
-<PageTitle>Budget Accounts</PageTitle>
+<PageTitle>Budget Months</PageTitle>
 
 <div class="mb-3">
-    <MudText Typo="Typo.h3">Budget Accounts</MudText>
+    <MudText Typo="Typo.h3">Budget Months</MudText>
 </div>
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())">Add</MudButton>
 </MudStack>
 
-<MudDataGrid T="BudgetAccount" @ref="grid" ServerData="(new Func<GridState<BudgetAccount>, Task<GridData<BudgetAccount>>>(ServerReload))" Filterable="true">
+<MudDataGrid T="BudgetMonth" @ref="grid" ServerData="(new Func<GridState<BudgetMonth>, Task<GridData<BudgetMonth>>>(ServerReload))" Filterable="true">
     <Columns>
-        <PropertyColumn Property="x => x!.Id" Title="Id" />
-        <PropertyColumn Property="x => x!.AccountName" Title="Account Name" />
-        <PropertyColumn Property="x => x!.Apr" Title="APR" />
-        <PropertyColumn Property="x => x!.StartDate" Title="Start Date" />
-        <PropertyColumn Property="x => x!.DueDate" Title="Due Date" />
-        <PropertyColumn Property="x => x!.CreditLimit" Title="Credit Limit" />
-        <PropertyColumn Property="x => x!.MinPayment" Title="Min Payment" />
+        <PropertyColumn Property="x => x!.Name" Title="Name" />
+        <PropertyColumn Property="x => x!.Payment" Title="Payment" />
+        <PropertyColumn Property="x => x!.Interest" Title="Interest" />
+        <PropertyColumn Property="x => x!.Balance" Title="Balance" />
         <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
             <CellTemplate>
                 <MudStack Row="true">
@@ -40,7 +37,7 @@
 </MudDataGrid>
 
 @code {
-    private MudDataGrid<BudgetAccount>? grid;
+    private MudDataGrid<BudgetMonth>? grid;
     private string? _searchString;
     private string GetAbsoluteUri(string uri)
     {
@@ -61,32 +58,32 @@
         return absolute.ToString();
     }
 
-    private async Task<GridData<BudgetAccount>> ServerReload(GridState<BudgetAccount> state)
+    private async Task<GridData<BudgetMonth>> ServerReload(GridState<BudgetMonth> state)
     {
         var top = state.PageSize;
         var skip = state.Page * state.PageSize;
         var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
         var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
 
-        AppService.ODataResult<BudgetAccount>? result = null;
+        AppService.ODataResult<BudgetMonth>? result = null;
 
         try
         {
-            result = await AppService.ListBudgetAccountODataAsync(100, 0, "", "", true, "");
+            result = await AppService.ListBudgetMonthODataAsync(100, 0, "", "", true, "");
         }
         catch (Exception ex)
         {
             Snackbar.Add(ex.Message, Severity.Error);
         }
 
-        return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<BudgetAccount>() };
+        return new() { TotalItems = result?.Count ?? 0, Items = result?.Value ?? Enumerable.Empty<BudgetMonth>() };
     }
 
     private async void OnAdd()
     {
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
-        var result = await DialogService.Show<AddBudgetAccount>("Add BudgetAccount", dialogOptions).Result;
+        var result = await DialogService.Show<AddBudgetMonth>("Add Budget Month", dialogOptions).Result;
 
         if (result != null && !result.Canceled)
         {
@@ -94,12 +91,12 @@
         }
     }
 
-    private async void OnEdit(BudgetAccount record)
+    private async void OnEdit(BudgetMonth record)
     {
-        DialogParameters<UpdateBudgetAccount> dialogParams = new() { { x => x.Id, record.Id!.Value } };
+        DialogParameters<UpdateBudgetMonth> dialogParams = new() { { x => x.Id, record.Id } };
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
-        var result = await DialogService.Show<UpdateBudgetAccount>("Update BudgetAccount", dialogParams, dialogOptions).Result;
+        var result = await DialogService.Show<UpdateBudgetMonth>("Update Budget Month", dialogParams, dialogOptions).Result;
 
         if (result != null && !result.Canceled)
         {
@@ -107,7 +104,7 @@
         }
     }
 
-    private async void OnDelete(BudgetAccount record)
+    private async void OnDelete(BudgetMonth record)
     {
         var result = await DialogService.ShowMessageBox(
             "Warning",
@@ -119,7 +116,7 @@
         {
             try
             {
-                await AppService.DeleteBudgetAccountAsync(record.Id!.Value);
+                await AppService.DeleteBudgetMonthAsync(record.Id);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
             }
             catch (Exception ex)

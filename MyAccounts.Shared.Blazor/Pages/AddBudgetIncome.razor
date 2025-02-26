@@ -6,15 +6,12 @@
     <DataAnnotationsValidator />
     <MudDialog>
         <TitleContent>
-            <MudText Typo="Typo.h6">Add Budget Account</MudText>
+            <MudText Typo="Typo.h6">Add Budget Income</MudText>
         </TitleContent>
         <DialogContent>
-            <MudTextField @bind-Value="record.AccountName" For="@(() => record.AccountName)" Label="Account Name" />
-            <MudNumericField @bind-Value="record.Apr" For="@(() => record.Apr)" Label="APR" />
-            <MudTextField @bind-Value="record.StartDate" For="@(() => record.StartDate)" Label="Start Date" />
-            <MudTextField @bind-Value="record.DueDate" For="@(() => record.DueDate)" Label="Due Date" />
-            <MudTextField @bind-Value="record.CreditLimit" For="@(() => record.CreditLimit)" Label="Credit Limit" />
-            <MudNumericField @bind-Value="record.MinPayment" For="@(() => record.MinPayment)" Label="Min Payment" />
+            <MudTextField @bind-Value="record.Source" For="@(() => record.Source)" Label="Source" />
+            <MudNumericField @bind-Value="record.Amount" For="@(() => record.Amount)" Label="Amount" />
+            <MudTextField @bind-Value="record.DateReceived" For="@(() => record.DateReceived)" Label="Date" />
         </DialogContent>
         <DialogActions>
             <MudButton OnClick="OnCancel">Cancel</MudButton>
@@ -27,7 +24,7 @@
     [CascadingParameter]
     MudDialogInstance? MudDialog { get; set; }
 
-    private BudgetAccount record = new();
+    private BudgetIncome record = new();
 
     private string GetAbsoluteUri(string uri)
     {
@@ -70,7 +67,7 @@
     {
         try
         {
-            await AppService.InsertBudgetAccountAsync(record);
+            await AppService.InsertBudgetIncomeAsync(record);
             MudDialog?.Close();
         }
         catch (Exception ex)
