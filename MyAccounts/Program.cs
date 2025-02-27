@@ -262,7 +262,7 @@ using (var scope = app.Services.CreateScope())
 
         await userManager.CreateAsync(adminUser, "testUser123!");
         await userManager.AddToRoleAsync(adminUser, "Administrator");
- 
+
         ApplicationUser normalUser = new()
         {
             Email = "normaluser@example.com",
@@ -275,7 +275,7 @@ using (var scope = app.Services.CreateScope())
         };
 
         await userManager.CreateAsync(normalUser, "testUser123!");
-        
+
 
         if (File.Exists("AccountType.Data.json"))
         {
@@ -335,7 +335,7 @@ using (var scope = app.Services.CreateScope())
                     foreach (var transaction in data)
                     {
                         transaction.Date = DateOnly.FromDateTime(DateTime.Now);
-                    
+
                         csv.WriteField(transaction.Date);
                         csv.WriteField("00:00:00");
                         csv.WriteField(transaction.Amount);
@@ -348,7 +348,7 @@ using (var scope = app.Services.CreateScope())
                 ctx.Transaction.AddRange(data);
                 ctx.SaveChanges();
 
-               
+
             }
         }
         if (File.Exists("TransactionSplit.Data.json"))
