@@ -126,6 +126,7 @@
             <CellTemplate>
                 <MudStack Row="true">
                     <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@MudBlazor.Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.FileCopy" Size="@MudBlazor.Size.Small" Title="Re-occurring" OnClick="@(e => OnReoccurring(context.Item!))" />
                     <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@MudBlazor.Size.Small" Title="Delete" OnClick="@(e => OnDelete(context.Item!))" />
                 </MudStack>
             </CellTemplate>
@@ -358,7 +359,7 @@
             Snackbar.Add(ex.Message, Severity.Error);
             await ((IdentityAuthenticationStateProvider)AuthenticationStateProvider).LogoutAsync();
             Navigation.NavigateTo("/login");
-            
+
             StateHasChanged();
         }
     }
@@ -560,7 +561,7 @@
                 orderby = "Date DESC, Id DESC";
 
             result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, true, "Account,Category");
-                       
+
         }
         catch (Exception ex)
         {
@@ -574,7 +575,7 @@
     {
         DialogParameters<AddTransaction> dialogParams = new() ;
         dialogParams.Add("Account", AccountName);
-        
+
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
         var result = await DialogService.Show<AddTransaction>("Add Transaction", dialogParams, dialogOptions).Result;
@@ -603,6 +604,50 @@
             NavigationService.NotifyStateChanged();
             await ResetChart();
             StateHasChanged();
+        }
+    }
+
+    private async void OnReoccurring(Transaction record)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Warning",
+            "Are you sure you want to create re-occurring transactions for this record until December, starting with next month?",
+            "OK",
+            "Cancel");
+
+        if (result.GetValueOrDefault(false))
+        {
+            try
+            {
+                var currentMonth = DateTime.Now.Month;
+                var tempRecord = new Transaction
+                    {
+                        AccountId = record.AccountId,
+                        CategoryId = record.CategoryId,
+                        Payee = record.Payee,
+                        Cleared = record.Cleared,
+                        Amount = record.Amount,
+                        Balance = record.Balance,
+                        Description = record.Description
+                    };
+
+                 
+                for (int month = currentMonth + 1; month <= 12; month++)
+                {
+                    tempRecord.Date = new DateOnly(DateTime.Now.Year, month, 1);
+                    
+                    await AppService.InsertTransactionAsync(tempRecord);
+                }
+
+                await (grid?.ReloadServerData() ?? Task.CompletedTask);
+                await ReloadData();
+                NavigationService.NotifyStateChanged();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
         }
     }
 
