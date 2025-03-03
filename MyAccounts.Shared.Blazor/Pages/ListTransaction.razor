@@ -631,11 +631,12 @@
                         Description = record.Description
                     };
 
-                 
                 for (int month = currentMonth + 1; month <= 12; month++)
                 {
-                    tempRecord.Date = new DateOnly(DateTime.Now.Year, month, 1);
-                    
+                    int day = record.Date.Value.Day;
+                    int year = record.Date.Value.Year;
+                    tempRecord.Date = new DateOnly(year, month, day);
+
                     await AppService.InsertTransactionAsync(tempRecord);
                 }
 
