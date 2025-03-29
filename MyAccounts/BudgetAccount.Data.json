@@ -1,11 +1,11 @@
 [
   {
     "Id": 1,
-    "AccountName": "MT Bank",
+    "AccountName": "MY Bank",
     "StartDate": "2025-01-01",
     "DueDate": "1st",
     "CreditLimit": "0.00",
-    "MinPayment": 2377.13
+    "MinPayment": 2000.01
   },
   {
     "Id": 2,
@@ -13,6 +13,6 @@
     "StartDate": "",
     "DueDate": "2025-01-01",
     "CreditLimit": "1st",
-    "MinPayment": 0.00
+    "MinPayment": 65.00
   }
 ]
