@@ -1,0 +1,12 @@
+[
+  {
+    "Id": 1,
+    "Name": "January",
+    "TotalIncome": 0.00,
+    "TotalExpenses": 0.00,
+    "TotalRemaining": 0.00,
+    "Interest": 0.00,
+    "Payment": 0.00,
+    "Balance": 0.00
+  }
+]

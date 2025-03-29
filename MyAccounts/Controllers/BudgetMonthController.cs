@@ -36,7 +36,7 @@ public class BudgetMonthController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<BudgetMonth>> GetAsync(long key)
+    public async Task<ActionResult<BudgetMonth>> GetAsync(int key)
     {
         var budgetMonth = await ctx.BudgetMonth.FirstOrDefaultAsync(x => x.Id == key);
 
@@ -92,7 +92,7 @@ public class BudgetMonthController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<BudgetMonth>> PatchAsync(long key, Delta<BudgetMonth> delta)
+    public async Task<ActionResult<BudgetMonth>> PatchAsync(int key, Delta<BudgetMonth> delta)
     {
         var budgetMonth = await ctx.BudgetMonth.FirstOrDefaultAsync(x => x.Id == key);
 
@@ -112,7 +112,7 @@ public class BudgetMonthController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteAsync(long key)
+    public async Task<IActionResult> DeleteAsync(int key)
     {
         var budgetMonth = await ctx.BudgetMonth.FindAsync(key);
 

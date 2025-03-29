@@ -1,0 +1,14 @@
+[
+  {
+    "Id": 1,
+    "Category": "Uncategorized",
+    "APR": 0.0,
+    "StartDate": "2025-01-01T00:00:00",
+    "DueDate": "2025-01-01T00:00:00",
+    "CreditLimit": 0.0,
+    "MinPay": 0.0,
+    "Interest": 0.0,
+    "Balance": 0.0,
+    "Pay": 0.0
+  }
+]

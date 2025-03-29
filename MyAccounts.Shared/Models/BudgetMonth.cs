@@ -14,7 +14,7 @@ namespace MyAccounts.Shared.Models
         [DataMember]
         public int Id { get; set; }
         [DataMember]
-        public MonthEnum Name { get; set; }
+        public String Name { get; set; }
         [DataMember]
         public decimal TotalIncome { get; set; }
         [DataMember]

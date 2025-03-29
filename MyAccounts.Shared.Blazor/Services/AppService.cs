@@ -580,7 +580,7 @@ public class AppService(
         bool count = false,
         string? expand = null)
     {
-        return GetODataAsync<BudgetMonth>("BudgetMonth", top, skip, orderby, filter, count, expand);
+        return GetODataAsync<BudgetMonth>("budgetmonth", top, skip, orderby, filter, count, expand);
     }
 
     public async Task<BudgetMonth?> GetBudgetMonthByIdAsync(long key)
@@ -664,7 +664,7 @@ public class AppService(
         bool count = false,
         string? expand = null)
     {
-        return GetODataAsync<BudgetIncome>("Budget Income", top, skip, orderby, filter, count, expand);
+        return GetODataAsync<BudgetIncome>("budgetincome", top, skip, orderby, filter, count, expand);
     }
 
     public async Task<BudgetIncome?> GetBudgetIncomeByIdAsync(long key)

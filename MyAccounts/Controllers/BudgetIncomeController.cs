@@ -36,7 +36,7 @@ public class BudgetIncomeController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<BudgetIncome>> GetAsync(long key)
+    public async Task<ActionResult<BudgetIncome>> GetAsync(int key)
     {
         var budgetIncome = await ctx.BudgetIncome.FirstOrDefaultAsync(x => x.Id == key);
 
@@ -72,7 +72,7 @@ public class BudgetIncomeController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<BudgetIncome>> PutAsync(long key, BudgetIncome update)
+    public async Task<ActionResult<BudgetIncome>> PutAsync(int key, BudgetIncome update)
     {
         var budgetIncome = await ctx.BudgetIncome.FirstOrDefaultAsync(x => x.Id == key);
 
@@ -92,7 +92,7 @@ public class BudgetIncomeController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<BudgetIncome>> PatchAsync(long key, Delta<BudgetIncome> delta)
+    public async Task<ActionResult<BudgetIncome>> PatchAsync(int key, Delta<BudgetIncome> delta)
     {
         var budgetIncome = await ctx.BudgetIncome.FirstOrDefaultAsync(x => x.Id == key);
 
@@ -112,7 +112,7 @@ public class BudgetIncomeController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteAsync(long key)
+    public async Task<IActionResult> DeleteAsync(int key)
     {
         var budgetIncome = await ctx.BudgetIncome.FindAsync(key);
 

@@ -374,6 +374,42 @@ using (var scope = app.Services.CreateScope())
                 ctx.SaveChanges();
             }
         }
+
+        if (File.Exists("BudgetExpense.Data.json"))
+        {
+            var json = File.ReadAllText("BudgetExpense.Data.json");
+            var data = JsonSerializer.Deserialize<BudgetExpense[]>(json);
+
+            if (data != null)
+            {
+                ctx.BudgetExpense.AddRange(data);
+                ctx.SaveChanges();
+            }
+        }
+
+        if (File.Exists("BudgetIncome.Data.json"))
+        {
+            var json = File.ReadAllText("BudgetIncome.Data.json");
+            var data = JsonSerializer.Deserialize<BudgetIncome[]>(json);
+
+            if (data != null)
+            {
+                ctx.BudgetIncome.AddRange(data);
+                ctx.SaveChanges();
+            }
+        }
+
+        if (File.Exists("BudgetMonth.Data.json"))
+        {
+            var json = File.ReadAllText("BudgetMonth.Data.json");
+            var data = JsonSerializer.Deserialize<BudgetMonth[]>(json);
+
+            if (data != null)
+            {
+                ctx.BudgetMonth.AddRange(data);
+                ctx.SaveChanges();
+            }
+        }
     }
 }
 app.UseRateLimiter();

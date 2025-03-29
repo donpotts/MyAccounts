@@ -19,11 +19,13 @@
         <MudToolBar>
             <AuthorizeView Roles="Administrator">
                 <MudLink Href="/" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Home</MudLink>
-                <MudLink Href="/budget" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Import Excel Budget</MudLink>
-                <MudLink Href="/budgetaccount" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Budget Accounts</MudLink>
-                <MudLink Href="/budgetexpense" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Budget Expenses</MudLink>
-                <MudLink Href="/budgetincome" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Budget Income</MudLink>
-                <MudLink Href="/budgetmonth" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Budget Month</MudLink>
+                <MudMenu Label="Budget" Class="d-flex px-4" Color="MudBlazor.Color.Inherit" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
+                    <MudLink Href="/budget" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Import Excel Budget</MudLink>
+                    <MudLink Href="/budgetaccount" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Budget Accounts</MudLink>
+                    <MudLink Href="/budgetexpense" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Budget Expenses</MudLink>
+                    <MudLink Href="/budgetincome" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Budget Income</MudLink>
+                    <MudLink Href="/budgetmonth" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Budget Month</MudLink>
+                </MudMenu>
                 <MudLink Href="/accounttype" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Account Type</MudLink>
                 <MudLink Href="/account" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Account</MudLink>
                 <MudLink Href="/category" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Category</MudLink>
