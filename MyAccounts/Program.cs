@@ -191,8 +191,11 @@ var app = builder.Build();
 //    app.UseSwaggerUI();
 //}
 
-app.UseSwagger();
 app.UseSwaggerUI();
+app.UseSwagger(options =>
+{
+    options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi2_0;
+});
 
 app.UseHttpsRedirection();
 app.UseForwardedHeaders();

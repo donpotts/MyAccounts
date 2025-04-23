@@ -33,33 +33,8 @@
 
 @if (Data != null && Data.Count > 0)
 {
-    <ApexChart TItem="TransactionCategoryData"
-    Title=""
-    Width="700"
-    Height="700"
-    @ref="chart"
-    Options=options
-    OnDataPointSelection="HandleDataPointSelection">
-
-        <ApexPointTooltip>
-            <MudCard>
-                <MudCardContent>
-                    <MudText>@context.DataPoint.X @* The percentage is coded into the category name *@</MudText>
-                    <MudText Typo="Typo.body2">@context.DataPoint.Items.Sum(x => x.TotalAmount).ToString("C")</MudText>
-                </MudCardContent>
-            </MudCard>
-        </ApexPointTooltip>
-
-        <ChildContent>
-            <ApexPointSeries TItem="TransactionCategoryData"
-            Items="Data"
-            Name="Expenses"
-            SeriesType="SeriesType.Pie"
-            XValue="e => e.Category"
-            YValue="e => e.TotalAmount"
-            ShowDataLabels/>
-        </ChildContent>
-    </ApexChart>
+    //old chart
+   // <MudChart<T> ChartType="ChartType.Pie" Data="Data" Options="options" OnDataPointSelection="HandleDataPointSelection" @ref="chart" />    
 }
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
@@ -161,8 +136,8 @@
     public string AccountName { get; set; } = null;
     public string CategoryName { get; set; } = null;
     private List<TransactionCategoryData> Data { get; set; } = new();
-    private ApexChart<TransactionCategoryData> chart;
-    private ApexChartOptions<TransactionCategoryData> options { get; set; } = new();
+    // private ApexChart<TransactionCategoryData> chart;
+    // private ApexChartOptions<TransactionCategoryData> options { get; set; } = new();
 
     int? top = null;
     int? skip = null;
@@ -197,55 +172,55 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ThemeService.OnChange += UpdateExpensesPieChart;
-        chart = new ApexChart<TransactionCategoryData>();
+        //ThemeService.OnChange += UpdateExpensesPieChart;
+        //chart = new ApexChart<TransactionCategoryData>();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     { 
-        if (firstRender && Data != null) { await chart.RenderAsync(); }
+        //if (firstRender && Data != null) { await chart.RenderAsync(); }
     }
 
-    private async void HandleDataPointSelection(SelectedData<TransactionCategoryData> selectedData)
-    {
-        var dataId = selectedData.DataPoint.Items.FirstOrDefault()?.Category;
-        if (dataId != null)
-        {
-            var categoryWithoutPercent = dataId.Split('(')[0].Trim();
-            dataId = categoryWithoutPercent;
-            CategoryName = dataId;
-            if (grid != null)
-            {
-                await (grid?.ReloadServerData() ?? Task.CompletedTask);
-            }
-            //await ReloadData();
-            StateHasChanged();
-        }
-    }
+    // private async void HandleDataPointSelection(SelectedData<TransactionCategoryData> selectedData)
+    // {
+    //     var dataId = selectedData.DataPoint.Items.FirstOrDefault()?.Category;
+    //     if (dataId != null)
+    //     {
+    //         var categoryWithoutPercent = dataId.Split('(')[0].Trim();
+    //         dataId = categoryWithoutPercent;
+    //         CategoryName = dataId;
+    //         if (grid != null)
+    //         {
+    //             await (grid?.ReloadServerData() ?? Task.CompletedTask);
+    //         }
+    //         //await ReloadData();
+    //         StateHasChanged();
+    //     }
+    // }
 
-    private async void UpdateExpensesPieChart()
-    {        
-        options = new ApexChartOptions<TransactionCategoryData>
-        {
-            Theme = new Theme()
-        };
+    // private async void UpdateExpensesPieChart()
+    // {        
+    //     options = new ApexChartOptions<TransactionCategoryData>
+    //     {
+    //         Theme = new Theme()
+    //     };
 
-        isDarkMode = ThemeService.IsDarkMode;
-        if (isDarkMode)
-        {
-            options.Theme.Mode = Mode.Dark;
-            options.Chart.Background = "var(--mud-palette-background-dark)";
+    //     isDarkMode = ThemeService.IsDarkMode;
+    //     if (isDarkMode)
+    //     {
+    //         options.Theme.Mode = Mode.Dark;
+    //         options.Chart.Background = "var(--mud-palette-background-dark)";
 
-        }
-        else
-        {
-            options.Theme.Mode = Mode.Light;
-            options.Chart.Background = "var(--mud-palette-background)";
-        }
-        await ResetChart();
+    //     }
+    //     else
+    //     {
+    //         options.Theme.Mode = Mode.Light;
+    //         options.Chart.Background = "var(--mud-palette-background)";
+    //     }
+    //     await ResetChart();
 
-        StateHasChanged();
-    }
+    //     StateHasChanged();
+    // }
 
     private string SelectedRow(Transaction transaction, int rowNumber)
     {
@@ -289,15 +264,15 @@
         return totalsAsDecimal.ToString("C");
     }
 
-    private async Task ResetChart()
-    {
-        options.DataLabels = new DataLabels
-            {
-                Formatter = @"function(value, { seriesIndex, w }) {
-            return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });}"
-            };
-        await chart.UpdateOptionsAsync(true, true, true, null);
-    }
+    // private async Task ResetChart()
+    // {
+    //     options.DataLabels = new DataLabels
+    //         {
+    //             Formatter = @"function(value, { seriesIndex, w }) {
+    //         return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });}"
+    //         };
+    //     await chart.UpdateOptionsAsync(true, true, true, null);
+    // }
 
     public class TransactionCategoryData
     {
@@ -319,7 +294,7 @@
         selectedItem = null;
         await ReloadData();
         Totals = await AccountTotals(AccountName);
-        UpdateExpensesPieChart();
+        //UpdateExpensesPieChart();
         StateHasChanged();
     }
 
@@ -327,7 +302,7 @@
     {
         dateRange = newDateRange;
         await ReloadData();
-        UpdateExpensesPieChart();
+        //UpdateExpensesPieChart();
         StateHasChanged();
     }
 
@@ -429,7 +404,7 @@
         // }
 
         Data.Clear();
-        await ResetChart();
+        // ResetChart();
         foreach (var item in groupedData)
         {
             item.TotalAmount = Math.Abs(item.TotalAmount);
@@ -464,7 +439,7 @@
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
             NavigationService.NotifyStateChanged();
-            await ResetChart();
+            //await ResetChart();
         }
     }
 
@@ -585,7 +560,7 @@
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
             NavigationService.NotifyStateChanged();
-            await ResetChart();
+          //  await ResetChart();
             StateHasChanged();
         }
     }
@@ -602,7 +577,7 @@
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
             NavigationService.NotifyStateChanged();
-            await ResetChart();
+            //await ResetChart();
             StateHasChanged();
         }
     }
@@ -668,7 +643,7 @@
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
                 await ReloadData();
                 NavigationService.NotifyStateChanged();
-                await ResetChart();
+            //    await ResetChart();
                 StateHasChanged();
             }
             catch (Exception ex)
