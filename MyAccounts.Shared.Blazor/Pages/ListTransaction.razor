@@ -31,11 +31,28 @@
 
 <MudText Typo="Typo.h6">Total Expenses: @totalSum.ToString("C")</MudText>
 
-@if (Data != null && Data.Count > 0)
-{
-    //old chart
-   // <MudChart<T> ChartType="ChartType.Pie" Data="Data" Options="options" OnDataPointSelection="HandleDataPointSelection" @ref="chart" />    
-}
+@if (supportCasesData != null)
+{ 
+<MudGrid Class="gap-6 d-flex justify-left">
+    <MudItem Style="min-width: 300px; height: auto;">
+        <MudPaper Class="pa-4">
+            <MudChart ChartType="MudBlazor.ChartType.Pie" LegendPosition="Position.Right" SelectedIndexChanged="@selectedPie" InputData="@supportCasesData" InputLabels="@supportCasesLabels" Width="100%" Height="300px" />
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+} 
+
+<MudDataGrid T="TransactionSummary" Hover="true" Filterable="true">
+    <Columns>
+        <PropertyColumn Property="x => x.CategoryName" Title="Category Name" />
+        <TemplateColumn Title="Total Amount" Sortable="true">
+            <CellTemplate Context="context">
+                <MudText>@context.Item.TotalAmount.ToString("C")</MudText>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>
+
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
@@ -132,12 +149,17 @@
 </script>
 
 @code {
+
     [Parameter]
     public string AccountName { get; set; } = null;
     public string CategoryName { get; set; } = null;
     private List<TransactionCategoryData> Data { get; set; } = new();
     // private ApexChart<TransactionCategoryData> chart;
     // private ApexChartOptions<TransactionCategoryData> options { get; set; } = new();
+    private double[] supportCasesData = Array.Empty<double>();
+    private string[] supportCasesLabels = Array.Empty<string>();
+    private List<TransactionSummary> transactionSummaries = new();
+
 
     int? top = null;
     int? skip = null;
@@ -170,57 +192,46 @@
 
     private double totalSum;
 
-    protected override async Task OnInitializedAsync()
+    private class TransactionSummary
     {
-        //ThemeService.OnChange += UpdateExpensesPieChart;
-        //chart = new ApexChart<TransactionCategoryData>();
+        public string CategoryName { get; set; }
+        public decimal TotalAmount { get; set; }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    { 
-        //if (firstRender && Data != null) { await chart.RenderAsync(); }
+    private async void selectedPie(int selectedData)
+    {
+        if (selectedData != null)
+        {
+            Console.WriteLine("selectedData=" + selectedData);
+            StateHasChanged();
+        }
     }
 
-    // private async void HandleDataPointSelection(SelectedData<TransactionCategoryData> selectedData)
-    // {
-    //     var dataId = selectedData.DataPoint.Items.FirstOrDefault()?.Category;
-    //     if (dataId != null)
-    //     {
-    //         var categoryWithoutPercent = dataId.Split('(')[0].Trim();
-    //         dataId = categoryWithoutPercent;
-    //         CategoryName = dataId;
-    //         if (grid != null)
-    //         {
-    //             await (grid?.ReloadServerData() ?? Task.CompletedTask);
-    //         }
-    //         //await ReloadData();
-    //         StateHasChanged();
-    //     }
-    // }
+    private async void UpdateExpensesPieChart()
+    {        
+        // options = new ApexChartOptions<TransactionCategoryData>
+        // {
+        //     Theme = new Theme()
+        // };
 
-    // private async void UpdateExpensesPieChart()
-    // {        
-    //     options = new ApexChartOptions<TransactionCategoryData>
-    //     {
-    //         Theme = new Theme()
-    //     };
+        // isDarkMode = ThemeService.IsDarkMode;
+        // if (isDarkMode)
+        // {
+        //     options.Theme.Mode = Mode.Dark;
+        //     options.Chart.Background = "var(--mud-palette-background-dark)";
 
-    //     isDarkMode = ThemeService.IsDarkMode;
-    //     if (isDarkMode)
-    //     {
-    //         options.Theme.Mode = Mode.Dark;
-    //         options.Chart.Background = "var(--mud-palette-background-dark)";
-
-    //     }
-    //     else
-    //     {
-    //         options.Theme.Mode = Mode.Light;
-    //         options.Chart.Background = "var(--mud-palette-background)";
-    //     }
-    //     await ResetChart();
-
-    //     StateHasChanged();
-    // }
+        // }
+        // else
+        // {
+        //     options.Theme.Mode = Mode.Light;
+        //     options.Chart.Background = "var(--mud-palette-background)";
+        // }
+        // await ResetChart();
+        await ReloadData();
+        supportCasesData = Data.Select(g => (Math.Abs((double)g.TotalAmount))).ToArray();
+        supportCasesLabels = Data.Select(g => $"{g.Category}").ToArray();
+        StateHasChanged();
+    }
 
     private string SelectedRow(Transaction transaction, int rowNumber)
     {
@@ -280,21 +291,21 @@
         public decimal TotalAmount { get; set; }
     }
 
-    private List<ChartSeries> ConvertToChartSeries(List<TransactionCategoryData> data)
-    {
-        return data.Select(d => new ChartSeries
-            {
-                Name = d.Category,
-                Data = new double[] { (double)d.TotalAmount }
-            }).ToList();
-    }
+    // private List<ChartSeries> ConvertToChartSeries(List<TransactionCategoryData> data)
+    // {
+    //     return data.Select(d => new ChartSeries
+    //         {
+    //             Name = d.Category,
+    //             Data = new double[] { (double)d.TotalAmount }
+    //         }).ToList();
+    // }
 
     protected override async Task OnParametersSetAsync()
     {
         selectedItem = null;
         await ReloadData();
         Totals = await AccountTotals(AccountName);
-        //UpdateExpensesPieChart();
+        UpdateExpensesPieChart();
         StateHasChanged();
     }
 
@@ -302,7 +313,7 @@
     {
         dateRange = newDateRange;
         await ReloadData();
-        //UpdateExpensesPieChart();
+        UpdateExpensesPieChart();
         StateHasChanged();
     }
 
@@ -559,6 +570,7 @@
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
+            UpdateExpensesPieChart();
             NavigationService.NotifyStateChanged();
           //  await ResetChart();
             StateHasChanged();
@@ -576,6 +588,7 @@
         {
             await (grid?.ReloadServerData() ?? Task.CompletedTask);
             await ReloadData();
+            UpdateExpensesPieChart();
             NavigationService.NotifyStateChanged();
             //await ResetChart();
             StateHasChanged();
@@ -617,6 +630,7 @@
 
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
                 await ReloadData();
+                UpdateExpensesPieChart();
                 NavigationService.NotifyStateChanged();
                 StateHasChanged();
             }
@@ -642,6 +656,7 @@
                 await AppService.DeleteTransactionAsync(record.Id!.Value);
                 await (grid?.ReloadServerData() ?? Task.CompletedTask);
                 await ReloadData();
+                UpdateExpensesPieChart();
                 NavigationService.NotifyStateChanged();
             //    await ResetChart();
                 StateHasChanged();
