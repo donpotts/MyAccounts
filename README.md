@@ -6,7 +6,7 @@ Simple financial account management application.
 
 ## Overview
 
-This repository contains an ASP.NET Core application with a Blazor WebAssembly (WASM) and MAUI UI applications in .NET 8. It also includes user authentication using ASP.NET Core 8 Identity, uses Entity Framework Core SQLite as the database, and supports OData for efficient querying.
+This repository contains an ASP.NET Core application with a Blazor WebAssembly (WASM) and MAUI UI applications in .NET. It also includes user authentication using ASP.NET Core Identity, uses Entity Framework Core SQLite as the database, and supports OData for efficient querying.
 
 ## Features
 
@@ -15,7 +15,7 @@ This repository contains an ASP.NET Core application with a Blazor WebAssembly (
 - Maui Blazor UI: A modern cross platform UI framework for .NET.
 - MudBlazor components: Using side and top navigation.
 - Swagger UI: An interactive documentation for your API.
-- ASP.NET Core 8 Identity: A membership system that adds login functionality to your application.
+- ASP.NET Core Identity: A membership system that adds login functionality to your application.
 - Entity Framework Core SQLite: A lightweight database provider for Entity Framework Core.
 - OData Support: A standard for building and consuming RESTful APIs.
 - Import CSV: Use "MyAccounts-2024-08-16-import.csv" for CSV format (Quicken Export All Transactions).
@@ -25,11 +25,11 @@ This repository contains an ASP.NET Core application with a Blazor WebAssembly (
 ### Prerequisites
 
 - Visual Studio 2022
-- .NET 8
+- .NET
 - ASP.NET Core
 - Blazor WASM
 - Swagger UI
-- ASP.NET Core 8 Identity
+- ASP.NET Core Identity
 - MudBlazor Components
 - Entity Framework Core SQLite
 - OData
@@ -52,7 +52,7 @@ Example:  https://myaccounts.azurewebsites.net/swagger
 
 ## Authentication
 
-This application uses ASP.NET Core 8 Identity for user authentication. To log in, navigate to the login page and enter your credentials.
+This application uses ASP.NET Core Identity for user authentication. To log in, navigate to the login page and enter your credentials.
 
 Administrator
 
