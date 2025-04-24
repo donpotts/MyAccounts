@@ -1,4 +1,4 @@
-name: Build and deploy .NET Core application to Web App myaccounts
+name: Build and deploy .NET Core 9 application to Web App myaccounts
 on:
   push:
     branches:
