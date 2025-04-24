@@ -2,7 +2,7 @@ name: Build and deploy .NET Core 9 application to Web App myaccounts
 on:
   push:
     branches:
-    - main
+    - dotnet9
 env:
   AZURE_WEBAPP_NAME: myaccounts
   AZURE_WEBAPP_PACKAGE_PATH: MyAccounts\publish
