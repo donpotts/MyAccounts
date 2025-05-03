@@ -26,6 +26,11 @@
     <Columns>
         @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
         <PropertyColumn Property="x => x!.Name" Title="Name" />
+        <TemplateColumn Title="Budget Account" Sortable="true">
+            <CellTemplate Context="context">
+                <MudCheckBox Value="@context.Item.BudgetAccount" Disabled="true" />
+            </CellTemplate>
+        </TemplateColumn>
         @* <PropertyColumn Property="x => x!.Date" Title="Date" />
         <PropertyColumn Property="x => x!.Balance" Title="Balance" /> *@
         <PropertyColumn @ref="accountTypeColumn" Property="x => x!.AccountType != null ? x.AccountType.Name : null" Title="Account Type" />
@@ -34,6 +39,7 @@
                 @string.Join(", ", context.Item.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? [])
             </CellTemplate>
         </TemplateColumn> *@
+        <PropertyColumn Property="x => x!.Note" Title="Note" />
         <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
             <CellTemplate>
                 <MudStack Row="true">

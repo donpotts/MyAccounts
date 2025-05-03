@@ -12,6 +12,7 @@
         </TitleContent>
         <DialogContent>
             <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
+            <MudCheckBox @bind-Value="record.BudgetCategory" Label="Budget Category"></MudCheckBox>
             @* <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
                 {

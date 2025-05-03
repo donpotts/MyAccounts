@@ -25,6 +25,11 @@
     <Columns>
         <PropertyColumn Property="x => x!.Id" Title="Id" />
         <PropertyColumn Property="x => x!.Name" Title="Name" />
+        <TemplateColumn Title="Budget Account" Sortable="true">
+            <CellTemplate Context="context">
+                <MudCheckBox Value="@context.Item.BudgetCategory" Disabled="true" />
+            </CellTemplate>
+        </TemplateColumn>
         @* <TemplateColumn Title="Account" Sortable="false" Filterable="false">
             <CellTemplate>
                 @string.Join(", ", context.Item.Account?.Select(x => x.Name?.ToString() ?? string.Empty) ?? [])

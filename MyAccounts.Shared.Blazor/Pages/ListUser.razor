@@ -13,7 +13,6 @@
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" Style="width: 140px;" OnClick="@(e => OnAdd())">Add User</MudButton>
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" Style="width: 140px;" OnClick="@(e => OnAddCsv())">Add CSV</MudButton>
 </MudStack>
 
 <MudDataGrid T="ApplicationUserDto" @ref="grid" ServerData="(new Func<GridState<ApplicationUserDto>, Task<GridData<ApplicationUserDto>>>(ServerReload))" Filterable="true">
@@ -96,18 +95,6 @@
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
 
         var result = await DialogService.Show<AddUser>("Add User", dialogOptions).Result;
-
-        if (!result.Canceled)
-        {
-            await (grid?.ReloadServerData() ?? Task.CompletedTask);
-        }
-    }
-
-    private async void OnAddCsv()
-    {
-        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
-
-        var result = await DialogService.Show<CsvImport>("CSV Import", dialogOptions).Result;
 
         if (!result.Canceled)
         {

@@ -66,7 +66,7 @@
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
 </MudStack>
 
-<MudDataGrid T="Transaction" @ref="grid" Hover="true" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true" RowClass="cursor-pointer" RowClassFunc="@SelectedRow" RowClick="RowClicked" SelectedItem="@selectedItem">
+<MudDataGrid T="Transaction" @ref="grid" Hover="true" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true" RowClass="cursor-pointer" RowClassFunc="@SelectedRow" RowClick="RowClicked" SelectedItem="@selectedItem" RowsPerPage="@pageSize">
     <ToolBarContent>
         @if (!string.IsNullOrEmpty(Totals))
         {
@@ -195,6 +195,8 @@
 
     private double totalSum;
 
+    int pageSize = 10;
+
     protected override async Task OnInitializedAsync()
     {
         ThemeService.OnChange += UpdateExpensesPieChart;
@@ -317,6 +319,7 @@
     protected override async Task OnParametersSetAsync()
     {
         selectedItem = null;
+        pageSize = 100;
         await ReloadData();
         Totals = await AccountTotals(AccountName);
         UpdateExpensesPieChart();

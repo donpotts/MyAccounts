@@ -2,16 +2,16 @@
 @inject IDialogService DialogService
 @attribute [Authorize(Roles = "Administrator")]
 
-<PageTitle>File Import</PageTitle>
+<PageTitle>Quicken Export File Import</PageTitle>
 
 <div class="mb-3">
-    <MudText Typo="Typo.h3">File Import</MudText>
+    <MudText Typo="Typo.h3">Quicken Export File Import</MudText>
+    <MudText Typo="Typo.body1">Import Quicken Export File transactions from a CSV file.</MudText>
 </div>
 
-<MudStack AlignItems="AlignItems.Center" Class="mb-3">
-    @* <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" Style="width: 140px;" OnClick="@(e => OnAddBankCsv())">Add Bank CSV</MudButton> *@
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" Style="width: 140px;" OnClick="@(e => OnAddQuickenCsv())">Add Quicken Export CSV</MudButton>
-</MudStack>
+<div>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" Style="width: 240px;" OnClick="@(e => OnAddQuickenCsv())">Add Quicken Export CSV</MudButton>
+</div>
 
 @code 
 {

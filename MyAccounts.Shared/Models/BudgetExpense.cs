@@ -31,5 +31,7 @@ namespace MyAccounts.Shared.Models
         public decimal Balance { get; set; }
         [DataMember]
         public decimal Pay { get; set; }
+        [DataMember]
+        public string? Description { get; set; }
     }
 }

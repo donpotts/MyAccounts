@@ -21,4 +21,7 @@ public class Category
 
     [DataMember]
     public List<Account>? Account { get; set; }
+
+    [DataMember]
+    public bool? BudgetCategory { get; set; }
 }

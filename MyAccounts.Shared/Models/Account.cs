@@ -16,6 +16,12 @@ public class Account
     public string? Name { get; set; }
 
     [DataMember]
+    public string? Note { get; set; }
+
+    [DataMember]
+    public bool? BudgetAccount { get; set; }
+
+    [DataMember]
     public DateTime? Date { get; set; }
 
     [DataMember]

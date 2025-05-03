@@ -21,6 +21,7 @@
                     <MudSelectItem Value="@accountType.Id">@accountType.Name</MudSelectItem>
                 }
             </MudSelect>
+            <MudTextField @bind-Value="record.Note" For="@(() => record.Note)" Label="Note" />
             @* <MudSelect T="long?" Label="Category" MultiSelection="true" @bind-SelectedValues="categoryValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => categoryArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var category in categoryArray ?? Enumerable.Empty<Category>())
                 {
