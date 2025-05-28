@@ -42,6 +42,34 @@ namespace MyAccounts.Models
 
             return transactions;
         }
+
+        public static async Task<List<CreditCardTransactionModel>> ReadCreditCardTransactionsAsync(string csvFilePath)
+        {
+            var bankLines = await File.ReadAllLinesAsync(csvFilePath);
+
+            var csvLines = bankLines.ToList();
+
+            var csvString = string.Join(Environment.NewLine, csvLines).Replace("Payee/Security", "Payee"); ;
+            using StringReader reader = new(csvString);
+            var transactions = new List<CreditCardTransactionModel>();
+
+            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = false,
+            }))
+            {
+                try
+                {
+                    transactions = csv.GetRecords<CreditCardTransactionModel>().ToList();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error reading records: {ex.Message}");
+                }
+            }
+
+            return transactions;
+        }
     }
 
 }

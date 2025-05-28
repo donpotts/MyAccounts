@@ -146,7 +146,7 @@
         {
             _isCancelled = false;
         }
-        
+
     }
 
     private async Task AddTransaction(BankRecord bankRecord)
@@ -254,11 +254,11 @@
             return new() { TotalItems = 0, Items = Enumerable.Empty<Transaction>() };
         }
 
-        var top = state.PageSize;
+        var top = 1000;
         var skip = state.Page * state.PageSize;
         var orderby = "Date DESC, Id DESC";
         var specificDate = _bankRecords.OrderByDescending(record => record.Date).Select(record => record.Date).FirstOrDefault().AddDays(5);
-        var filter = $"Cleared eq false and AccountId eq {_selectedAccount} and Date lt {specificDate:yyyy-MM-dd}";
+        var filter = $"AccountId eq {_selectedAccount} and Date lt {specificDate:yyyy-MM-dd}";
 
         var result = await AppService.ListTransactionODataAsync(top, skip, orderby, filter, false, "Category");
 
@@ -285,7 +285,7 @@
                 .FirstOrDefault(transaction => transaction.Date != null
                     && bankRecord.Date != null
                     && bankRecord.Date.Month == transaction.Date.Value.Month
-                    && transaction.Amount == bankRecord.Amount);
+                    && (transaction.Amount * -1) == (bankRecord.Amount * -1));
 
             if (matchingTransaction == null && !_isCancelled)
             {

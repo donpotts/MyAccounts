@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Extensions;
 using MyAccounts.Data;
 using MyAccounts.Models;
 using MyAccounts.Shared.Models;
@@ -50,6 +51,58 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
 
         var transactions = await QuickenTransactionImporter.ReadQuickenTransactionsAsync(csvFilePath);
         var bankTransactions = await BankTransactionImporter.ReadBankTransactionsAsync(csvFilePath);
+        var creditCardTransactions = await BankTransactionImporter.ReadCreditCardTransactionsAsync(csvFilePath);
+
+        if (creditCardTransactions != null)
+        {
+            foreach (var creditCardTransaction in creditCardTransactions)
+            {
+                Console.WriteLine($"{creditCardTransaction.DateStart} - {creditCardTransaction.DateEnd} - {creditCardTransaction.Amount} - {creditCardTransaction.Description} - {creditCardTransaction.Type}");
+                long? catId;
+                if (creditCardTransaction.Amount > 0)
+                {
+                    catId = 1;
+                }
+                else
+                {
+                    catId = 35;
+                }
+
+                var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount ?? 0) == creditCardTransaction.Amount * -1 && t.Date >= creditCardTransaction.DateStart);
+
+
+                var newTransaction = new Transaction
+                {
+                    Date = creditCardTransaction.DateStart,
+                    Payee = creditCardTransaction.Description,
+                    Amount = creditCardTransaction.Amount * -1,
+                    Description = "Ally Credit Card Transaction Import!",
+                    AccountId = 21,
+                    CategoryId = catId,
+                };
+                if (existingTransaction != null)
+                {
+                    // Update existing transaction
+                    existingTransaction.Date = newTransaction.Date;
+                    existingTransaction.Payee = newTransaction.Payee;
+                    existingTransaction.Amount = newTransaction.Amount;
+                    existingTransaction.Description = "Ally Credit Card Transaction Import Update!";
+                    existingTransaction.CategoryId = newTransaction.CategoryId;
+                    existingTransaction.AccountId = newTransaction.AccountId;
+
+                    ctx.Transaction.Update(existingTransaction);
+                    Console.WriteLine($"Updated Transaction: {existingTransaction.Date} - {existingTransaction.Payee} - {existingTransaction.Amount} - {existingTransaction.CategoryId} - {existingTransaction.AccountId}");
+                }
+                else
+                {
+                    // Insert new transaction
+                    ctx.Transaction.Add(newTransaction);
+                    Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
+                }
+
+                await ctx.SaveChangesAsync();
+            }
+        }
 
         if (bankTransactions != null)
         {

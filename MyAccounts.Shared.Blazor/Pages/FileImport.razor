@@ -16,14 +16,7 @@
 @code 
 {
     string accountName = "";
-
-    private async void OnAddBankCsv()
-    {
-        DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
-
-        var result = await DialogService.Show<CsvBankImport>("CSV Import", dialogOptions).Result;
-    }
-
+    
     private async void OnAddQuickenCsv()
     {
         DialogOptions dialogOptions = new() { FullWidth = true, CloseOnEscapeKey = true };
