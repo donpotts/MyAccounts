@@ -1,6 +1,6 @@
 [
   {
-    "Id": 1,
+   
     "Date": "2024-07-21T00:00:00",
     "Payee": "Cash",
     "AccountId": 1,
@@ -11,7 +11,7 @@
     "Description": "Account One Checking Initial Deposit"
   },
   {
-    "Id": 2,
+    
     "Date": "2024-07-21T00:00:00",
     "Payee": "House",
     "AccountId": 2,
@@ -22,7 +22,7 @@
     "Description": "Account Two Savings Initial Deposit"
   },
   {
-    "Id": 3,
+    
     "Date": "2024-07-20T00:00:00",
     "Payee": "Food Store",
     "AccountId": 3,

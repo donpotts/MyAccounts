@@ -19,6 +19,7 @@ public class TransactionSplit
     public long? CategoryId { get; set; }
 
     [DataMember]
+    [Column(TypeName = "decimal(18, 2)")]
     public decimal? Amount { get; set; }
 
     [DataMember]

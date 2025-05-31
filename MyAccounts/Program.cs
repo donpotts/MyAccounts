@@ -95,7 +95,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlite(builder.Configuration.GetConnectionString("ApplicationDbContext"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDbContext"));
 });
 
 builder.Services.AddRazorPages();
@@ -284,8 +284,10 @@ using (var scope = app.Services.CreateScope())
 
             if (data != null)
             {
+                //ctx.Database.ExecuteSqlRaw("SET IDENTITY_INSERT AccountType ON");
                 ctx.AccountType.AddRange(data);
                 ctx.SaveChanges();
+                //ctx.Database.ExecuteSqlRaw("SET IDENTITY_INSERT AccountType OFF");
             }
         }
         if (File.Exists("Category.Data.json"))

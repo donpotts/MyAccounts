@@ -30,7 +30,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasConversion<double>();
         modelBuilder.Entity<Account>()
             .Property(e => e.Balance)
-            .HasPrecision(19, 4);
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0m);
         modelBuilder.Entity<Account>()
             .HasOne(x => x.AccountType);
         modelBuilder.Entity<Account>()
@@ -42,13 +43,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasConversion<double>();
         modelBuilder.Entity<Transaction>()
             .Property(e => e.Amount)
-            .HasPrecision(19, 4);
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0m);
         modelBuilder.Entity<Transaction>()
             .Property(e => e.Balance)
             .HasConversion<double>();
         modelBuilder.Entity<Transaction>()
             .Property(e => e.Balance)
-            .HasPrecision(19, 4);
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0m);
         modelBuilder.Entity<Transaction>()
             .HasOne(x => x.Account);
         modelBuilder.Entity<Transaction>()
@@ -58,7 +61,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasConversion<double>();
         modelBuilder.Entity<TransactionSplit>()
             .Property(e => e.Amount)
-            .HasPrecision(19, 4);
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0m);
         modelBuilder.Entity<TransactionSplit>()
             .HasOne(x => x.Transaction);
         modelBuilder.Entity<TransactionSplit>()
@@ -78,7 +82,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasConversion<double>();
         modelBuilder.Entity<BudgetAccount>()
             .Property(e => e.MinPayment)
-            .HasPrecision(19, 4);
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0m);
     }
 
     //public List<Category> GetSortedCategories()

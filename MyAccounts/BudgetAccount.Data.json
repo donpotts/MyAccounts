@@ -1,6 +1,6 @@
 [
   {
-    "Id": 1,
+    
     "AccountName": "MY Bank",
     "StartDate": "2025-01-01",
     "DueDate": "1st",
@@ -8,7 +8,7 @@
     "MinPayment": 2000.01
   },
   {
-    "Id": 2,
+    
     "AccountName": "HOA",
     "StartDate": "",
     "DueDate": "2025-01-01",

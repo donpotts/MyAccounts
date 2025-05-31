@@ -25,6 +25,7 @@ public class Account
     public DateTime? Date { get; set; }
 
     [DataMember]
+    [Column(TypeName = "decimal(18, 2)")]
     public decimal? Balance { get; set; }
 
     [DataMember]
