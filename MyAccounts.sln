@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAccounts.Blazor", "MyAcco
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAccounts.Maui.Blazor", "MyAccounts.Maui.Blazor\MyAccounts.Maui.Blazor.csproj", "{F9F603FB-3EFF-4AE4-B4D6-A5A223622E61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbMigrator", "DbMigrator\DbMigrator.csproj", "{85134F55-7B05-4427-93B4-65AAD9618117}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{F9F603FB-3EFF-4AE4-B4D6-A5A223622E61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9F603FB-3EFF-4AE4-B4D6-A5A223622E61}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F9F603FB-3EFF-4AE4-B4D6-A5A223622E61}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{85134F55-7B05-4427-93B4-65AAD9618117}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85134F55-7B05-4427-93B4-65AAD9618117}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85134F55-7B05-4427-93B4-65AAD9618117}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85134F55-7B05-4427-93B4-65AAD9618117}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
