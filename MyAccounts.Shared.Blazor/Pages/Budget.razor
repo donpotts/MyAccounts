@@ -48,13 +48,13 @@
 </MudFileUpload>
 
 <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Class="my-2">
-    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="InsertRowAfterSelection">Insert row</MudButton>
+    @* <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="InsertRowAfterSelection">Insert row</MudButton>
     <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="InsertColAfterSelection">Insert col</MudButton>
     <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="RemoveCol">RemoveCol</MudButton>
-    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="RemoveRow">RemoveRow</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="RemoveRow">RemoveRow</MudButton> *@
     <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="() => Sheet.Commands.Undo()">Undo</MudButton>
     <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="() => Sheet.Commands.Redo()">Redo</MudButton>
-    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.Selection.Value = "Bob")">Set to Bob</MudButton>
+    @* <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.Selection.Value = "Bob")">Set to Bob</MudButton>
     <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => Sheet.SetFormat(Sheet.Selection.Regions, new CellFormat() { BackgroundColor = "red" }))">
         Set bg to red
     </MudButton>
@@ -74,30 +74,39 @@
         Currency
     </MudButton>
     <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="@(() => _datasheet.SetActiveAsync(true))">Set sheet active</MudButton>
-    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="ClearBg">Clear BG</MudButton>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" @onclick="ClearBg">Clear BG</MudButton> *@
 </MudStack>
 
 <MudStack Spacing="0">
-    <MudCheckBox @bind-Value="StickyHeadings" Label="Sticky headings"></MudCheckBox>
+    @* <MudCheckBox @bind-Value="StickyHeadings" Label="Sticky headings"></MudCheckBox>
     <MudCheckBox @bind-Value="ShowRowHeadings" Label="Show row headings"></MudCheckBox>
-    <MudCheckBox @bind-Value="ShowColHeadings" Label="Show col headings"></MudCheckBox>
+     <MudCheckBox @bind-Value="ShowColHeadings" Label="Show col headings"></MudCheckBox>
     <MudCheckBox @bind-Value="IsDarkMode" Label="Darkmode"></MudCheckBox>
-    <MudCheckBox @bind-Value="ShowFormulaDependents" Label="Show formula dependents"></MudCheckBox>
+    @* <MudCheckBox @bind-Value="ShowFormulaDependents" Label="Show formula dependents"></MudCheckBox> *@
+    <MudCheckBox @bind-Value="IsDarkMode" Label="Darkmode"></MudCheckBox>
 </MudStack>
 
 @code {
     private Sheet Sheet;
     private string Theme => IsDarkMode ? "dark" : "default";
     private bool _isDarkMode;
+    private bool IsDarkMode
+    {
+        get => _isDarkMode;
+        set
+        {
+            if (_isDarkMode == value) return;
+            _isDarkMode = value;
+            UpdateSheetTextColor();
+            StateHasChanged();
+        }
+    }
     private string FilterValue { get; set; }
-
     private bool StickyHeadings { get; set; } = true;
     private bool ShowRowHeadings { get; set; } = true;
     private bool ShowColHeadings { get; set; } = true;
-    private bool IsDarkMode { get; set; }
     private Datasheet _datasheet = default!;
     private bool ShowFormulaDependents { get; set; }
-
     private string columnLetter;
     private IDialogReference _dialogRef;
     IList<IBrowserFile> files = new List<IBrowserFile>();
@@ -111,13 +120,20 @@
         Sheet.EndBatchUpdates();
         Sheet.Commands.ResumeHistory();
         Sheet.ScreenUpdating = true;
+        UpdateSheetTextColor();
+    }
+
+    private void UpdateSheetTextColor()
+    {
+        string textColor = IsDarkMode ? "white" : "black";
+        var newFormat = new CellFormat() { ForegroundColor = textColor };
+        Sheet.SetFormat(Sheet.Region, newFormat);
     }
 
     private async void UploadExcelFile(IBrowserFile file)
     {
         if (file == null) return;
-        
-       
+
         _dialogRef = DialogService.Show<LoadingProgressDialog>("", new DialogOptions() { CloseButton = false, BackdropClick = false });
         await InvokeAsync(StateHasChanged);
         await Task.Delay(500);
@@ -135,7 +151,7 @@
 
             var lastRow = worksheet.LastRowUsed().RowNumber();
             var lastCol = worksheet.LastColumnUsed().ColumnNumber();
-            
+
             await InvokeAsync(() =>
             {
                 Sheet.ScreenUpdating = false;
@@ -145,7 +161,7 @@
 
             const int chunkSize = 500;
             var currentChunk = new List<CellDataForUI>();
-        
+
             for (int row = 1; row <= lastRow; row++)
             {
                 for (int col = 1; col <= lastCol; col++)
@@ -193,7 +209,6 @@
                             Formula = formula
                         });
 
-            
                     if (currentChunk.Count >= chunkSize || (row == lastRow && col == lastCol))
                     {
                         var chunkToProcess = new List<CellDataForUI>(currentChunk);
@@ -230,19 +245,15 @@
                                 }
                             }
                         });
-                        //await Task.Delay(10);
                     }
-                    //await Task.Delay(10);
                 }
-                //await Task.Delay(10);
             }
-
+            UpdateSheetTextColor();
             await InvokeAsync(() =>
             {
                 Sheet.EndBatchUpdates();
                 Sheet.Commands.ResumeHistory();
                 Sheet.ScreenUpdating = true;
-
                 _dialogRef?.Close();
                 _dialogRef = null;
                 StateHasChanged();
@@ -257,97 +268,5 @@
         public object Value { get; set; }
         public CellFormat Format { get; set; }
         public string Formula { get; set; }
-    }
-
-
-    private void SortSelectionDesc()
-    {
-        if (Sheet.Selection.ActiveRegion == null)
-            return;
-        Sheet.Commands.ExecuteCommand(
-            new SortRangeCommand(Sheet.Selection.ActiveRegion, new ColumnSortOptions(0, false))
-        );
-    }
-
-    private void SortSelectionAsc()
-    {
-        if (Sheet.Selection.ActiveRegion == null)
-            return;
-        Sheet.Commands.ExecuteCommand(
-            new SortRangeCommand(Sheet.Selection.ActiveRegion, new ColumnSortOptions(0, true))
-        );
-    }
-
-    private void InsertRowAfterSelection()
-    {
-        if (Sheet.Selection.ActiveRegion == null)
-        {
-            return;
-        }
-
-        Sheet.Rows.InsertAt(Sheet.Selection.ActiveRegion.TopLeft.row);
-    }
-
-    private void InsertColAfterSelection()
-    {
-        if (Sheet.Selection.ActiveRegion == null)
-        {
-            return;
-        }
-
-        Sheet.Columns.InsertAt(Sheet.Selection.ActiveRegion.TopLeft.col);
-    }
-
-    private void RemoveCol()
-    {
-        if (Sheet.Selection.ActiveRegion == null)
-        {
-            return;
-        }
-
-        Sheet.Columns.RemoveAt(Sheet.Selection.ActiveRegion.Left);
-    }
-
-    private void RemoveRow()
-    {
-        if (Sheet.Selection.ActiveRegion == null)
-        {
-            return;
-        }
-
-        Sheet.Rows.RemoveAt(Sheet.Selection.ActiveRegion.Top);
-    }
-
-    private void SetBorder(IReadOnlyList<IRegion> selectionRegions, int width, string color)
-    {
-        var format = new CellFormat()
-            {
-                BorderBottom = new Border()
-                {
-                    Width = width,
-                    Color = color
-                },
-                BorderLeft = new Border()
-                {
-                    Width = width,
-                    Color = color
-                },
-                BorderRight = new Border()
-                {
-                    Width = width,
-                    Color = color
-                },
-                BorderTop = new Border()
-                {
-                    Width = width,
-                    Color = color
-                }
-            };
-        Sheet.SetFormat(selectionRegions, format);
-    }
-
-    private void ClearBg()
-    {
-        Sheet.SetFormat(Sheet.Selection.Regions, new CellFormat() { BackgroundColor = null });
     }
 }
