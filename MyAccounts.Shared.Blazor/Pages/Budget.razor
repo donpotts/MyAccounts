@@ -125,7 +125,7 @@
 
     private void UpdateSheetTextColor()
     {
-        string textColor = IsDarkMode ? "white" : "black";
+        string textColor = IsDarkMode ? "#E0E0E0" : "black";
         var newFormat = new CellFormat() { ForegroundColor = textColor };
         Sheet.SetFormat(Sheet.Region, newFormat);
     }

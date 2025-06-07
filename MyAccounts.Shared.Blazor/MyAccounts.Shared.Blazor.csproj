@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>abc7177d-469f-43a8-94a7-7049055279b7</UserSecretsId>
   </PropertyGroup>
 
 
@@ -17,6 +18,7 @@
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.16" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.16" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="MudBlazor" Version="7.15.0" />
   </ItemGroup>
 

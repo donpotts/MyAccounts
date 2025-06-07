@@ -77,7 +77,7 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                     Payee = creditCardTransaction.Description,
                     Amount = creditCardTransaction.Amount * -1,
                     Description = "Ally Credit Card Transaction Import!",
-                    AccountId = 21,
+                    AccountId = 20,
                     CategoryId = catId,
                 };
                 if (existingTransaction != null)
