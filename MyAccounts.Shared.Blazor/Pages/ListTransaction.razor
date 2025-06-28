@@ -136,6 +136,9 @@
         <MudDataGridPager T="Transaction" PageSizeOptions="new int[] { 10, 20, 50, 100, 250, 500, 750, 1000 }" />
     </PagerContent>
 </MudDataGrid>
+<MudScrollToTop>
+    <MudFab Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.ArrowCircleUp" />
+</MudScrollToTop>
 <script>
     window.downloadFromBase64 = function (base64, filename) {
     var a = document.createElement("a");
