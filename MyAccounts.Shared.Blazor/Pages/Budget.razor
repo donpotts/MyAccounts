@@ -11,6 +11,8 @@
 @using ClosedXML.Excel
 @using System.IO
 @using System.Timers
+@using ExcelExporter = MyAccounts.Shared.Blazor.Components.ExcelExporter
+
 @inject IJSRuntime JSRuntime
 @inject IDialogService DialogService
 
@@ -32,8 +34,11 @@
     <ActivatorContent>
         <MudButton Variant="Variant.Filled"
         Color="MudBlazor.Color.Primary">
-            Excel Budget
+            Import Excel Budget
         </MudButton>
+        
+    
+    <ExcelExporter Sheet="Sheet" />
     </ActivatorContent>
     <SelectedTemplate>
         @if (context != null)
@@ -123,6 +128,14 @@
         UpdateSheetTextColor();
     }
 
+    private void HandleSheetImported(Sheet importedSheet)
+    {
+        Sheet = importedSheet;
+        UpdateSheetTextColor(); // Optional: keeps dark mode formatting consistent
+        StateHasChanged();
+    }
+
+
     private void UpdateSheetTextColor()
     {
         string textColor = IsDarkMode ? "#E0E0E0" : "black";
@@ -133,8 +146,17 @@
     private async void UploadExcelFile(IBrowserFile file)
     {
         if (file == null) return;
+        var parameters = new DialogParameters
+        {
+            { "Message", "Importing Excel Data..." }
+        };
 
-        _dialogRef = DialogService.Show<LoadingProgressDialog>("", new DialogOptions() { CloseButton = false, BackdropClick = false });
+        _dialogRef = DialogService.Show<LoadingProgressDialog>("", parameters, new DialogOptions
+        {
+            CloseButton = false,
+            BackdropClick = true
+        });
+
         await InvokeAsync(StateHasChanged);
         await Task.Delay(500);
         await InvokeAsync(StateHasChanged);

@@ -2,7 +2,7 @@
 
 <MudDialog>
     <TitleContent>
-        <h3 class="mud-typography mud-h3">Loading Excel Data</h3>
+        <h3 class="mud-typography mud-h3">@Message</h3>
     </TitleContent>
     <DialogContent>
         <div>
@@ -11,3 +11,8 @@
         </div>
     </DialogContent>
 </MudDialog>
+
+@code {
+[CascadingParameter] MudDialogInstance MudDialog { get; set; }
+[Parameter] public string Message { get; set; }
+}

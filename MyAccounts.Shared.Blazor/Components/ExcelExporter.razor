@@ -1,0 +1,155 @@
+@using BlazorDatasheet.Core.Data
+@using ClosedXML.Excel
+@inject IJSRuntime JSRuntime
+@inject IDialogService DialogService
+
+<MudButton Variant="Variant.Filled"
+            Color="MudBlazor.Color.Primary"
+            OnClick="ExportToExcel">
+    Export to Excel
+</MudButton>
+
+@code {
+    [Parameter]
+    public Sheet Sheet { get; set; }
+    private bool isExporting = false;
+    private IDialogReference _dialogRef;
+    private async Task ExportToExcel()
+    {        
+        var parameters = new DialogParameters
+        {
+            { "Message", "Exporting data to Excel..." }
+        };
+
+        _dialogRef = DialogService.Show<LoadingProgressDialog>("", parameters, new DialogOptions
+        {
+            CloseButton = false,
+            BackdropClick = true
+        });
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(500);
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(500);
+        StateHasChanged();
+        using var workbook = new XLWorkbook();
+        var worksheet = workbook.Worksheets.Add("Budget");
+        //worksheet.Range(1, 1, 55, 26).Style.Border.OutsideBorder = XLBorderStyleValues.None;
+        worksheet.ShowGridLines = true;
+        worksheet.PageSetup.ShowGridlines = true;
+        worksheet.Range("A1:Z55").Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        worksheet.Range("A1:Z55").Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        worksheet.Style.Font.FontName = "Calibri";
+        worksheet.Style.Font.FontSize = 16;
+        worksheet.SheetView.FreezeRows(1);
+        worksheet.SheetView.FreezeColumns(6);
+        await InvokeAsync(() =>
+        {
+            for (int r = 0; r < Sheet.NumRows; r++)
+            {
+                for (int c = 0; c < Sheet.NumCols; c++)
+                {
+                    var cell = Sheet.Cells[r, c];
+                    var xlCell = worksheet.Cell(r + 1, c + 1);
+
+                    xlCell.Style.Font.FontName = "Calibri";
+                    xlCell.Style.Font.FontSize = 16;
+
+                    if (!string.IsNullOrEmpty(cell.Formula))
+                    {
+                        xlCell.FormulaA1 = cell.Formula;
+                    }
+                    else if (cell.Value != null)
+                    {
+                        if (cell.Value is decimal or double or float)
+                            xlCell.Value = Convert.ToDouble(cell.Value);
+                        else if (cell.Value is int or long or short)
+                            xlCell.Value = Convert.ToInt64(cell.Value);
+                        else
+                            xlCell.Value = cell.Value.ToString();
+                    }
+
+                    if (cell.Format != null)
+                    {
+                        try
+                        {
+                            xlCell.Style.Font.FontColor = XLColor.FromHtml(cell.Format.ForegroundColor); //"#000000");
+                        }
+                        catch {}
+
+                        try
+                        {
+                            xlCell.Style.Fill.BackgroundColor = XLColor.FromHtml(NormalizeColor(cell.Format.BackgroundColor));
+                        }
+                        catch {}
+
+                        if (!string.IsNullOrEmpty(cell.Format.NumberFormat))
+                        {
+                            xlCell.Style.NumberFormat.Format = cell.Format.NumberFormat;
+                        }
+                    }
+                }
+            }
+        });
+
+        await InvokeAsync(() =>
+        {
+            for (int c = 0; c < Sheet.NumCols; c++)
+            {
+                // var size = Sheet.Columns.GetSize(c);
+                // if (size > 0)
+                // {
+                //     worksheet.Column(c + 1).Width = size / 7.5; // approximate conversion from pixels to Excel width
+                // }
+                if (c < 2)
+                   worksheet.Column(c + 1).Width = 30;
+                else
+                   worksheet.Column(c + 1).Width = 15;
+            }
+
+            //worksheet.Columns().AdjustToContents();
+            //worksheet.Rows().AdjustToContents(); 
+        });
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        stream.Position = 0;
+
+        var bytes = stream.ToArray();
+        var base64 = Convert.ToBase64String(bytes);
+        var fileName = $"Budget-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
+            
+        await InvokeAsync(() =>
+        {
+            _dialogRef?.Close();
+            _dialogRef = null;
+            Sheet = null;
+            StateHasChanged();
+        });
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, base64);
+    }
+    
+
+    private string NormalizeColor(string color)
+    {
+        if (string.IsNullOrWhiteSpace(color))
+            return "#000000";
+
+        return color.ToLower() switch
+        {
+            "black" => "#000000",
+            "white" => "#ffffff",
+            "red" => "#ff0000",
+            "green" => "#008000",
+            "blue" => "#0000ff",
+            "yellow" => "#ffff00",
+            "gray" => "#808080",
+            "lightgray" => "#d3d3d3",
+            "darkgray" => "#a9a9a9",
+            "transparent" => "#ffffff",
+            _ when color.StartsWith("#") => color,
+            _ => "#ffffff"
+        };
+    }
+}
+
+
+
