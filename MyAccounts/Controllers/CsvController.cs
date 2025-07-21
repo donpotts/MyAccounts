@@ -13,7 +13,7 @@ namespace MyAccounts.Controllers;
 public class CsvController(CsvService csvService) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> PostAsync(IFormFile file)
+    public async Task<IActionResult> PostAsync(IFormFile file, [FromForm] long? accountId)
     {
         var extension = file.ContentType switch
         {
@@ -24,15 +24,17 @@ public class CsvController(CsvService csvService) : ControllerBase
         try
         {
             using var stream = file.OpenReadStream();
-            return Ok($"\"{await csvService.SaveToUploadsAsync(extension, stream, "")}\"");
+            var accountIdValue = accountId ?? 0;
+            var (filePath, insertedCount) = await csvService.SaveToUploadsAsync(extension, stream, accountIdValue);
+            return Ok(new { filePath, insertedCount });
         }
         catch (ArgumentException ex)
         {
-            return BadRequest($"\"{ex.Message}\"");
+            return BadRequest($"{ex.Message}");
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"\"{ex.Message}\"");
+            return StatusCode(500, $"{ex.Message}");
         }
     }
 }

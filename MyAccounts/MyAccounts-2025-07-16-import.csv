@@ -1,0 +1,18 @@
+All Transactions Report Created: 2025-07-16 11:13:23 -0500
+,
+﻿Filter Criteria:,All Dates
+,All Accounts
+,Any Status
+,All Accounts
+,
+﻿,"Scheduled","Split","Date","Payee","Category","Amount","Account"
+﻿,,,"7/6/2025","Food Store","Groceries","-7.61","My Checking"
+﻿,,"S","7/5/2025","All Stuff","Clothing","-19.71","His Debit"
+﻿,,"S","7/5/2025","All Stuff","Groceries","-49.30","His Debit"
+﻿,,"S","7/5/2025","All Stuff","Stupid Stuff","-5.99","His Debit"
+﻿,,"S","7/5/2025","All Stuff","Cash","-100.00","His Debit"
+﻿,,,"7/1/2025","Food Store","Groceries","-15.92","My Checking"
+﻿,,,"7/2/2025","Food Store","Groceries","-25.92","My Checking"
+﻿,,,"7/3/2025","Food Store","Groceries","-35.92","My Checking"
+﻿
+﻿

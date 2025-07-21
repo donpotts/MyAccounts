@@ -12,7 +12,7 @@ using MyAccounts.Data;
 namespace MyAccounts.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250531000226_InitialCreate")]
+    [Migration("20250721050106_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

@@ -11,7 +11,7 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
 {
     private readonly string webRootPath = environment.WebRootPath;
 
-    public async Task<string> SaveToUploadsAsync(string? extension, Stream csvFile, string accountName)
+    public async Task<(string filePath, int insertedCount)> SaveToUploadsAsync(string? extension, Stream csvFile, long accountId)
     {
         decimal? SumTransactionSplits = 00.0M;
         string todaySplit = "Split"+System.DateOnly.FromDateTime(System.DateTime.Now).ToString("yyyyMMdd");
@@ -49,13 +49,24 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
 
         string csvFilePath = filePath;
 
+        // Detect CSV type by reading the first line
+        string firstLine;
+        using (var reader = new StreamReader(csvFilePath))
+        {
+            firstLine = await reader.ReadLineAsync() ?? string.Empty;
+        }
+        bool isGenericCreditCard = firstLine.Contains("Transaction Date") && firstLine.Contains("Card No.") && firstLine.Contains("Debit") && firstLine.Contains("Credit");
+
         var transactions = await QuickenTransactionImporter.ReadQuickenTransactionsAsync(csvFilePath);
         var bankTransactions = await BankTransactionImporter.ReadBankTransactionsAsync(csvFilePath);
-        var creditCardTransactions = await BankTransactionImporter.ReadCreditCardTransactionsAsync(csvFilePath);
+        var genericCreditCardTransactions = isGenericCreditCard ? await BankTransactionImporter.ReadGenericCreditCardTransactionsAsync(csvFilePath) : null;
+        var bankCreditCardTransactions = !isGenericCreditCard ? await BankTransactionImporter.ReadBankCreditCardTransactionsAsync(csvFilePath) : null;
 
-        if (creditCardTransactions != null)
+        int insertedCount = 0;
+
+        if (bankCreditCardTransactions != null)
         {
-            foreach (var creditCardTransaction in creditCardTransactions)
+            foreach (var creditCardTransaction in bankCreditCardTransactions)
             {
                 Console.WriteLine($"{creditCardTransaction.DateStart} - {creditCardTransaction.DateEnd} - {creditCardTransaction.Amount} - {creditCardTransaction.Description} - {creditCardTransaction.Type}");
                 long? catId;
@@ -76,9 +87,10 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                     Date = creditCardTransaction.DateStart,
                     Payee = creditCardTransaction.Description,
                     Amount = creditCardTransaction.Amount * -1,
-                    Description = "Ally Credit Card Transaction Import!",
-                    AccountId = 20,
+                    Description = "Bank Credit Card Transaction Import!",
+                    AccountId = accountId,
                     CategoryId = catId,
+                    Cleared = true
                 };
                 if (existingTransaction != null)
                 {
@@ -86,7 +98,7 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                     existingTransaction.Date = newTransaction.Date;
                     existingTransaction.Payee = newTransaction.Payee;
                     existingTransaction.Amount = newTransaction.Amount;
-                    existingTransaction.Description = "Ally Credit Card Transaction Import Update!";
+                    existingTransaction.Description = "Bank Credit Card Transaction Import Update!";
                     existingTransaction.CategoryId = newTransaction.CategoryId;
                     existingTransaction.AccountId = newTransaction.AccountId;
 
@@ -97,36 +109,43 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                 {
                     // Insert new transaction
                     ctx.Transaction.Add(newTransaction);
+                    insertedCount++;
                     Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
                 }
 
                 await ctx.SaveChangesAsync();
             }
         }
-
-        if (bankTransactions != null)
+        
+        if (genericCreditCardTransactions != null)
         {
-            foreach (var bankTransaction in bankTransactions)
+            foreach (var creditCardTransaction in genericCreditCardTransactions)
             {
-                Console.WriteLine($"{bankTransaction.Date} - {bankTransaction.Time} - {bankTransaction.Amount} - {bankTransaction.Description} - {bankTransaction.Type}");
+                Console.WriteLine($"{creditCardTransaction.TransactionDate} - {creditCardTransaction.PostedDate} - {creditCardTransaction.Debit} - {creditCardTransaction.Credit} - {creditCardTransaction.Description} - {creditCardTransaction.Category}");
                 long? catId;
-                if (bankTransaction.Amount > 0)
+                decimal amount = creditCardTransaction.Debit ?? 0;
+                if (amount > 0)
                 {
-                    catId = 6;
+                    catId = 1;
+                    amount = -amount; // Debits are negative (expenses)
                 }
                 else
                 {
-                    catId = 5;
+                    catId = 35;
+                    amount = creditCardTransaction.Credit ?? 0; // Credits are positive (payments/refunds)
                 }
 
-                var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount == bankTransaction.Amount && t.Date == bankTransaction.Date));
+                var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount ?? 0) == amount && t.Date == creditCardTransaction.TransactionDate);
+
                 var newTransaction = new Transaction
                 {
-                    Date = bankTransaction.Date,
-                    Payee = bankTransaction.Description,
-                    Amount = bankTransaction.Amount,
-                    AccountId = 4,
+                    Date = creditCardTransaction.TransactionDate,
+                    Payee = creditCardTransaction.Description,
+                    Amount = amount,
+                    Description = "Credit Card Transaction Import!",
+                    AccountId = accountId,
                     CategoryId = catId,
+                    Cleared = true
                 };
                 if (existingTransaction != null)
                 {
@@ -134,6 +153,7 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                     existingTransaction.Date = newTransaction.Date;
                     existingTransaction.Payee = newTransaction.Payee;
                     existingTransaction.Amount = newTransaction.Amount;
+                    existingTransaction.Description = "Credit Card Transaction Import Update!";
                     existingTransaction.CategoryId = newTransaction.CategoryId;
                     existingTransaction.AccountId = newTransaction.AccountId;
 
@@ -144,10 +164,60 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                 {
                     // Insert new transaction
                     ctx.Transaction.Add(newTransaction);
+                    insertedCount++;
                     Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
                 }
 
                 await ctx.SaveChangesAsync();
+            }
+
+            if (bankTransactions != null)
+            {
+                foreach (var bankTransaction in bankTransactions)
+                {
+                    Console.WriteLine($"{bankTransaction.Date} - {bankTransaction.Time} - {bankTransaction.Amount} - {bankTransaction.Description} - {bankTransaction.Type}");
+                    long? catId;
+                    if (bankTransaction.Amount > 0)
+                    {
+                        catId = 6;
+                    }
+                    else
+                    {
+                        catId = 5;
+                    }
+
+                    var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount == bankTransaction.Amount && t.Date == bankTransaction.Date));
+                    var newTransaction = new Transaction
+                    {
+                        Date = bankTransaction.Date,
+                        Payee = bankTransaction.Description,
+                        Amount = bankTransaction.Amount,
+                        AccountId = accountId == 0 ? 4 : accountId, // fallback to 4 if not provided
+                        CategoryId = catId,
+                        Cleared = true
+                    };
+                    if (existingTransaction != null)
+                    {
+                        // Update existing transaction
+                        existingTransaction.Date = newTransaction.Date;
+                        existingTransaction.Payee = newTransaction.Payee;
+                        existingTransaction.Amount = newTransaction.Amount;
+                        existingTransaction.CategoryId = newTransaction.CategoryId;
+                        existingTransaction.AccountId = newTransaction.AccountId;
+
+                        ctx.Transaction.Update(existingTransaction);
+                        Console.WriteLine($"Updated Transaction: {existingTransaction.Date} - {existingTransaction.Payee} - {existingTransaction.Amount} - {existingTransaction.CategoryId} - {existingTransaction.AccountId}");
+                    }
+                    else
+                    {
+                        // Insert new transaction
+                        ctx.Transaction.Add(newTransaction);
+                        insertedCount++;
+                        Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
+                    }
+
+                    await ctx.SaveChangesAsync();
+                }
             }
         }
 
@@ -182,33 +252,15 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                 categoryId = (int)category.Id;
             }
 
-            // Get the AccountId
-            var account = await ctx.Account.FirstOrDefaultAsync(x => x.Name == transaction.Account);
-            int accountId;
-            if (account == null)
-            {
-                // Create a new Account if it doesn't exist
-                account = new Account
-                {
-                    Name = transaction.Account
-                };
-                ctx.Account.Add(account);
-                await ctx.SaveChangesAsync();
-                accountId = (int)account.Id;
-            }
-            else
-            {
-                accountId = (int)account.Id;
-            }
-
-            // Create a new Transaction
+            // Always use provided accountId
             var newTransaction = new Transaction
             {
                 Date = transaction.Date,
                 Payee = transaction.Payee,
                 Amount = transaction.Amount,
                 CategoryId = categoryId,
-                AccountId = accountId
+                AccountId = accountId == 0 ? accountId : accountId,
+                Cleared = true
             };
 
             if (transaction.Split == "S")
@@ -234,12 +286,11 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
             {
                 // Insert new transaction
                 ctx.Transaction.Add(newTransaction);
+                insertedCount++;
                 Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
             }
 
             await ctx.SaveChangesAsync();
-
-            //Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
         }
 
         var splitTrans = ctx.Transaction.Where(x => x.Description == todaySplit)
@@ -285,6 +336,6 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
 
         await ctx.SaveChangesAsync();
 
-        return $"/upload/csv/{fileName}";
+        return ($"/upload/csv/{fileName}", insertedCount);
     }
 }

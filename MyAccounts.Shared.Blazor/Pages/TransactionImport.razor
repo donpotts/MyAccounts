@@ -1,0 +1,66 @@
+@page "/transactionimport"
+@using CsvHelper.Configuration
+@using MudBlazor
+@using Size = MudBlazor.Size
+@inject ISnackbar Snackbar
+@inject AppService AppService
+@inject IDialogService DialogService
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>Transaction Import</PageTitle>
+
+<div class="mb-3">
+    <MudText Typo="Typo.h3">Transaction Import</MudText>
+    <MudText Typo="Typo.body1">Import transactions from a CSV file and select the account to import into.</MudText>
+</div>
+
+<MudFileUpload T="IBrowserFile" Accept=".csv" FilesChanged="ProcessFileAsync" Disabled="_isProcessing">
+    <ActivatorContent>
+        <MudButton Variant="Variant.Filled" MudBlazor.Color="Primary">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2" Typo="Typo.button">Processing</MudText>
+            }
+            else
+            {
+                <MudIcon Class="ms-n1" Size="Size.Small" Icon="@Icons.Material.Filled.UploadFile" />
+                <MudText Class="ms-2" Typo="Typo.button">Import Transaction CSV</MudText>
+            }
+        </MudButton>
+    </ActivatorContent>
+</MudFileUpload>
+
+@code {
+    private bool _isProcessing = false;
+    private IBrowserFile? _uploadedFile;
+    private long? _selectedAccountId;
+
+    private async Task ProcessFileAsync(IBrowserFile? file)
+    {
+        if (file == null)
+            return;
+
+        _isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            // Show dialog to select account
+            var dialogOptions = new DialogOptions { CloseOnEscapeKey = true };
+            var dialog = DialogService.Show<AccountSelectorDialog>("Select Account", dialogOptions);
+            var result = await dialog.Result;
+            if (!result.Canceled && result.Data is long selectedAccountId)
+            {
+                _selectedAccountId = selectedAccountId;
+                Console.WriteLine($"Selected AccountId: {_selectedAccountId}");
+                // TODO: Continue with file processing and import using _selectedAccountId
+            }
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+}

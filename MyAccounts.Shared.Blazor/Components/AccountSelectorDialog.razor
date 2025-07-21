@@ -1,0 +1,49 @@
+@using MudBlazor
+@inject AppService AppService
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Select Account</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect T="long?" Label="Account" @bind-Value="_selectedAccount">
+            @if (_accounts != null)
+            {
+                foreach (var account in _accounts.OrderBy(a => a.Name))
+                {
+                    <MudSelectItem Value="account.Id">@account.Name</MudSelectItem>
+                }
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="OnCancel">Cancel</MudButton>
+        <MudButton OnClick="OnSelect" Color="MudBlazor.Color.Primary">Select</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    private Account[]? _accounts;
+    private long? _selectedAccount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allAccounts = await AppService.ListAccountAsync();
+        _accounts = allAccounts?.Where(a => a.AccountType != null && a.AccountType.Name == "Credit Card").ToArray();
+    }
+
+    private void OnSelect()
+    {
+        if (_selectedAccount.HasValue)
+        {
+            Console.WriteLine($"Selected AccountId: {_selectedAccount.Value}");
+        }
+        MudDialog.Close(_selectedAccount);
+    }
+
+    private void OnCancel()
+    {
+        MudDialog.Cancel();
+    }
+}
