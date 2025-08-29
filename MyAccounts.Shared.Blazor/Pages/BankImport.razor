@@ -5,6 +5,8 @@
 @inject ISnackbar Snackbar
 @inject AppService AppService
 @inject IDialogService DialogService
+@inject NavigationService NavigationService
+
 @attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Statement Import</PageTitle>
@@ -163,6 +165,8 @@
             };
 
         await AppService.InsertTransactionAsync(newTransaction);
+        NavigationService.NotifyStateChanged();
+        StateHasChanged();
     }
 
     private async Task NextTransaction(BankRecord bankRecord)

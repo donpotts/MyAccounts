@@ -56,6 +56,11 @@
         {
             Snackbar.Add(ex.Message, Severity.Error);
         }
+        finally
+        {
+            NavigationService.NotifyStateChanged();
+            StateHasChanged();
+        }
 
         return null;
     }

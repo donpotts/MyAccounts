@@ -5,6 +5,8 @@
 @inject ISnackbar Snackbar
 @inject AppService AppService
 @inject IDialogService DialogService
+@inject NavigationService NavigationService
+
 @attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Transaction Import</PageTitle>
@@ -60,6 +62,7 @@
         finally
         {
             _isProcessing = false;
+            NavigationService.NotifyStateChanged();
             StateHasChanged();
         }
     }
