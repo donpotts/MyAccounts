@@ -289,8 +289,7 @@
 
             var matchingTransaction = transactions?
                 .FirstOrDefault(transaction => transaction.Date != null
-                    && bankRecord.Date != null
-                    && bankRecord.Date.Month == transaction.Date.Value.Month
+                    && Math.Abs((bankRecord.Date.ToDateTime(TimeOnly.MinValue) - transaction.Date.Value.ToDateTime(TimeOnly.MinValue)).TotalDays) <= 7
                     && (transaction.Amount * -1) == (bankRecord.Amount * -1));
 
             if (matchingTransaction == null && !_isCancelled)
