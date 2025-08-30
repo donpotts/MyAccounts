@@ -171,6 +171,7 @@
 
     private async Task NextTransaction(BankRecord bankRecord)
     {
+        NavigationService.NotifyStateChanged();
         StateHasChanged();
     }
 
@@ -346,6 +347,7 @@
         finally
         {
             _isSaving = false;
+            NavigationService.NotifyStateChanged();
             StateHasChanged();
         }
     }
