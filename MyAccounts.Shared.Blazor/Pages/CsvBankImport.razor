@@ -80,9 +80,8 @@
         {
             var my =  accountValues?.Select(x => new Account { Id = x, Name = accountName }).FirstOrDefault();
             var myrecord = await AppService.GetAccountByIdAsync(my.Id);
-            AppService.UploadBankAccountCsvAsync(file, myrecord.Name);
+            await AppService.UploadBankAccountCsvAsync(file, myrecord.Name);
             MudDialog?.Close();
-            NavigationService.NotifyStateChanged();
         }
         catch (Exception ex)
         {

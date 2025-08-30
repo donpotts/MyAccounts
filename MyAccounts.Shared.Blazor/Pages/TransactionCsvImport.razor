@@ -42,6 +42,8 @@
         }
         Console.WriteLine($"Selected AccountId: {accountId}");
         await UploadCsvAsync(file, accountId);
+        NavigationService.NotifyStateChanged();
+        StateHasChanged();
     }
 
     private async Task<string?> UploadCsvAsync(IBrowserFile file, long accountId)

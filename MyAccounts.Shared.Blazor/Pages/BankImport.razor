@@ -233,6 +233,7 @@
         finally
         {
             _isProcessing = false;
+            NavigationService.NotifyStateChanged();
             StateHasChanged();
         }
     }
