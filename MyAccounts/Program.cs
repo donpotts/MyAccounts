@@ -95,7 +95,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlite(builder.Configuration.GetConnectionString("ApplicationDbContext"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("ApplicationDbContext"));
 });
 
 builder.Services.AddRazorPages();
