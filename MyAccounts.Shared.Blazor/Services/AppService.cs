@@ -1104,4 +1104,25 @@ public class AppService(
 
         await HandleResponseErrorsAsync(response);
     }
+
+    public async Task<string?> UploadCsvAsync(IBrowserFile file, long accountId)
+    {
+        using var stream = file.OpenReadStream(file.Size);
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        MultipartFormDataContent content = [];
+        StreamContent fileContent = new(stream, Convert.ToInt32(file.Size));
+        fileContent.Headers.ContentType = new(file.ContentType);
+        content.Add(fileContent, "file", "CsvImport.csv");
+        content.Add(new StringContent(accountId.ToString()), "accountId");
+
+        HttpRequestMessage request = new(HttpMethod.Post, $"/api/csv");
+        request.Headers.Add("Authorization", $"Bearer {token}");
+        request.Content = content;
+
+        var response = await httpClient.SendAsync(request);
+        await HandleResponseErrorsAsync(response);
+        return await response.Content.ReadAsStringAsync(); // Return raw string for JSON parsing
+    }
 }

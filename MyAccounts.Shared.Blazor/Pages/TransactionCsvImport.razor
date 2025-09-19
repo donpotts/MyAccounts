@@ -2,32 +2,26 @@
 @inject ISnackbar Snackbar
 @inject AppService AppService
 @inject IDialogService DialogService
-@attribute [Authorize(Roles = "Administrator")]
-@inject AppService AppService
-@inject ISnackbar Snackbar
 @inject HttpClient HttpClient
 @inject NavigationService NavigationService
 @attribute [Authorize(Roles = "Administrator")]
 @using CsvHelper.Configuration
-@using Color = MudBlazor.Color
 @using Size = MudBlazor.Size
 
-<PageTitle>Transaction Import</PageTitle>
+<PageTitle>Credit Card Transaction Import</PageTitle>
 
 <div class="mb-3">
-    <MudText Typo="Typo.h3">Transaction Import</MudText>
-    <MudText Typo="Typo.body1">Import transactions from a CSV file.</MudText>
+    <MudText Typo="Typo.h3">Credit Card Transaction Import</MudText>
+    <MudText Typo="Typo.body1">Import credit card transactions from a CSV file.</MudText>
 </div>
 
-<div>
-    <MudFileUpload T="IBrowserFile" FilesChanged="@(async args => registerModel.Photo = await UploadCsvAsync(args))" Accept=".csv">
-        <ActivatorContent>
-            <MudButton HtmlTag="label" Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
-                Upload CSV
-            </MudButton>
-        </ActivatorContent>
-    </MudFileUpload>
-</div>
+<MudFileUpload T="IBrowserFile" FilesChanged="OnFileChanged" Accept=".csv">
+    <ActivatorContent>
+        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="MudBlazor.Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+            Upload CSV
+        </MudButton>
+    </ActivatorContent>
+</MudFileUpload>
 
 @code {
     [CascadingParameter]
@@ -35,14 +29,24 @@
 
     private RegisterModel registerModel = new();
 
-    private void OnClose()
+    private async Task OnFileChanged(IBrowserFile file)
     {
-        MudDialog?.Close();
+        // Open dialog to select account
+        var dialogOptions = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = DialogService.Show<AccountSelectorDialog>("Select Account", dialogOptions);
+        var result = await dialog.Result;
+        if (result.Canceled || result.Data is not long accountId)
+        {
+            Snackbar.Add("No transaction account selected.", Severity.Warning);
+            return;
+        }
+        Console.WriteLine($"Selected AccountId: {accountId}");
+        await UploadCsvAsync(file, accountId);
         NavigationService.NotifyStateChanged();
-
+        StateHasChanged();
     }
 
-    private async Task<string?> UploadCsvAsync(IBrowserFile file)
+    private async Task<string?> UploadCsvAsync(IBrowserFile file, long accountId)
     {
         if (file.ContentType != "text/csv")
         {
@@ -52,9 +56,20 @@
 
         try
         {
-            AppService.UploadCsvAsync(file);
+            Console.WriteLine($"Uploading CSV for AccountId: {accountId}");
+            var response = await AppService.UploadCsvAsync(file, accountId);
+            if (!string.IsNullOrWhiteSpace(response))
+            {
+                var jsonDoc = System.Text.Json.JsonDocument.Parse(response);
+                if (jsonDoc.RootElement.TryGetProperty("insertedCount", out var insertedCountElem))
+                {
+                    int insertedCount = insertedCountElem.GetInt32();
+                    Snackbar.Add($"Imported {insertedCount} transactions.", Severity.Success);
+                }
+            }
             MudDialog?.Close();
             NavigationService.NotifyStateChanged();
+            StateHasChanged();
         }
         catch (Exception ex)
         {

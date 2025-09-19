@@ -43,7 +43,7 @@ namespace MyAccounts.Models
             return transactions;
         }
 
-        public static async Task<List<CreditCardTransactionModel>> ReadCreditCardTransactionsAsync(string csvFilePath)
+        public static async Task<List<BankCreditCardTransactionModel>> ReadBankCreditCardTransactionsAsync(string csvFilePath)
         {
             var bankLines = await File.ReadAllLinesAsync(csvFilePath);
 
@@ -51,7 +51,7 @@ namespace MyAccounts.Models
 
             var csvString = string.Join(Environment.NewLine, csvLines).Replace("Payee/Security", "Payee"); ;
             using StringReader reader = new(csvString);
-            var transactions = new List<CreditCardTransactionModel>();
+            var transactions = new List<BankCreditCardTransactionModel>();
 
             using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -60,7 +60,35 @@ namespace MyAccounts.Models
             {
                 try
                 {
-                    transactions = csv.GetRecords<CreditCardTransactionModel>().ToList();
+                    transactions = csv.GetRecords<BankCreditCardTransactionModel>().ToList();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error reading records: {ex.Message}");
+                }
+            }
+
+            return transactions;
+        }
+
+        public static async Task<List<GenericCreditCardTransactionModel>> ReadGenericCreditCardTransactionsAsync(string csvFilePath)
+        {
+            var bankLines = await File.ReadAllLinesAsync(csvFilePath);
+
+            var csvLines = bankLines.ToList();
+
+            var csvString = string.Join(Environment.NewLine, csvLines);
+            using StringReader reader = new(csvString);
+            var transactions = new List<GenericCreditCardTransactionModel>();
+
+            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+            }))
+            {
+                try
+                {
+                    transactions = csv.GetRecords<GenericCreditCardTransactionModel>().ToList();
                 }
                 catch (Exception ex)
                 {

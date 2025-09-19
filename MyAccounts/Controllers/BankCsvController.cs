@@ -13,7 +13,7 @@ namespace MyAccounts.Controllers;
 public class BankCsvController(CsvService csvService) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> PostAsync(IFormFile file, [FromForm] string accountName)
+    public async Task<IActionResult> PostAsync(IFormFile file, [FromForm] long accountId)
     {
         var extension = file.ContentType switch
         {
@@ -24,7 +24,7 @@ public class BankCsvController(CsvService csvService) : ControllerBase
         try
         {
             using var stream = file.OpenReadStream();
-            return Ok($"\"{await csvService.SaveToUploadsAsync(extension, stream, accountName)}\"");
+            return Ok($"\"{await csvService.SaveToUploadsAsync(extension, stream, accountId)}\"");
         }
         catch (ArgumentException ex)
         {
