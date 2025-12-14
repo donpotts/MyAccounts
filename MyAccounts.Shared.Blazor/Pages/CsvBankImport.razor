@@ -40,7 +40,7 @@
     private AccountType record = new();
     string accountName = "";
     [CascadingParameter]
-    MudDialogInstance? MudDialog { get; set; }
+    IMudDialogInstance? MudDialog { get; set; }
 
     private RegisterModel registerModel = new();
 

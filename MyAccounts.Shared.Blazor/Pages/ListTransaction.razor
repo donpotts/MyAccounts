@@ -79,7 +79,7 @@
         <MudButton Color="MudBlazor.Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
-        <PropertyColumn Property="x => x!.Id" Title="Id" />
+        @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
         <PropertyColumn Property="x => x!.Date" Title="Date" />
         <PropertyColumn Property="x => x!.Payee" Title="Payee" />
         <TemplateColumn Title="Cleared" Sortable="true">

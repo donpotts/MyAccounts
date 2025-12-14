@@ -23,7 +23,7 @@
          <MudButton Color="MudBlazor.Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
     </ToolBarContent>
     <Columns>
-        <PropertyColumn Property="x => x!.Id" Title="Id" />
+        @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
         <PropertyColumn Property="x => x!.Name" Title="Name" />
         <TemplateColumn Title="Budget Account" Sortable="true">
             <CellTemplate Context="context">

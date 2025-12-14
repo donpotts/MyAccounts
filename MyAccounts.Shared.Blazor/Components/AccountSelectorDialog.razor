@@ -23,7 +23,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     private Account[]? _accounts;
     private long? _selectedAccount;
 
