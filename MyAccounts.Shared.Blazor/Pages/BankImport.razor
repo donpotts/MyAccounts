@@ -1,4 +1,4 @@
-﻿@page "/bankimport"
+@page "/bankimport"
 @using CsvHelper.Configuration
 @using Color = MudBlazor.Color
 @using Size = MudBlazor.Size
@@ -46,6 +46,7 @@
                 <PropertyColumn Property="x => x.Amount" Format="C" />
                 <PropertyColumn Property="x => x.Type" />
                 <PropertyColumn Property="x => x.Description" />
+                <PropertyColumn Property="x => x.Category" />
             </Columns>
             <PagerContent>
                 <MudDataGridPager />
@@ -102,42 +103,31 @@
     private class BankRecord
     {
         public DateOnly Date { get; set; }
-
         public TimeOnly Time { get; set; }
-
         public decimal Amount { get; set; }
-
         public string? Type { get; set; }
-
         public string? Description { get; set; }
+        public string? Category { get; set; }
     }
 
     private class ABankStatement
     {
         public DateOnly Date { get; set; }
-
         public TimeOnly Time { get; set; }
-
         public decimal Amount { get; set; }
-
         public string? Type { get; set; }
-
         public string? Description { get; set; }
+        public string? Category { get; set; }
     }
 
     private class UBankStatement
     {
         public DateOnly Date { get; set; }
-
         public string? Description { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Original Description")]
         public string? OriginalDescription { get; set; }
-
         public string? Category { get; set; }
-
         public decimal Amount { get; set; }
-
         public string? Status { get; set; }
     }
 
@@ -145,44 +135,32 @@
     {
         [CsvHelper.Configuration.Attributes.Name("Posting Date")]
         public DateOnly PostingDate { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Transaction Date")]
         public DateOnly TransactionDate { get; set; }
-
         public decimal Amount { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Credit Debit Indicator")]
         public string? CreditDebitIndicator { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("type")]
         public string? Type { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Type Group")]
         public string? TypeGroup { get; set; }
-
         public string? Reference { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Instructed Currency")]
         public string? InstructedCurrency { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Currency Exchange Rate")]
         public decimal? CurrencyExchangeRate { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Instructed Amount")]
         public decimal? InstructedAmount { get; set; }
-
         public string? Description { get; set; }
-
         public string? Category { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Check Serial Number")]
         public string? CheckSerialNumber { get; set; }
-
         [CsvHelper.Configuration.Attributes.Name("Card Ending")]
         public string? CardEnding { get; set; }
     }
 
     private Account[]? _accounts;
+    private Category[]? _categories;
     private bool _isProcessing = false;
     private bool _isSaving = false;
     private List<BankRecord> _bankRecords = [];
@@ -196,6 +174,7 @@
     {
         base.OnInitialized();
         _accounts = await AppService.ListAccountAsync();
+        _categories = await AppService.ListCategoryAsync();
     }
 
     private async Task ShowTransactionDialog(BankRecord bankRecord)
@@ -225,21 +204,46 @@
         {
             _isCancelled = false;
         }
-
     }
 
     private async Task AddTransaction(BankRecord bankRecord)
     {
-        var newTransaction = new Transaction
+        long? categoryId = 1; // Default category
+        
+        // Look up or create category from CSV if provided
+        if (!string.IsNullOrWhiteSpace(bankRecord.Category))
+        {
+            var existingCategory = _categories?.FirstOrDefault(c => 
+                c.Name != null && c.Name.Equals(bankRecord.Category, StringComparison.OrdinalIgnoreCase));
+            
+            if (existingCategory != null)
             {
-                Date = bankRecord.Date,
-                Amount = bankRecord.Amount,
-                Description = "From Bank CSV Import!",
-                AccountId = _selectedAccount.Value,
-                Cleared = true,
-                Payee = bankRecord.Description,
-                CategoryId = 1,
-            };
+                categoryId = existingCategory.Id;
+            }
+            else
+            {
+                // Create new category and get the returned category with ID
+                var newCategory = new Category { Name = bankRecord.Category };
+                var createdCategory = await AppService.InsertCategoryAsync(newCategory);
+                if (createdCategory?.Id != null)
+                {
+                    categoryId = createdCategory.Id;
+                }
+                // Reload categories to include the new one
+                _categories = await AppService.ListCategoryAsync();
+            }
+        }
+
+        var newTransaction = new Transaction
+        {
+            Date = bankRecord.Date,
+            Amount = bankRecord.Amount,
+            Description = "From Bank CSV Import!",
+            AccountId = _selectedAccount.Value,
+            Cleared = true,
+            Payee = bankRecord.Description,
+            CategoryId = categoryId,
+        };
 
         await AppService.InsertTransactionAsync(newTransaction);
         NavigationService.NotifyStateChanged();
@@ -316,13 +320,14 @@
                         {
                             var amount = record.CreditDebitIndicator == "Debit" ? -Math.Abs(record.Amount) : Math.Abs(record.Amount);
                             _bankRecords.Add(new BankRecord
-                                {
-                                    Date = record.TransactionDate,
-                                    Amount = amount,
-                                    Description = record.Description,
-                                    Type = record.Type ?? record.TypeGroup,
-                                    Time = default
-                                });
+                            {
+                                Date = record.TransactionDate,
+                                Amount = amount,
+                                Description = record.Description,
+                                Type = record.Type ?? record.TypeGroup,
+                                Time = default,
+                                Category = record.Category
+                            });
                         }
                     }
                     catch(Exception ex)
@@ -341,7 +346,8 @@
                             Amount = record.Amount,
                             Description = record.Description,
                             Type = record.Category,
-                            Time = default
+                            Time = default,
+                            Category = record.Category
                         });
                     }
                 }
@@ -356,7 +362,8 @@
                             Amount = record.Amount,
                             Description = record.Description,
                             Type = record.Type,
-                            Time = record.Time
+                            Time = record.Time,
+                            Category = record.Category
                         });
                     }
                 }
@@ -436,7 +443,47 @@
                     && bankRecord.Date.Month == transaction.Date.Value.Month
                     && (transaction.Amount * -1) == (bankRecord.Amount * -1));
 
-            if (matchingTransaction == null && !_isCancelled)
+            if (matchingTransaction != null)
+            {
+                // Update category if existing transaction is uncategorized and bank record has a category
+                if (!string.IsNullOrWhiteSpace(bankRecord.Category) &&
+                    (matchingTransaction.Category == null ||
+                     matchingTransaction.Category.Name == null ||
+                     matchingTransaction.Category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase)))
+                {
+                    // Look up or create the category
+                    var existingCategory = _categories?.FirstOrDefault(c =>
+                        c.Name != null && c.Name.Equals(bankRecord.Category, StringComparison.OrdinalIgnoreCase));
+
+                    long? categoryId;
+                    if (existingCategory != null)
+                    {
+                        categoryId = existingCategory.Id;
+                    }
+                    else
+                    {
+                        // Create new category and get the returned category with ID
+                        var newCategory = new Category { Name = bankRecord.Category };
+                        var createdCategory = await AppService.InsertCategoryAsync(newCategory);
+                        if (createdCategory?.Id != null)
+                        {
+                            categoryId = createdCategory.Id;
+                        }
+                        else
+                        {
+                            categoryId = 1; // Fallback to default if creation failed
+                        }
+                        // Reload categories to include the new one
+                        _categories = await AppService.ListCategoryAsync();
+                    }
+
+                    // Update the transaction's category
+                    matchingTransaction.CategoryId = categoryId;
+                    matchingTransaction.Category = _categories?.FirstOrDefault(c => c.Id == categoryId);
+                    await AppService.UpdateTransactionAsync(matchingTransaction.Id!.Value, matchingTransaction);
+                }
+            }
+            else if (!_isCancelled)
             {
                 await ShowTransactionDialog(bankRecord);
             }

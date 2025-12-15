@@ -66,9 +66,25 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
         {
             foreach (var creditCardTransaction in bankCreditCardTransactions)
             {
-                Console.WriteLine($"{creditCardTransaction.DateStart} - {creditCardTransaction.DateEnd} - {creditCardTransaction.Amount} - {creditCardTransaction.Description} - {creditCardTransaction.Type}");
+                Console.WriteLine($"{creditCardTransaction.DateStart} - {creditCardTransaction.DateEnd} - {creditCardTransaction.Amount} - {creditCardTransaction.Description} - {creditCardTransaction.Type} - {creditCardTransaction.Category}");
                 long? catId;
-                if (creditCardTransaction.Amount > 0)
+                
+                // Use category from CSV if provided, otherwise use default
+                if (!string.IsNullOrWhiteSpace(creditCardTransaction.Category))
+                {
+                    var category = await ctx.Category.FirstOrDefaultAsync(x => x.Name == creditCardTransaction.Category);
+                    if (category == null)
+                    {
+                        category = new Category
+                        {
+                            Name = creditCardTransaction.Category
+                        };
+                        ctx.Category.Add(category);
+                        await ctx.SaveChangesAsync();
+                    }
+                    catId = category.Id;
+                }
+                else if (creditCardTransaction.Amount > 0)
                 {
                     catId = 1;
                 }
@@ -77,7 +93,9 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                     catId = 35;
                 }
 
-                var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount ?? 0) == creditCardTransaction.Amount * -1 && t.Date >= creditCardTransaction.DateStart);
+                var existingTransaction = await ctx.Transaction
+                    .Include(t => t.Category)
+                    .FirstOrDefaultAsync(t => (t.Amount ?? 0) == creditCardTransaction.Amount * -1 && t.Date >= creditCardTransaction.DateStart);
 
 
                 var newTransaction = new Transaction
@@ -97,7 +115,16 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                     existingTransaction.Payee = newTransaction.Payee;
                     existingTransaction.Amount = newTransaction.Amount;
                     existingTransaction.Description = "Bank Credit Card Transaction Import Update!";
-                    existingTransaction.CategoryId = newTransaction.CategoryId;
+                    
+                    // Update category if existing is uncategorized and CSV has a category
+                    if (!string.IsNullOrWhiteSpace(creditCardTransaction.Category) && 
+                        (existingTransaction.Category == null || 
+                         existingTransaction.Category.Name == null ||
+                         existingTransaction.Category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        existingTransaction.CategoryId = newTransaction.CategoryId;
+                    }
+                    
                     existingTransaction.AccountId = newTransaction.AccountId;
 
                     ctx.Transaction.Update(existingTransaction);
@@ -124,16 +151,40 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                 decimal amount = creditCardTransaction.Debit ?? 0;
                 if (amount > 0)
                 {
-                    catId = 1;
                     amount = -amount; // Debits are negative (expenses)
                 }
                 else
                 {
-                    catId = 35;
                     amount = creditCardTransaction.Credit ?? 0; // Credits are positive (payments/refunds)
                 }
 
-                var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount ?? 0) == amount && t.Date == creditCardTransaction.TransactionDate);
+                // Use category from CSV if provided, otherwise use default
+                if (!string.IsNullOrWhiteSpace(creditCardTransaction.Category))
+                {
+                    var category = await ctx.Category.FirstOrDefaultAsync(x => x.Name == creditCardTransaction.Category);
+                    if (category == null)
+                    {
+                        category = new Category
+                        {
+                            Name = creditCardTransaction.Category
+                        };
+                        ctx.Category.Add(category);
+                        await ctx.SaveChangesAsync();
+                    }
+                    catId = category.Id;
+                }
+                else if (creditCardTransaction.Debit > 0)
+                {
+                    catId = 1;
+                }
+                else
+                {
+                    catId = 35;
+                }
+
+                var existingTransaction = await ctx.Transaction
+                    .Include(t => t.Category)
+                    .FirstOrDefaultAsync(t => (t.Amount ?? 0) == amount && t.Date == creditCardTransaction.TransactionDate);
 
                 var newTransaction = new Transaction
                 {
@@ -152,7 +203,16 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                     existingTransaction.Payee = newTransaction.Payee;
                     existingTransaction.Amount = newTransaction.Amount;
                     existingTransaction.Description = "Credit Card Transaction Import Update!";
-                    existingTransaction.CategoryId = newTransaction.CategoryId;
+                    
+                    // Update category if existing is uncategorized and CSV has a category
+                    if (!string.IsNullOrWhiteSpace(creditCardTransaction.Category) && 
+                        (existingTransaction.Category == null || 
+                         existingTransaction.Category.Name == null ||
+                         existingTransaction.Category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        existingTransaction.CategoryId = newTransaction.CategoryId;
+                    }
+                    
                     existingTransaction.AccountId = newTransaction.AccountId;
 
                     ctx.Transaction.Update(existingTransaction);
@@ -168,54 +228,81 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
 
                 await ctx.SaveChangesAsync();
             }
+        }
 
-            if (bankTransactions != null)
+        if (bankTransactions != null)
+        {
+            foreach (var bankTransaction in bankTransactions)
             {
-                foreach (var bankTransaction in bankTransactions)
+                Console.WriteLine($"{bankTransaction.Date} - {bankTransaction.Time} - {bankTransaction.Amount} - {bankTransaction.Description} - {bankTransaction.Type} - {bankTransaction.Category}");
+                long? catId;
+                
+                // Use category from CSV if provided, otherwise use default
+                if (!string.IsNullOrWhiteSpace(bankTransaction.Category))
                 {
-                    Console.WriteLine($"{bankTransaction.Date} - {bankTransaction.Time} - {bankTransaction.Amount} - {bankTransaction.Description} - {bankTransaction.Type}");
-                    long? catId;
-                    if (bankTransaction.Amount > 0)
+                    var category = await ctx.Category.FirstOrDefaultAsync(x => x.Name == bankTransaction.Category);
+                    if (category == null)
                     {
-                        catId = 6;
+                        category = new Category
+                        {
+                            Name = bankTransaction.Category
+                        };
+                        ctx.Category.Add(category);
+                        await ctx.SaveChangesAsync();
                     }
-                    else
-                    {
-                        catId = 5;
-                    }
-
-                    var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount == bankTransaction.Amount && t.Date == bankTransaction.Date));
-                    var newTransaction = new Transaction
-                    {
-                        Date = bankTransaction.Date,
-                        Payee = bankTransaction.Description,
-                        Amount = bankTransaction.Amount,
-                        AccountId = accountId == 0 ? 4 : accountId, // fallback to 4 if not provided
-                        CategoryId = catId,
-                        Cleared = true
-                    };
-                    if (existingTransaction != null)
-                    {
-                        // Update existing transaction
-                        existingTransaction.Date = newTransaction.Date;
-                        existingTransaction.Payee = newTransaction.Payee;
-                        existingTransaction.Amount = newTransaction.Amount;
-                        existingTransaction.CategoryId = newTransaction.CategoryId;
-                        existingTransaction.AccountId = newTransaction.AccountId;
-
-                        ctx.Transaction.Update(existingTransaction);
-                        Console.WriteLine($"Updated Transaction: {existingTransaction.Date} - {existingTransaction.Payee} - {existingTransaction.Amount} - {existingTransaction.CategoryId} - {existingTransaction.AccountId}");
-                    }
-                    else
-                    {
-                        // Insert new transaction
-                        ctx.Transaction.Add(newTransaction);
-                        insertedCount++;
-                        Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
-                    }
-
-                    await ctx.SaveChangesAsync();
+                    catId = category.Id;
                 }
+                else if (bankTransaction.Amount > 0)
+                {
+                    catId = 6;
+                }
+                else
+                {
+                    catId = 5;
+                }
+
+                var existingTransaction = await ctx.Transaction
+                    .Include(t => t.Category)
+                    .FirstOrDefaultAsync(t => (t.Amount == bankTransaction.Amount && t.Date == bankTransaction.Date));
+                var newTransaction = new Transaction
+                {
+                    Date = bankTransaction.Date,
+                    Payee = bankTransaction.Description,
+                    Amount = bankTransaction.Amount,
+                    AccountId = accountId == 0 ? 4 : accountId, // fallback to 4 if not provided
+                    CategoryId = catId,
+                    Cleared = true
+                };
+                if (existingTransaction != null)
+                {
+                    // Update existing transaction
+                    existingTransaction.Date = newTransaction.Date;
+                    existingTransaction.Payee = newTransaction.Payee;
+                    existingTransaction.Amount = newTransaction.Amount;
+                    
+                    // Update category if existing is uncategorized and CSV has a category
+                    if (!string.IsNullOrWhiteSpace(bankTransaction.Category) && 
+                        (existingTransaction.Category == null || 
+                         existingTransaction.Category.Name == null ||
+                         existingTransaction.Category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        existingTransaction.CategoryId = newTransaction.CategoryId;
+                    }
+                    
+                    existingTransaction.AccountId = newTransaction.AccountId;
+
+                    ctx.Transaction.Update(existingTransaction);
+                    Console.WriteLine($"Updated Transaction: {existingTransaction.Date} - {existingTransaction.Payee} - {existingTransaction.Amount} - {existingTransaction.CategoryId} - {existingTransaction.AccountId}");
+                }
+                else
+                {
+                    // Insert new transaction
+                    ctx.Transaction.Add(newTransaction);
+                    insertedCount++;
+                    Console.WriteLine($"Inserted Transaction: {newTransaction.Date} - {newTransaction.Payee} - {newTransaction.Amount} - {newTransaction.CategoryId} - {newTransaction.AccountId}");
+                }
+
+                await ctx.SaveChangesAsync();
             }
         }
 
@@ -266,7 +353,9 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                 newTransaction.Description = todaySplit;
             }
 
-            var existingTransaction = await ctx.Transaction.FirstOrDefaultAsync(t => (t.Amount == newTransaction.Amount && t.Date == newTransaction.Date));
+            var existingTransaction = await ctx.Transaction
+                .Include(t => t.Category)
+                .FirstOrDefaultAsync(t => (t.Amount == newTransaction.Amount && t.Date == newTransaction.Date));
 
             if (existingTransaction != null)
             {
@@ -274,7 +363,16 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
                 existingTransaction.Date = newTransaction.Date;
                 existingTransaction.Payee = newTransaction.Payee;
                 existingTransaction.Amount = newTransaction.Amount;
-                existingTransaction.CategoryId = newTransaction.CategoryId;
+                
+                // Update category if existing is uncategorized and CSV has a category
+                if (!string.IsNullOrWhiteSpace(transaction.Category) && 
+                    (existingTransaction.Category == null || 
+                     existingTransaction.Category.Name == null ||
+                     existingTransaction.Category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase)))
+                {
+                    existingTransaction.CategoryId = newTransaction.CategoryId;
+                }
+                
                 existingTransaction.AccountId = newTransaction.AccountId;
 
                 ctx.Transaction.Update(existingTransaction);
