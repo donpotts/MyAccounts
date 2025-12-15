@@ -9,8 +9,6 @@ namespace MyAccounts.Services;
 
 public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ctx)
 {
-    private readonly string webRootPath = environment.WebRootPath;
-
     public async Task<(string filePath, int insertedCount)> SaveToUploadsAsync(string? extension, Stream csvFile, long accountId)
     {
         decimal? SumTransactionSplits = 00.0M;
@@ -24,7 +22,9 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
         string fileName;
         string filePath;
 
-        var uploadPath = Path.Combine(webRootPath, "upload", "csv");
+        // Use temp directory instead of wwwroot for Azure App Service compatibility
+        // Azure App Service has read-only wwwroot, but temp directory is writable
+        var uploadPath = Path.Combine(Path.GetTempPath(), "MyAccounts", "upload", "csv");
 
         if (!Directory.Exists(uploadPath))
         {
@@ -44,8 +44,6 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
         {
             await csvFile.CopyToAsync(fs);
         }
-
-        Uri csvUri = new($"/upload/csv/{fileName}", UriKind.Relative);
 
         string csvFilePath = filePath;
 
@@ -336,6 +334,19 @@ public class CsvService(IWebHostEnvironment environment, ApplicationDbContext ct
 
         await ctx.SaveChangesAsync();
 
-        return ($"/upload/csv/{fileName}", insertedCount);
+        // Clean up the temporary file after processing
+        try
+        {
+            if (File.Exists(csvFilePath))
+            {
+                File.Delete(csvFilePath);
+            }
+        }
+        catch
+        {
+            // Ignore cleanup errors - temp files will be cleaned up by OS eventually
+        }
+
+        return (fileName, insertedCount);
     }
 }

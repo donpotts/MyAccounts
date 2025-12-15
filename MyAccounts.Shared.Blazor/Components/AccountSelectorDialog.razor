@@ -30,7 +30,7 @@
     protected override async Task OnInitializedAsync()
     {
         var allAccounts = await AppService.ListAccountAsync();
-        _accounts = allAccounts?.Where(a => a.AccountType != null && (a.AccountType.Name.Contains("Credit Card") || a.AccountType.Name.Contains("CC"))).ToArray();
+        _accounts = allAccounts?.Where(a => a.AccountType != null && (a.AccountType.Name.ToUpper().Contains("CREDIT CARD") || a.AccountType.Name.Contains("CC"))).ToArray();
     }
 
     private void OnSelect()
