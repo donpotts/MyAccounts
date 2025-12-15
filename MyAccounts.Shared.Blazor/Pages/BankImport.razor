@@ -110,6 +110,22 @@
         public string? Description { get; set; }
     }
 
+    private class BankRecord2
+    {
+        public DateOnly Date { get; set; }
+
+        public string? Description { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Original Description")]
+        public string? OriginalDescription { get; set; }
+
+        public string? Category { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public string? Status { get; set; }
+    }
+
     private Account[]? _accounts;
     private bool _isProcessing = false;
     private bool _isSaving = false;
@@ -205,11 +221,49 @@
 
             using (var fs = file.OpenReadStream())
             using (StreamReader reader = new(fs))
-            using (CsvReader csv = new(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { TrimOptions = TrimOptions.Trim }))
             {
-                await foreach (var record in csv.GetRecordsAsync<BankRecord>())
+                // Read the header line to determine format
+                var headerLine = await reader.ReadLineAsync();
+                if (string.IsNullOrEmpty(headerLine))
                 {
-                    _bankRecords.Add(record);
+                    Snackbar.Add("The imported file is empty.", Severity.Warning);
+                    return;
+                }
+
+                // Create a new stream with the full content (header + remaining lines)
+                var remainingContent = await reader.ReadToEndAsync();
+                var fullContent = headerLine + Environment.NewLine + remainingContent;
+                using var memoryStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(fullContent));
+                using var newReader = new StreamReader(memoryStream);
+
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture) { TrimOptions = TrimOptions.Trim };
+
+                // Check if header matches the new format (Date, Description, Original Description, Category, Amount, Status)
+                var headers = headerLine.Split(new[] { '\t', ',' }, StringSplitOptions.TrimEntries);
+                var isNewFormat = headers.Contains("Original Description") || headers.Contains("Status");
+
+                if (isNewFormat)
+                {
+                    using CsvReader csv = new(newReader, config);
+                    await foreach (var record in csv.GetRecordsAsync<BankRecord2>())
+                    {
+                        _bankRecords.Add(new BankRecord
+                        {
+                            Date = record.Date,
+                            Amount = record.Amount,
+                            Description = record.Description,
+                            Type = record.Category,
+                            Time = default
+                        });
+                    }
+                }
+                else
+                {
+                    using CsvReader csv = new(newReader, config);
+                    await foreach (var record in csv.GetRecordsAsync<BankRecord>())
+                    {
+                        _bankRecords.Add(record);
+                    }
                 }
             }
 
