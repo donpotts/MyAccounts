@@ -1,19 +1,21 @@
 ﻿@page "/banktransaction"
 @inject IDialogService DialogService
 
-<MudDialog>
+<MudDialog Style="min-height: 250px;">
     <DialogContent>
-        <MudText Typo="Typo.h6">
-            @((MarkupString)Message)
-        </MudText>
-        <MudText Typo="Typo.body1">
-            @((MarkupString)Details)
-        </MudText>
+        <div style="min-height: 150px;">
+            <MudText Typo="Typo.h6" Class="mb-4">
+                @((MarkupString)Message)
+            </MudText>
+            <MudText Typo="Typo.body1" Style="word-wrap: break-word; overflow-wrap: break-word;">
+                @((MarkupString)Details)
+            </MudText>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="AddTransactionAndClose" Color="MudBlazor.Color.Primary">Add</MudButton>
-        <MudButton OnClick="NextTransactionAndClose" Color="MudBlazor.Color.Primary">Next</MudButton>
-        <MudButton OnClick="CancelDialog" Color="MudBlazor.Color.Error">Cancel</MudButton>
+        <MudButton OnClick="AddTransactionAndClose" Color="MudBlazor.Color.Primary" Variant="Variant.Filled">Add</MudButton>
+        <MudButton OnClick="NextTransactionAndClose" Color="MudBlazor.Color.Secondary" Variant="Variant.Filled">Next</MudButton>
+        <MudButton OnClick="CancelDialog" Color="MudBlazor.Color.Error" Variant="Variant.Filled">Cancel</MudButton>
     </DialogActions>
 </MudDialog>
 

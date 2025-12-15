@@ -6,6 +6,7 @@
 @inject AppService AppService
 @inject IDialogService DialogService
 @inject ILogger<BankImport> Logger
+@inject NavigationService NavigationService
 @attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Statement Import</PageTitle>
@@ -201,15 +202,22 @@
     {
         _isCancelled = false;
         var parameters = new DialogParameters
-    {
-        { "Message", $"<strong>Add transaction?</strong><br>{bankRecord.Amount} on {bankRecord.Date}" },
-        { "Details", $"<strong>Amount:</strong> {bankRecord.Amount}<br><strong>Date:</strong> {bankRecord.Date}<br><strong>Description:</strong><br>{bankRecord.Description}" },
-        { "AddTransaction", new Func<Task>(async () => await AddTransaction(bankRecord)) },
-        { "NextTransaction", new Func<Task>(async () => await NextTransaction(bankRecord)) },
-        { "Cancel", new Action(Cancel) }
-    };
+        {
+            { "Message", $"<strong>Add transaction?</strong><br>{bankRecord.Amount} on {bankRecord.Date}" },
+            { "Details", $"<strong>Amount:</strong> {bankRecord.Amount}<br><strong>Date:</strong> {bankRecord.Date}<br><strong>Description:</strong><br>{bankRecord.Description}" },
+            { "AddTransaction", new Func<Task>(async () => await AddTransaction(bankRecord)) },
+            { "NextTransaction", new Func<Task>(async () => await NextTransaction(bankRecord)) },
+            { "Cancel", new Action(Cancel) }
+        };
 
-        var options = new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false };
+        var options = new DialogOptions 
+        { 
+            CloseOnEscapeKey = true, 
+            BackdropClick = false,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            Position = DialogPosition.Center
+        };
         var dialog = DialogService.Show<AddBankTransaction>("Missing Transaction", parameters, options);
         var dr = await dialog.Result;
 
@@ -234,6 +242,7 @@
             };
 
         await AppService.InsertTransactionAsync(newTransaction);
+        NavigationService.NotifyStateChanged();
     }
 
     private async Task NextTransaction(BankRecord bankRecord)
@@ -295,21 +304,21 @@
 
                 // Check if header matches one of the alternate formats
                 var headers = headerLine.Split(new[] { '\t', ',' }, StringSplitOptions.TrimEntries);
-                var isNfcuFormat = headers.Contains("Posting Date") || headers.Contains("Credit Debit Indicator");
-                var isUsaaFormat = headers.Contains("Original Description") || headers.Contains("Status");
+                var isNFormat = headers.Contains("Posting Date") || headers.Contains("Credit Debit Indicator");
+                var isUFormat = headers.Contains("Original Description") || headers.Contains("Status");
 
-                if (isNfcuFormat)
+                if (isNFormat)
                 {
-                    // NFCU Statement format
                     using CsvReader csv = new(newReader, config);
                     try
                     {
                         await foreach (var record in csv.GetRecordsAsync<NBankStatement>())
                         {
+                            var amount = record.CreditDebitIndicator == "Debit" ? -Math.Abs(record.Amount) : Math.Abs(record.Amount);
                             _bankRecords.Add(new BankRecord
                                 {
                                     Date = record.TransactionDate,
-                                    Amount = record.Amount,
+                                    Amount = amount,
                                     Description = record.Description,
                                     Type = record.Type ?? record.TypeGroup,
                                     Time = default
@@ -321,9 +330,8 @@
                         Logger.LogError(ex, "Error processing NFCU format: {Message}", ex.Message);
                     }
                 }
-                else if (isUsaaFormat)
+                else if (isUFormat)
                 {
-                    // USAA Bank Statement format
                     using CsvReader csv = new(newReader, config);
                     await foreach (var record in csv.GetRecordsAsync<UBankStatement>())
                     {
@@ -339,7 +347,6 @@
                 }
                 else
                 {
-                    // Ally Bank Statement format
                     using CsvReader csv = new(newReader, config);
                     await foreach (var record in csv.GetRecordsAsync<ABankStatement>())
                     {
