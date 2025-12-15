@@ -56,6 +56,7 @@ namespace MyAccounts.Models
             using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = false,
+                MissingFieldFound = null, // Ignore missing fields for CSVs with fewer columns than the model
             }))
             {
                 try
