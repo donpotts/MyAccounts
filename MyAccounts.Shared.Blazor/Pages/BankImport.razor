@@ -5,6 +5,7 @@
 @inject ISnackbar Snackbar
 @inject AppService AppService
 @inject IDialogService DialogService
+@inject ILogger<BankImport> Logger
 @attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Statement Import</PageTitle>
@@ -110,7 +111,20 @@
         public string? Description { get; set; }
     }
 
-    private class BankRecord2
+    private class ABankStatement
+    {
+        public DateOnly Date { get; set; }
+
+        public TimeOnly Time { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public string? Type { get; set; }
+
+        public string? Description { get; set; }
+    }
+
+    private class UBankStatement
     {
         public DateOnly Date { get; set; }
 
@@ -124,6 +138,47 @@
         public decimal Amount { get; set; }
 
         public string? Status { get; set; }
+    }
+
+    private class NBankStatement
+    {
+        [CsvHelper.Configuration.Attributes.Name("Posting Date")]
+        public DateOnly PostingDate { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Transaction Date")]
+        public DateOnly TransactionDate { get; set; }
+
+        public decimal Amount { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Credit Debit Indicator")]
+        public string? CreditDebitIndicator { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("type")]
+        public string? Type { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Type Group")]
+        public string? TypeGroup { get; set; }
+
+        public string? Reference { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Instructed Currency")]
+        public string? InstructedCurrency { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Currency Exchange Rate")]
+        public decimal? CurrencyExchangeRate { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Instructed Amount")]
+        public decimal? InstructedAmount { get; set; }
+
+        public string? Description { get; set; }
+
+        public string? Category { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Check Serial Number")]
+        public string? CheckSerialNumber { get; set; }
+
+        [CsvHelper.Configuration.Attributes.Name("Card Ending")]
+        public string? CardEnding { get; set; }
     }
 
     private Account[]? _accounts;
@@ -238,14 +293,39 @@
 
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture) { TrimOptions = TrimOptions.Trim };
 
-                // Check if header matches the new format (Date, Description, Original Description, Category, Amount, Status)
+                // Check if header matches one of the alternate formats
                 var headers = headerLine.Split(new[] { '\t', ',' }, StringSplitOptions.TrimEntries);
-                var isNewFormat = headers.Contains("Original Description") || headers.Contains("Status");
+                var isNfcuFormat = headers.Contains("Posting Date") || headers.Contains("Credit Debit Indicator");
+                var isUsaaFormat = headers.Contains("Original Description") || headers.Contains("Status");
 
-                if (isNewFormat)
+                if (isNfcuFormat)
                 {
+                    // NFCU Statement format
                     using CsvReader csv = new(newReader, config);
-                    await foreach (var record in csv.GetRecordsAsync<BankRecord2>())
+                    try
+                    {
+                        await foreach (var record in csv.GetRecordsAsync<NBankStatement>())
+                        {
+                            _bankRecords.Add(new BankRecord
+                                {
+                                    Date = record.TransactionDate,
+                                    Amount = record.Amount,
+                                    Description = record.Description,
+                                    Type = record.Type ?? record.TypeGroup,
+                                    Time = default
+                                });
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        Logger.LogError(ex, "Error processing NFCU format: {Message}", ex.Message);
+                    }
+                }
+                else if (isUsaaFormat)
+                {
+                    // USAA Bank Statement format
+                    using CsvReader csv = new(newReader, config);
+                    await foreach (var record in csv.GetRecordsAsync<UBankStatement>())
                     {
                         _bankRecords.Add(new BankRecord
                         {
@@ -259,10 +339,18 @@
                 }
                 else
                 {
+                    // Ally Bank Statement format
                     using CsvReader csv = new(newReader, config);
-                    await foreach (var record in csv.GetRecordsAsync<BankRecord>())
+                    await foreach (var record in csv.GetRecordsAsync<ABankStatement>())
                     {
-                        _bankRecords.Add(record);
+                        _bankRecords.Add(new BankRecord
+                        {
+                            Date = record.Date,
+                            Amount = record.Amount,
+                            Description = record.Description,
+                            Type = record.Type,
+                            Time = record.Time
+                        });
                     }
                 }
             }
