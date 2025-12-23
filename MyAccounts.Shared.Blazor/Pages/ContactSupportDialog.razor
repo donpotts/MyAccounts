@@ -1,0 +1,63 @@
+@inject ISnackbar Snackbar
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Contact Support</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body1" Class="mb-2">Fill out the form below and we'll get back to you as soon as possible.</MudText>
+        <MudTextField @bind-Value="Name" Label="Your Name" Variant="Variant.Outlined" Required="true" Class="mb-2" />
+        <MudTextField @bind-Value="Message" Label="Message" Variant="Variant.Outlined" Required="true" Lines="4" Class="mb-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="Send" Disabled="!CanSend">Send</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    private string Name { get; set; } = string.Empty;
+    private string Email { get; set; } = string.Empty;
+    private string Message { get; set; } = string.Empty;
+    private bool IsSending { get; set; } = false;
+    private bool CanSend => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Message);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            Email = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? user.FindFirst("email")?.Value
+                ?? string.Empty;
+        }
+    }
+
+    private async void Send()
+    {
+        if (!CanSend) return;
+        IsSending = true;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/support/send", new { Name, Email, Message });
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Your message was sent! We'll get back to you soon.", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add("There was a problem sending your message. Please try again later.", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("There was a problem sending your message. Please try again later.", Severity.Error);
+        }
+        IsSending = false;
+    }
+    private void Cancel() => MudDialog.Cancel();
+}

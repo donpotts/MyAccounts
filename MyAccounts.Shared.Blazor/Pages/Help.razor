@@ -1,0 +1,743 @@
+@page "/help"
+@attribute [Authorize]
+@inject IDialogService DialogService
+
+<PageTitle>Help & How To Guide</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4 pa-4">
+    <MudStack Spacing="4">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Help" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
+            <MudText Typo="Typo.h3">Help & How To Guide</MudText>
+        </MudStack>
+        
+        <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="my-4">
+            <MudText Typo="Typo.h6">Welcome to MyAccounts!</MudText>
+            <MudText>This guide will show you step-by-step how to use this app to manage your money. Click on any section below to see the instructions.</MudText>
+        </MudAlert>
+
+        <MudExpansionPanels MultiExpansion="true" Elevation="2">
+            
+            @* ==================== GETTING STARTED ==================== *@
+            <MudExpansionPanel MaxHeight="2000" IsInitiallyExpanded="true">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Home" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">Getting Started - Read This First!</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Welcome! Here's what you need to know:</MudText>
+                        
+                        <MudText Typo="Typo.body1" Class="mb-4" Style="font-size: 1.1rem; line-height: 1.8;">
+                            MyAccounts helps you keep track of your money - like a digital checkbook! You can:
+                        </MudText>
+                        
+                        <MudList T="string" Dense="false">
+                            <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="MudBlazor.Color.Success">
+                                <MudText Style="font-size: 1.1rem;">See all your bank accounts in one place</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="MudBlazor.Color.Success">
+                                <MudText Style="font-size: 1.1rem;">Track where your money goes (groceries, bills, etc.)</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="MudBlazor.Color.Success">
+                                <MudText Style="font-size: 1.1rem;">Import transactions from your bank's website</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="MudBlazor.Color.Success">
+                                <MudText Style="font-size: 1.1rem;">See charts showing your spending</MudText>
+                            </MudListItem>
+                        </MudList>
+
+                        <MudDivider Class="my-4" />
+                        
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                            <MudIcon Icon="@Icons.Material.Filled.ListAlt" Color="MudBlazor.Color.Primary" />
+                            <MudText Typo="Typo.h6">Do These Steps First (In This Order):</MudText>
+                        </MudStack>
+                        <MudTimeline TimelinePosition="TimelinePosition.Start">
+                            <MudTimelineItem Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">
+                                <MudText Typo="Typo.h6">Step 1: Add Your Categories</MudText>
+                                <MudText Style="font-size: 1.1rem;">Categories are labels like "Groceries" or "Electric Bill" - they help you see where your money goes.</MudText>
+                            </MudTimelineItem>
+                            <MudTimelineItem Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">
+                                <MudText Typo="Typo.h6">Step 2: Add Your Accounts</MudText>
+                                <MudText Style="font-size: 1.1rem;">Add each of your bank accounts and credit cards.</MudText>
+                            </MudTimelineItem>
+                            <MudTimelineItem Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">
+                                <MudText Typo="Typo.h6">Step 3: Add Your Transactions</MudText>
+                                <MudText Style="font-size: 1.1rem;">Enter your purchases and deposits, or import them from your bank.</MudText>
+                            </MudTimelineItem>
+                        </MudTimeline>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== HOW TO ADD A CATEGORY ==================== *@
+            <MudExpansionPanel MaxHeight="2000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Folder" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">How To Add a Category</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What is a Category?</strong> A category is a label that describes what you spent money on. For example: "Groceries", "Gas", "Electric Bill", "Doctor Visit".</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Step-by-Step Instructions:</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Look at the top of the screen</strong> - Find the word <strong>"Category"</strong> and click on it.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click the blue "ADD" button</strong> - It's in the upper right corner of the screen.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Type the category name</strong> - For example, type "Groceries" in the Name box.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click the "ADD" button</strong> at the bottom of the box to save it.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                            <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="MudBlazor.Color.Warning" />
+                            <MudText Typo="Typo.h6">Suggested Categories to Create:</MudText>
+                        </MudStack>
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Groceries</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Gas/Fuel</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Electric Bill</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Water Bill</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Phone Bill</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Internet</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Dining Out</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Doctor/Medical</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large">Pharmacy</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Secondary" Size="MudBlazor.Size.Large">Income/Paycheck</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Secondary" Size="MudBlazor.Size.Large">Social Security</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Secondary" Size="MudBlazor.Size.Large">Pension</MudChip>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== HOW TO ADD AN ACCOUNT ==================== *@
+            <MudExpansionPanel MaxHeight="2000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">How To Add a Bank Account or Credit Card</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What is an Account?</strong> An account is any place where you have money - your checking account, savings account, or credit cards.</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Step-by-Step Instructions:</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Look at the top of the screen</strong> - Find the word <strong>"Account"</strong> and click on it.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click the blue "ADD" button</strong> in the upper right corner.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Type the account name</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Use a name you'll recognize, like "Chase Checking" or "Visa Credit Card"</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click the "Account Type" dropdown</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Choose "Checking", "Savings", or "Credit Card"</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">5</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click the "ADD" button</strong> at the bottom to save it.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudAlert Severity="Severity.Success" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" />
+                                <MudText Style="font-size: 1.1rem;"><strong>Done!</strong> Your new account will now appear in the left sidebar. Click on it anytime to see its transactions.</MudText>
+                            </MudStack>
+                        </MudAlert>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== HOW TO ADD A TRANSACTION ==================== *@
+            <MudExpansionPanel MaxHeight="2500">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">How To Add a Transaction (Purchase or Deposit)</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What is a Transaction?</strong> A transaction is any time money goes in or out of your account - like when you buy groceries or get your Social Security check.</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Step-by-Step Instructions:</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Look at the left side of the screen</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Find your account name (like "Chase Checking") and click on it.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click the blue "ADD" button</strong> in the upper right corner.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Fill in the Date</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Click on the date box and pick the date of the transaction.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Type the Payee name</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">This is who you paid or who paid you. Example: "Safeway" or "Social Security"</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">5</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Type the Amount</strong></MudText>
+                                        <MudText Style="font-size: 1rem;" Color="MudBlazor.Color.Error"><strong>IMPORTANT:</strong> For money you SPENT, put a minus sign (-) first!</MudText>
+                                        <MudText Style="font-size: 1rem;">Example: Spent $50 at grocery store - type <strong>-50.00</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Example: Received $1,500 paycheck - type <strong>1500.00</strong></MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">6</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Pick a Category</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Click the dropdown and choose what type of expense it was (like "Groceries").</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">7</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click the "ADD" button</strong> at the bottom to save it.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudAlert Severity="Severity.Warning" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+                                <MudText Typo="Typo.h6">Remember About the Minus Sign!</MudText>
+                            </MudStack>
+                            <MudGrid Class="mt-2">
+                                <MudItem xs="12" md="6">
+                                    <MudText Style="font-size: 1.1rem;" Color="MudBlazor.Color.Error"><strong>Money Going OUT (Expenses):</strong></MudText>
+                                    <MudText Style="font-size: 1rem;">Use a minus sign: <strong>-50.00</strong></MudText>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudText Style="font-size: 1.1rem;" Color="MudBlazor.Color.Success"><strong>Money Coming IN (Income):</strong></MudText>
+                                    <MudText Style="font-size: 1rem;">No minus sign: <strong>1500.00</strong></MudText>
+                                </MudItem>
+                            </MudGrid>
+                        </MudAlert>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== HOW TO IMPORT FROM BANK ==================== *@
+            <MudExpansionPanel MaxHeight="3000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Upload" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">How To Import Transactions From Your Bank</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What is Importing?</strong> Instead of typing each transaction one by one, you can download a file from your bank's website and upload it here. It's much faster!</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Part 1: Download the File From Your Bank</MudText>
+                        
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-info);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Go to your bank's website</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Open Safari (the compass icon) and go to your bank's website. Log in to your account.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-info);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Find the "Download" or "Export" option</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Look for words like "Download Transactions", "Export", or "Download Statement".</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-info);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Choose "CSV" format</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">When asked what format, choose "CSV" or "Comma Separated Values".</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-info);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Save the file</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">The file will download to your Downloads folder.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Part 2: Upload the File to MyAccounts</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>At the top of the screen, click "FILE IMPORTS"</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">A dropdown menu will appear.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click "Statement Import"</strong></MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click the blue "IMPORT BANK CSV" button</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">A window will open to find your file.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Find the file you downloaded</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Look in your Downloads folder. Click on the file, then click "Open".</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">5</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Choose your account</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Click the "Account" dropdown and pick which account these transactions belong to.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">6</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Review and Save</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Look at the list to make sure it looks right, then click "SAVE CHANGES".</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudAlert Severity="Severity.Success" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" />
+                                <MudText Style="font-size: 1.1rem;"><strong>Done!</strong> Your transactions are now imported! They'll appear in your account.</MudText>
+                            </MudStack>
+                        </MudAlert>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== HOW TO EDIT OR DELETE ==================== *@
+            <MudExpansionPanel MaxHeight="2000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Edit" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">How To Edit or Delete a Transaction</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">To Edit a Transaction (Fix a Mistake):</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Find the transaction</strong> you want to change in the list.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Look at the right side of that row</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">You'll see small icons (pictures).</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click the pencil icon</strong></MudText>
+                                        <MudIcon Icon="@Icons.Material.Outlined.Edit" Size="MudBlazor.Size.Medium" />
+                                        <MudText Style="font-size: 1rem;">to edit the transaction.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Make your changes</strong> and click "UPDATE" to save.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Error">To Delete a Transaction:</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-error);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Error" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Find the transaction</strong> you want to delete.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-error);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Error" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click the trash can icon</strong></MudText>
+                                        <MudIcon Icon="@Icons.Material.Outlined.Delete" Size="MudBlazor.Size.Medium" Color="MudBlazor.Color.Error" />
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-error);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Error" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click "DELETE"</strong> to confirm, or "CANCEL" if you changed your mind.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudAlert Severity="Severity.Warning" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" />
+                                <MudText Style="font-size: 1.1rem;"><strong>Be Careful!</strong> Once you delete a transaction, it's gone forever. Make sure you really want to delete it!</MudText>
+                            </MudStack>
+                        </MudAlert>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== UNDERSTANDING THE SCREEN ==================== *@
+            <MudExpansionPanel MaxHeight="2000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Monitor" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">Understanding What You See on the Screen</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">The Main Parts of the Screen:</MudText>
+
+                        <MudSimpleTable Bordered="true" Striped="true" Hover="true" Style="font-size: 1.1rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 30%;">What You See</th>
+                                    <th>What It Means</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Left Sidebar</strong></td>
+                                    <td>Shows all your accounts. Click on any account name to see its transactions.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Top Menu Bar</strong></td>
+                                    <td>Has links to different parts of the app (Account, Category, Transaction, etc.)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Pie Chart</strong></td>
+                                    <td>Shows where your money is going. Bigger slices mean you spent more in that category.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Transaction List</strong></td>
+                                    <td>Shows all your purchases and deposits. Newest ones are at the top.</td>
+                                </tr>
+                                <tr>
+                                    <td><MudText Color="MudBlazor.Color.Success"><strong>Green Numbers</strong></MudText></td>
+                                    <td>Money coming IN (income, deposits)</td>
+                                </tr>
+                                <tr>
+                                    <td><MudText Color="MudBlazor.Color.Error"><strong>Red Numbers</strong></MudText></td>
+                                    <td>Money going OUT (expenses, purchases)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Today's Balance</strong></td>
+                                    <td>Shows how much money you have in the account right now.</td>
+                                </tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== HELPFUL TIPS ==================== *@
+            <MudExpansionPanel MaxHeight="2000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="MudBlazor.Color.Warning" />
+                        <MudText Typo="Typo.h6">Helpful Tips & Tricks</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Tips to Make Things Easier:</MudText>
+
+                        <MudList T="string" Dense="false">
+                            <MudListItem Icon="@Icons.Material.Filled.TouchApp" IconColor="MudBlazor.Color.Primary">
+                                <MudText Style="font-size: 1.1rem;"><strong>Double-click on any transaction</strong> to quickly edit it.</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.Search" IconColor="MudBlazor.Color.Primary">
+                                <MudText Style="font-size: 1.1rem;"><strong>Use the search box</strong> to find transactions. Just type part of the name (like "Safeway").</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.DateRange" IconColor="MudBlazor.Color.Primary">
+                                <MudText Style="font-size: 1.1rem;"><strong>Change the date range</strong> at the top to see transactions from a specific month.</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.PieChart" IconColor="MudBlazor.Color.Primary">
+                                <MudText Style="font-size: 1.1rem;"><strong>Click on a pie chart slice</strong> to see just those transactions.</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.Download" IconColor="MudBlazor.Color.Primary">
+                                <MudText Style="font-size: 1.1rem;"><strong>Click "EXPORT"</strong> to save your transactions to a file you can open in Excel.</MudText>
+                            </MudListItem>
+                        </MudList>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">If Something Goes Wrong:</MudText>
+
+                        <MudList T="string" Dense="false">
+                            <MudListItem Icon="@Icons.Material.Filled.Refresh" IconColor="MudBlazor.Color.Warning">
+                                <MudText Style="font-size: 1.1rem;"><strong>Refresh the page</strong> - Press Command + R on your keyboard (the Command key and R together).</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.Logout" IconColor="MudBlazor.Color.Warning">
+                                <MudText Style="font-size: 1.1rem;"><strong>Log out and back in</strong> - Click "Logout" at the top right, then log in again.</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.Close" IconColor="MudBlazor.Color.Warning">
+                                <MudText Style="font-size: 1.1rem;"><strong>Close the browser and reopen</strong> - Sometimes starting fresh helps!</MudText>
+                            </MudListItem>
+                        </MudList>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+        </MudExpansionPanels>
+
+        @* ==================== CONTACT SUPPORT ==================== *@
+        <MudPaper Class="pa-6 mt-6" Elevation="2">
+            <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.Support" Size="MudBlazor.Size.Large" Color="MudBlazor.Color.Success" />
+                <MudText Typo="Typo.h5">Need More Help?</MudText>
+                <MudText Typo="Typo.body1" Align="MudBlazor.Align.Center" Style="font-size: 1.1rem;">
+                    If you're still having trouble, don't worry! Just ask a family member or friend for help,
+                    or contact support and we'll walk you through it.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Success" Size="MudBlazor.Size.Large" StartIcon="@Icons.Material.Filled.Email" OnClick="ShowContactSupportDialog">
+                    Contact Support
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private async Task ShowContactSupportDialog()
+    {
+        var dialog = await DialogService.ShowAsync<ContactSupportDialog>("Contact Support");
+        await dialog.Result;
+    }
+}
