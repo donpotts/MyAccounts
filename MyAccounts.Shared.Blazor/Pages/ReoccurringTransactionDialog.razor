@@ -1,0 +1,55 @@
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Repeat" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
+            <MudText Typo="Typo.h6">Create Recurring Transactions</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="4">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                Transactions will be created starting from the next month after the original transaction date.
+            </MudAlert>
+            <MudNumericField @bind-Value="_numberOfMonths" 
+                             Label="Number of Months" 
+                             Variant="Variant.Outlined" 
+                             Min="1" 
+                             Max="60"
+                             HelperText="Enter a value between 1 and 60"
+                             Adornment="Adornment.Start"
+                             AdornmentIcon="@Icons.Material.Filled.CalendarMonth"
+                             AdornmentColor="MudBlazor.Color.Primary"
+                             Immediate="true"
+                             Class="mt-2" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="@(_numberOfMonths < 1)">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-1" Size="MudBlazor.Size.Small" />
+            Create
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; }
+
+    private int _numberOfMonths = 1;
+
+    private void Submit()
+    {
+        if (_numberOfMonths < 1)
+        {
+            Snackbar.Add("Please enter a valid number of months (1 or more).", Severity.Warning);
+            return;
+        }
+        
+        MudDialog.Close(DialogResult.Ok(_numberOfMonths));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

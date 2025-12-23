@@ -612,33 +612,33 @@
 
     private async void OnReoccurring(Transaction record)
     {
-        var result = await DialogService.ShowMessageBox(
-            "Warning",
-            "Are you sure you want to create re-occurring transactions for this record until December, starting with next month?",
-            "OK",
-            "Cancel");
-
-        if (result.GetValueOrDefault(false))
+        // Show dialog to get number of months
+        var parameters = new DialogParameters<ReoccurringTransactionDialog>();
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        
+        var dialog = await DialogService.ShowAsync<ReoccurringTransactionDialog>("Create Recurring Transactions", parameters, options);
+        var dialogResult = await dialog.Result;
+        
+        if (!dialogResult.Canceled && dialogResult.Data is int numberOfMonths && numberOfMonths > 0)
         {
             try
             {
-                var currentMonth = DateTime.Now.Month;
+                var startDate = record.Date.Value;
                 var tempRecord = new Transaction
-                    {
-                        AccountId = record.AccountId,
-                        CategoryId = record.CategoryId,
-                        Payee = record.Payee,
-                        Cleared = record.Cleared,
-                        Amount = record.Amount,
-                        Balance = record.Balance,
-                        Description = record.Description
-                    };
-
-                for (int month = currentMonth + 1; month <= 12; month++)
                 {
-                    int day = record.Date.Value.Day;
-                    int year = record.Date.Value.Year;
-                    tempRecord.Date = new DateOnly(year, month, day);
+                    AccountId = record.AccountId,
+                    CategoryId = record.CategoryId,
+                    Payee = record.Payee,
+                    Cleared = record.Cleared,
+                    Amount = record.Amount,
+                    Balance = record.Balance,
+                    Description = record.Description
+                };
+
+                for (int i = 1; i <= numberOfMonths; i++)
+                {
+                    var newDate = startDate.AddMonths(i);
+                    tempRecord.Date = newDate;
 
                     await AppService.InsertTransactionAsync(tempRecord);
                 }
@@ -647,6 +647,8 @@
                 await ReloadData();
                 NavigationService.NotifyStateChanged();
                 StateHasChanged();
+                
+                Snackbar.Add($"Created {numberOfMonths} recurring transaction(s).", Severity.Success);
             }
             catch (Exception ex)
             {
