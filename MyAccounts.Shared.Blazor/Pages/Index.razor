@@ -15,16 +15,16 @@
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
                 <MudText Typo="Typo.h5">Dashboard</MudText>
                 <MudStack Row="true" Spacing="2">
-                    <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@selectedRange" SelectedValueChanged="OnRangeChanged" Class="mud-chip-group-outlined">
-                        <MudChip Value="@("week")" Variant="Variant.Outlined" Color="MudBlazor.Color.Primary">Week</MudChip>
-                        <MudChip Value="@("month")" Variant="Variant.Outlined" Color="MudBlazor.Color.Primary">Month</MudChip>
-                        <MudChip Value="@("quarter")" Variant="Variant.Outlined" Color="MudBlazor.Color.Primary">Quarter</MudChip>
-                        <MudChip Value="@("year")" Variant="Variant.Outlined" Color="MudBlazor.Color.Primary">Year</MudChip>
+                    <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@selectedRange" SelectedValueChanged="OnRangeChanged">
+                        <MudChip Value="@("week")" Variant="Variant.Text" Color="MudBlazor.Color.Default" SelectedColor="MudBlazor.Color.Primary">Week</MudChip>
+                        <MudChip Value="@("month")" Variant="Variant.Text" Color="MudBlazor.Color.Default" SelectedColor="MudBlazor.Color.Primary">Month</MudChip>
+                        <MudChip Value="@("quarter")" Variant="Variant.Text" Color="MudBlazor.Color.Default" SelectedColor="MudBlazor.Color.Primary">Quarter</MudChip>
+                        <MudChip Value="@("year")" Variant="Variant.Text" Color="MudBlazor.Color.Default" SelectedColor="MudBlazor.Color.Primary">Year</MudChip>
                     </MudChipSet>
                 </MudStack>
             </MudStack>
 
-            <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" @bind-ActivePanelIndex="activeTabIndex">
+            <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" @bind-ActivePanelIndex="activeTabIndex" Color="MudBlazor.Color.Default" SliderColor="MudBlazor.Color.Primary">
                 <MudTabPanel Text="Expenses by Category" Icon="@Icons.Material.Filled.PieChart">
                     @if (isLoading)
                     {
@@ -130,6 +130,45 @@
                         <MudAlert Severity="Severity.Info" Class="my-4">No trend data available for this period.</MudAlert>
                     }
                 </MudTabPanel>
+
+                <MudTabPanel Text="By Account" Icon="@Icons.Material.Filled.AccountBalance">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" Class="my-4" />
+                    }
+                    else if (accountData != null && accountData.Count > 0)
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Class="mb-4">
+                            <div>
+                                <MudText Typo="Typo.subtitle1" Class="mb-2">@GetDateRangeLabel()</MudText>
+                                <MudText Typo="Typo.body2">Credits (Income) vs Debits (Expenses) by Account</MudText>
+                            </div>
+                        </MudStack>
+                        <ApexChart TItem="AccountChartDataItem"
+                                   Title=""
+                                   Width="800"
+                                   Height="400"
+                                   @ref="accountChart"
+                                   Options="accountChartOptions">
+                            <ApexPointSeries TItem="AccountChartDataItem"
+                                             Items="accountData"
+                                             Name="Credits"
+                                             SeriesType="SeriesType.Bar"
+                                             XValue="e => e.Account"
+                                             YValue="e => e.Credits" />
+                            <ApexPointSeries TItem="AccountChartDataItem"
+                                             Items="accountData"
+                                             Name="Debits"
+                                             SeriesType="SeriesType.Bar"
+                                             XValue="e => e.Account"
+                                             YValue="e => e.Debits" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="my-4">No account data available for this period.</MudAlert>
+                    }
+                </MudTabPanel>
             </MudTabs>
         </MudPaper>
     </Authorized>
@@ -148,14 +187,17 @@
     private List<TrendDataItem> trendData = new();
     private List<TrendDataItem> incomeTrendData = new();
     private List<TrendDataItem> expenseTrendData = new();
+    private List<AccountChartDataItem> accountData = new();
 
     private ApexChart<ChartDataItem>? expenseChart;
     private ApexChart<ChartDataItem>? incomeExpenseChart;
     private ApexChart<TrendDataItem>? trendChart;
+    private ApexChart<AccountChartDataItem>? accountChart;
 
     private ApexChartOptions<ChartDataItem> expenseChartOptions = new();
     private ApexChartOptions<ChartDataItem> incomeExpenseChartOptions = new();
     private ApexChartOptions<TrendDataItem> trendChartOptions = new();
+    private ApexChartOptions<AccountChartDataItem> accountChartOptions = new();
 
     private decimal totalExpenses = 0;
     private decimal totalIncome = 0;
@@ -177,6 +219,13 @@
         public decimal Value { get; set; }
     }
 
+    public class AccountChartDataItem
+    {
+        public string Account { get; set; } = "";
+        public decimal Credits { get; set; }
+        public decimal Debits { get; set; }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         ThemeService.OnChange += OnThemeChanged;
@@ -190,6 +239,15 @@
         var isDarkMode = ThemeService.IsDarkMode;
         var mode = isDarkMode ? Mode.Dark : Mode.Light;
         var background = isDarkMode ? "var(--mud-palette-background-dark)" : "var(--mud-palette-background)";
+        var foreground = isDarkMode ? "#ffffff" : "#373d3f";
+        var labelDropShadow = isDarkMode ? new DropShadow
+        {
+            Enabled = true,
+            Top = 1,
+            Left = 1,
+            Blur = 2,
+            Opacity = 0.8
+        } : new DropShadow { Enabled = false };
 
         expenseChartOptions = new ApexChartOptions<ChartDataItem>
         {
@@ -197,9 +255,18 @@
             Chart = new Chart { Background = background },
             DataLabels = new DataLabels
             {
+                Style = new DataLabelsStyle
+                {
+                    Colors = new List<string> { foreground }
+                },
+                DropShadow = labelDropShadow,
                 Formatter = @"function(value, { seriesIndex, w }) {
                     return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }"
+            },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
             }
         };
 
@@ -207,20 +274,41 @@
         {
             Theme = new Theme { Mode = mode },
             Chart = new Chart { Background = background },
-            Colors = new List<string> { "#4CAF50", "#F44336" }, // Green for Income, Red for Expenses
+            Colors = new List<string> { "#66BB6A", "#EF5350" }, // Lighter green/red for better dark mode visibility
             PlotOptions = new PlotOptions
             {
                 Bar = new PlotOptionsBar
                 {
                     Horizontal = false,
                     ColumnWidth = "50%",
-                    Distributed = true // Use different color for each bar
+                    Distributed = true
                 }
             },
-            Legend = new Legend { Show = false }, // Hide legend since bars are labeled
+            Legend = new Legend { Show = false },
             DataLabels = new DataLabels
             {
+                Style = new DataLabelsStyle
+                {
+                    Colors = new List<string> { "#ffffff" } // White text on colored bars
+                },
                 Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }"
+            },
+            Xaxis = new XAxis
+            {
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = foreground }
+                }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Style = new AxisLabelStyle { Colors = foreground }
+                    }
+                }
             }
         };
 
@@ -228,14 +316,71 @@
         {
             Theme = new Theme { Mode = mode },
             Chart = new Chart { Background = background },
-            Colors = new List<string> { "#4CAF50", "#F44336" }, // Green for Income, Red for Expenses
+            Colors = new List<string> { "#66BB6A", "#EF5350" }, // Lighter green/red for better visibility
             Stroke = new Stroke { Curve = Curve.Smooth, Width = 3 },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            },
+            Xaxis = new XAxis
+            {
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = foreground }
+                }
+            },
             Yaxis = new List<YAxis>
             {
                 new YAxis
                 {
                     Labels = new YAxisLabels
                     {
+                        Style = new AxisLabelStyle { Colors = foreground },
+                        Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }"
+                    }
+                }
+            }
+        };
+
+        accountChartOptions = new ApexChartOptions<AccountChartDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart { Background = background },
+            Colors = new List<string> { "#66BB6A", "#EF5350" }, // Green for credits, Red for debits
+            PlotOptions = new PlotOptions
+            {
+                Bar = new PlotOptionsBar
+                {
+                    Horizontal = false,
+                    ColumnWidth = "70%"
+                }
+            },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            },
+            DataLabels = new DataLabels
+            {
+                Style = new DataLabelsStyle
+                {
+                    Colors = new List<string> { "#ffffff" }
+                },
+                Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }"
+            },
+            Xaxis = new XAxis
+            {
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = foreground }
+                }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Style = new AxisLabelStyle { Colors = foreground },
                         Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }"
                     }
                 }
@@ -249,6 +394,7 @@
         if (expenseChart != null) await expenseChart.UpdateOptionsAsync(true, true, true);
         if (incomeExpenseChart != null) await incomeExpenseChart.UpdateOptionsAsync(true, true, true);
         if (trendChart != null) await trendChart.UpdateOptionsAsync(true, true, true);
+        if (accountChart != null) await accountChart.UpdateOptionsAsync(true, true, true);
         StateHasChanged();
     }
 
@@ -293,23 +439,39 @@
             {
                 var transactions = result.Value.ToList();
 
-                // Calculate totals
-                totalIncome = transactions.Where(t => t.Amount > 0 && !t.Category.Name.StartsWith("Transfer:[")).Sum(t => t.Amount ?? 0);
-                totalExpenses = Math.Abs(transactions.Where(t => t.Amount < 0 && !t.Category.Name.StartsWith("Transfer:[")).Sum(t => t.Amount ?? 0));
+                // Fetch TransactionSplit records for split transactions
+                var transactionIds = transactions.Select(t => t.Id).ToList();
+                List<TransactionSplit> transactionSplits = new();
+                if (transactionIds.Any())
+                {
+                    var splitFilter = $"Transaction/Id in ({string.Join(",", transactionIds)})";
+                    var splitResult = await AppService.ListTransactionSplitODataAsync(null, null, null, splitFilter, true, "Transaction,Category");
+                    transactionSplits = splitResult?.Value?.ToList() ?? new();
+                }
+
+                // Calculate totals using both transactions and splits
+                // For income: positive amounts excluding transfers, and for Split transactions use the splits
+                var incomeFromNonSplit = transactions
+                    .Where(t => t.Amount > 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["))
+                    .Sum(t => t.Amount ?? 0);
+                var incomeFromSplits = transactionSplits
+                    .Where(s => s.Amount > 0 && !s.Category.Name.StartsWith("Transfer:["))
+                    .Sum(s => s.Amount ?? 0);
+                totalIncome = incomeFromNonSplit + incomeFromSplits;
+
+                // For expenses: negative amounts excluding transfers, and for Split transactions use the splits
+                var expensesFromNonSplit = Math.Abs(transactions
+                    .Where(t => t.Amount < 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["))
+                    .Sum(t => t.Amount ?? 0));
+                var expensesFromSplits = Math.Abs(transactionSplits
+                    .Where(s => s.Amount < 0 && !s.Category.Name.StartsWith("Transfer:["))
+                    .Sum(s => s.Amount ?? 0));
+                totalExpenses = expensesFromNonSplit + expensesFromSplits;
+
                 netAmount = totalIncome - totalExpenses;
 
-                // Expense by category (pie chart)
-                expenseData = transactions
-                    .Where(t => t.Amount < 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["))
-                    .GroupBy(t => t.Category.Name)
-                    .Select(g => new ChartDataItem
-                    {
-                        Label = g.Key,
-                        Value = Math.Abs(g.Sum(t => t.Amount ?? 0))
-                    })
-                    .OrderByDescending(x => x.Value)
-                    .Take(10)
-                    .ToList();
+                // Expense by category (pie chart) - merge transactions and splits
+                expenseData = GroupExpensesByCategory(transactions, transactionSplits);
 
                 // Income vs Expenses (bar chart)
                 incomeExpenseData = new List<ChartDataItem>
@@ -319,9 +481,23 @@
                 };
 
                 // Monthly trend (line chart)
-                trendData = BuildTrendData(transactions);
+                trendData = BuildTrendData(transactions, transactionSplits);
                 incomeTrendData = trendData.Where(x => x.Type == "Income").ToList();
                 expenseTrendData = trendData.Where(x => x.Type == "Expenses").ToList();
+
+                // By Account (grouped bar chart) - exclude transfers
+                accountData = transactions
+                    .Where(t => !t.Category.Name.StartsWith("Transfer:["))
+                    .GroupBy(t => t.Account?.Name ?? "Unknown")
+                    .Select(g => new AccountChartDataItem
+                    {
+                        Account = g.Key,
+                        Credits = g.Where(t => t.Amount > 0).Sum(t => t.Amount ?? 0),
+                        Debits = Math.Abs(g.Where(t => t.Amount < 0).Sum(t => t.Amount ?? 0))
+                    })
+                    .Where(a => a.Credits > 0 || a.Debits > 0)
+                    .OrderByDescending(a => a.Credits + a.Debits)
+                    .ToList();
             }
         }
         catch (Exception ex)
@@ -335,24 +511,107 @@
         }
     }
 
-    private List<TrendDataItem> BuildTrendData(List<Transaction> transactions)
+    private List<ChartDataItem> GroupExpensesByCategory(List<Transaction> transactions, List<TransactionSplit> transactionSplits)
+    {
+        // Group expenses from non-split transactions
+        var filteredTransactions = transactions
+            .Where(t => t.Amount < 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["));
+
+        var groupedData = filteredTransactions
+            .GroupBy(t => t.Category.Name)
+            .Select(g => new ChartDataItem
+            {
+                Label = g.Key,
+                Value = Math.Abs(g.Sum(t => t.Amount ?? 0))
+            })
+            .ToList();
+
+        // Group expenses from split transactions
+        var filteredSplits = transactionSplits
+            .Where(s => s.Amount < 0 && !s.Category.Name.StartsWith("Transfer:["));
+
+        var groupedSplits = filteredSplits
+            .GroupBy(s => s.Category.Name)
+            .Select(g => new ChartDataItem
+            {
+                Label = g.Key,
+                Value = Math.Abs(g.Sum(s => s.Amount ?? 0))
+            })
+            .ToList();
+
+        // Merge split data into grouped data
+        foreach (var split in groupedSplits)
+        {
+            var existingCategory = groupedData.FirstOrDefault(g => g.Label == split.Label);
+            if (existingCategory != null)
+            {
+                existingCategory.Value += split.Value;
+            }
+            else
+            {
+                groupedData.Add(split);
+            }
+        }
+
+        return groupedData
+            .OrderByDescending(x => x.Value)
+            .Take(10)
+            .ToList();
+    }
+
+    private List<TrendDataItem> BuildTrendData(List<Transaction> transactions, List<TransactionSplit> transactionSplits)
     {
         var result = new List<TrendDataItem>();
 
-        var grouped = transactions
-            .Where(t => !t.Category.Name.StartsWith("Transfer:["))
+        // Build a lookup of transaction ID to date for splits
+        var transactionDates = transactions.ToDictionary(t => t.Id ?? 0, t => t.Date);
+
+        // Group non-split transactions by period
+        var groupedTransactions = transactions
+            .Where(t => t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["))
             .GroupBy(t => new { Year = t.Date?.Year ?? 0, Month = t.Date?.Month ?? 0 })
-            .OrderBy(g => g.Key.Year)
-            .ThenBy(g => g.Key.Month);
+            .ToDictionary(
+                g => g.Key,
+                g => new
+                {
+                    Income = g.Where(t => t.Amount > 0).Sum(t => t.Amount ?? 0),
+                    Expenses = Math.Abs(g.Where(t => t.Amount < 0).Sum(t => t.Amount ?? 0))
+                }
+            );
 
-        foreach (var group in grouped)
+        // Group splits by the transaction's period
+        var groupedSplits = transactionSplits
+            .Where(s => !s.Category.Name.StartsWith("Transfer:["))
+            .Select(s => new
+            {
+                Split = s,
+                Date = transactionDates.GetValueOrDefault(s.TransactionId ?? 0)
+            })
+            .Where(x => x.Date.HasValue)
+            .GroupBy(x => new { Year = x.Date!.Value.Year, Month = x.Date!.Value.Month })
+            .ToDictionary(
+                g => g.Key,
+                g => new
+                {
+                    Income = g.Where(x => x.Split.Amount > 0).Sum(x => x.Split.Amount ?? 0),
+                    Expenses = Math.Abs(g.Where(x => x.Split.Amount < 0).Sum(x => x.Split.Amount ?? 0))
+                }
+            );
+
+        // Merge all periods
+        var allPeriods = groupedTransactions.Keys.Union(groupedSplits.Keys).OrderBy(k => k.Year).ThenBy(k => k.Month);
+
+        foreach (var period in allPeriods)
         {
-            var period = $"{group.Key.Year}-{group.Key.Month:D2}";
-            var income = group.Where(t => t.Amount > 0).Sum(t => t.Amount ?? 0);
-            var expenses = Math.Abs(group.Where(t => t.Amount < 0).Sum(t => t.Amount ?? 0));
+            var periodLabel = $"{period.Year}-{period.Month:D2}";
+            var transactionData = groupedTransactions.GetValueOrDefault(period);
+            var splitData = groupedSplits.GetValueOrDefault(period);
 
-            result.Add(new TrendDataItem { Period = period, Type = "Income", Value = income });
-            result.Add(new TrendDataItem { Period = period, Type = "Expenses", Value = expenses });
+            var income = (transactionData?.Income ?? 0) + (splitData?.Income ?? 0);
+            var expenses = (transactionData?.Expenses ?? 0) + (splitData?.Expenses ?? 0);
+
+            result.Add(new TrendDataItem { Period = periodLabel, Type = "Income", Value = income });
+            result.Add(new TrendDataItem { Period = periodLabel, Type = "Expenses", Value = expenses });
         }
 
         return result;
