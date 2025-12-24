@@ -66,21 +66,35 @@
 
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_content/BlazorDatasheet/blazor-datasheet.js"></script>
-    <script>navigator.serviceWorker.register('service-worker.js');</script>
-    <script src="_framework/blazor.webassembly.js?v=1.0.1"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
     <script>
+        // Service worker registration with auto-update
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
+                // Check for updates every 5 minutes
+                setInterval(() => registration.update(), 5 * 60 * 1000);
+
                 registration.onupdatefound = function () {
                     const installingWorker = registration.installing;
                     installingWorker.onstatechange = function () {
                         if (installingWorker.state === 'installed') {
                             if (navigator.serviceWorker.controller) {
+                                // New version available - notify user and reload
+                                console.log('New version available. Reloading...');
                                 window.location.reload();
                             }
                         }
                     };
                 };
+            });
+
+            // Force refresh when a new service worker takes over
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', function () {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
             });
         }
     </script>

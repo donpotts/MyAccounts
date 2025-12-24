@@ -612,6 +612,382 @@
                 </ChildContent>
             </MudExpansionPanel>
 
+            @* ==================== RE-OCCURRING TRANSACTIONS ==================== *@
+            <MudExpansionPanel MaxHeight="2500">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Repeat" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">How To Set Up Re-occurring Transactions</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What is a Re-occurring Transaction?</strong> These are bills or income that happen regularly - like your monthly electric bill, rent, or Social Security payment. Instead of typing them every month, you can set them up once and they'll be added automatically!</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Step-by-Step Instructions:</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>First, create a transaction</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Add a transaction as you normally would (see "How To Add a Transaction" above).</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Find the transaction in your list</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Look for the transaction you just added.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click the repeat icon</strong></MudText>
+                                        <MudIcon Icon="@Icons.Material.Filled.Repeat" Size="MudBlazor.Size.Medium" Color="MudBlazor.Color.Primary" />
+                                        <MudText Style="font-size: 1rem;">It's on the right side of the transaction row, between the edit (pencil) and delete (trash) icons.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Choose how many months</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Enter the number of months to create transactions for (like 12 for a full year).</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">5</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click "CREATE"</strong> to add all the transactions at once.</MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudAlert Severity="Severity.Success" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" />
+                                <MudText Style="font-size: 1.1rem;"><strong>Done!</strong> The transactions will be created for each month. You'll see them in your account on the dates you specified.</MudText>
+                            </MudStack>
+                        </MudAlert>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                            <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="MudBlazor.Color.Warning" />
+                            <MudText Typo="Typo.h6">Common Re-occurring Transactions:</MudText>
+                        </MudStack>
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Error" Size="MudBlazor.Size.Large">Rent/Mortgage</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Error" Size="MudBlazor.Size.Large">Electric Bill</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Error" Size="MudBlazor.Size.Large">Phone Bill</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Error" Size="MudBlazor.Size.Large">Insurance</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Success" Size="MudBlazor.Size.Large">Social Security</MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudChip T="string" Color="MudBlazor.Color.Success" Size="MudBlazor.Size.Large">Pension</MudChip>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== SPLIT TRANSACTIONS ==================== *@
+            <MudExpansionPanel MaxHeight="2500">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.CallSplit" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">How To Split a Transaction Into Multiple Categories</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What is a Split Transaction?</strong> Sometimes one purchase includes items from different categories. For example, at Walmart you might buy groceries ($50), medicine ($20), and household supplies ($30). Instead of creating three separate transactions, you can split one $100 transaction into these three categories!</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Step-by-Step Instructions:</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>First, add the main transaction</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Add the transaction as you normally would with the total amount (like -100.00 for Walmart).</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Find the transaction in your list</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Look for the transaction you just added.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click the split icon</strong></MudText>
+                                        <MudIcon Icon="@Icons.Material.Filled.CallSplit" Size="MudBlazor.Size.Medium" Color="MudBlazor.Color.Primary" />
+                                        <MudText Style="font-size: 1rem;">It's on the right side of the transaction row.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Add your first split</strong></MudText>
+                                        <MudText Style="font-size: 1rem;"><strong>Category:</strong> Choose the category (like "Groceries")</MudText>
+                                        <MudText Style="font-size: 1rem;"><strong>Amount:</strong> Enter the amount for this category (like -50.00)</MudText>
+                                        <MudText Style="font-size: 1rem;">Click "ADD" to save this split.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">5</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Add more splits</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Repeat step 4 for each category until all the money is accounted for.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudAlert Severity="Severity.Warning" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Calculate" />
+                                <MudText Typo="Typo.h6">Make Sure the Numbers Add Up!</MudText>
+                            </MudStack>
+                            <MudText Style="font-size: 1.1rem;">The total of all your splits should equal the original transaction amount.</MudText>
+                            <MudText Style="font-size: 1rem;" Class="mt-2">Example: Walmart $100 = Groceries $50 + Medicine $20 + Supplies $30</MudText>
+                        </MudAlert>
+
+                        <MudAlert Severity="Severity.Success" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" />
+                                <MudText Style="font-size: 1.1rem;"><strong>Done!</strong> Your transaction is now split. The pie chart will show spending in each category separately.</MudText>
+                            </MudStack>
+                        </MudAlert>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* ==================== CREDIT CARD IMPORT ==================== *@
+            <MudExpansionPanel MaxHeight="3000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.CreditCard" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">How To Import Credit Card Transactions</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What is Credit Card Import?</strong> Just like importing bank transactions, you can download your credit card statement as a CSV file and upload it here. This saves you from typing each purchase individually!</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Part 1: Download From Your Credit Card Website</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-info);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Log in to your credit card website</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Go to your credit card company's website (like Chase, Capital One, etc.) and log in.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-info);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Find "Download" or "Export Transactions"</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Look in your account activity or statements section for a download option.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-info);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Choose CSV format</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Select "CSV" or "Comma Separated Values" as the file format.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true" Style="border-color: var(--mud-palette-info);">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Save the file</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">The file will download to your Downloads folder.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Part 2: Upload to MyAccounts</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click "FILE IMPORTS" at the top of the screen</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">A dropdown menu will appear.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click "Transaction Import"</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">This is specifically for credit card transactions.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click "IMPORT CSV"</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">A file picker will open.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Find and select your downloaded file</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Look in your Downloads folder for the CSV file you downloaded.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">5</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Review the transactions</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">You'll see a preview of the transactions. Make sure they look correct.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">6</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Select the credit card account</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Choose which credit card account these transactions belong to.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">7</MudAvatar>
+                                    <MudText Style="font-size: 1.2rem;"><strong>Click "IMPORT" to save the transactions</strong></MudText>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudAlert Severity="Severity.Success" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" />
+                                <MudText Style="font-size: 1.1rem;"><strong>Done!</strong> Your credit card transactions are now imported. You can view them by clicking on the credit card account in the left sidebar.</MudText>
+                            </MudStack>
+                        </MudAlert>
+
+                        <MudAlert Severity="Severity.Info" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Lightbulb" />
+                                <MudText Typo="Typo.h6">Tip: Assign Categories</MudText>
+                            </MudStack>
+                            <MudText Style="font-size: 1.1rem;">After importing, you may want to edit each transaction to assign the correct category (like "Groceries" or "Gas"). This helps you see where your money is going in the pie chart.</MudText>
+                        </MudAlert>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
             @* ==================== UNDERSTANDING THE SCREEN ==================== *@
             <MudExpansionPanel MaxHeight="2000">
                 <TitleContent>

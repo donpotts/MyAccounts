@@ -1125,4 +1125,67 @@ public class AppService(
         await HandleResponseErrorsAsync(response);
         return await response.Content.ReadAsStringAsync(); // Return raw string for JSON parsing
     }
+
+    public async Task<(byte[] Data, string FileName)?> DownloadBackupAsync()
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, "/api/backup");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        var data = await response.Content.ReadAsByteArrayAsync();
+        var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+            ?? $"backup-{DateTime.Now:yyyyMMdd-HHmmss}.sql";
+
+        return (data, fileName);
+    }
+
+    public async Task<BackupLog[]?> GetBackupLogsAsync(int limit = 50)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Get, $"/api/backup/logs?limit={limit}");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<BackupLog[]>();
+    }
+
+    public async Task<string?> TriggerServerBackupAsync()
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Post, "/api/backup/run");
+        request.Headers.Authorization = new("Bearer", token);
+
+        var response = await httpClient.SendAsync(request);
+
+        await HandleResponseErrorsAsync(response);
+
+        return await response.Content.ReadAsStringAsync();
+    }
+
+    public async Task<bool> SendSupportMessageAsync(string name, string email, string message)
+    {
+        var token = await authenticationStateProvider.GetBearerTokenAsync()
+            ?? throw new Exception("Not authorized");
+
+        HttpRequestMessage request = new(HttpMethod.Post, "/api/support/send");
+        request.Headers.Authorization = new("Bearer", token);
+        request.Content = JsonContent.Create(new { Name = name, Email = email, Message = message });
+
+        var response = await httpClient.SendAsync(request);
+
+        return response.IsSuccessStatusCode;
+    }
 }

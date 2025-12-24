@@ -21,6 +21,7 @@ public static class Extensions
         services.AddScoped<AuthenticationStateProvider, IdentityAuthenticationStateProvider>();
         services.AddScoped<NavigationService, NavigationService>();
         services.AddScoped<ThemeService>();
+        services.AddSingleton<VersionService>();
         services.AddMudServices();
         services.AddBlazorDatasheet();
     }

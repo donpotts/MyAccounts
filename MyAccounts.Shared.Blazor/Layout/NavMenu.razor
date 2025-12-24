@@ -1,5 +1,6 @@
 @using System.Security.Claims
 @using MyAccounts.Shared.Blazor.Components.Themes
+@using MyAccounts.Shared.Blazor.Services
 @inject AppService AppService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IStorageService LocalStorageService
@@ -7,6 +8,7 @@
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ThemeService ThemeService
+@inject VersionService VersionService
 
 <MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
 @* <MudThemeProvider Theme="_theme" IsDarkMode="ThemeService.IsDarkMode" /> *@
@@ -14,7 +16,8 @@
 <MudAppBar Color="MudBlazor.Color.Inherit">
     <AuthorizeView Roles="Administrator">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="MudBlazor.Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Class="d-flex mr-8">My Accounts</MudText>
+        <MudText Class="d-flex mr-2">My Accounts</MudText>
+        <MudChip T="string" Size="MudBlazor.Size.Small" Variant="Variant.Outlined" Style="color: white; border-color: rgba(255,255,255,0.7);" Class="mr-4">v@(VersionService.Version)</MudChip>
     </AuthorizeView>
     <MudSpacer />
     <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert="true">
@@ -41,6 +44,7 @@
             </AuthorizeView>
             <AuthorizeView Roles="Administrator">
                 <MudLink Href="/user" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">User</MudLink>
+                <MudLink Href="/backup" Class="d-flex px-4" Color="MudBlazor.Color.Inherit">Backup</MudLink>
             </AuthorizeView>
             <AuthorizeView>
                 <Authorized>

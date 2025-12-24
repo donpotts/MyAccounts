@@ -18,6 +18,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<BudgetExpense> BudgetExpense => Set<BudgetExpense>();
     public DbSet<BudgetIncome> BudgetIncome => Set<BudgetIncome>();
     public DbSet<BudgetMonth> BudgetMonth => Set<BudgetMonth>();
+    public DbSet<BackupLog> BackupLog => Set<BackupLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

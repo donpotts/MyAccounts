@@ -6,7 +6,9 @@
       "Bash(dotnet add:*)",
       "Bash(dotnet run:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(rm:*)"
     ]
   }
 }

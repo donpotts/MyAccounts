@@ -1,5 +1,5 @@
 @inject ISnackbar Snackbar
-@inject HttpClient Http
+@inject AppService AppService
 @inject AuthenticationStateProvider AuthStateProvider
 <MudDialog>
     <TitleContent>
@@ -7,12 +7,22 @@
     </TitleContent>
     <DialogContent>
         <MudText Typo="Typo.body1" Class="mb-2">Fill out the form below and we'll get back to you as soon as possible.</MudText>
-        <MudTextField @bind-Value="Name" Label="Your Name" Variant="Variant.Outlined" Required="true" Class="mb-2" />
-        <MudTextField @bind-Value="Message" Label="Message" Variant="Variant.Outlined" Required="true" Lines="4" Class="mb-2" />
+        <MudTextField @bind-Value="Name" Label="Your Name" Variant="Variant.Outlined" Required="true" Immediate="true" Class="mb-2" />
+        <MudTextField @bind-Value="Message" Label="Message" Variant="Variant.Outlined" Required="true" Immediate="true" Lines="4" Class="mb-2" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="Send" Disabled="!CanSend">Send</MudButton>
+        <MudButton OnClick="Cancel" Disabled="@IsSending">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="@SendAsync" Disabled="@(!CanSend || IsSending)">
+            @if (IsSending)
+            {
+                <MudProgressCircular Size="MudBlazor.Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Sending...</span>
+            }
+            else
+            {
+                <span>Send</span>
+            }
+        </MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -36,14 +46,15 @@
         }
     }
 
-    private async void Send()
+    private async Task SendAsync()
     {
-        if (!CanSend) return;
+        if (!CanSend || IsSending) return;
         IsSending = true;
+        StateHasChanged();
         try
         {
-            var response = await Http.PostAsJsonAsync("/api/support/send", new { Name, Email, Message });
-            if (response.IsSuccessStatusCode)
+            var success = await AppService.SendSupportMessageAsync(Name, Email, Message);
+            if (success)
             {
                 Snackbar.Add("Your message was sent! We'll get back to you soon.", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
@@ -57,7 +68,11 @@
         {
             Snackbar.Add("There was a problem sending your message. Please try again later.", Severity.Error);
         }
-        IsSending = false;
+        finally
+        {
+            IsSending = false;
+            StateHasChanged();
+        }
     }
     private void Cancel() => MudDialog.Cancel();
 }

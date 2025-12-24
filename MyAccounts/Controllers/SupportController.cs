@@ -26,7 +26,7 @@ namespace MyAccounts.Controllers
         }
 
         [HttpPost("send")]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> Send([FromBody] SupportRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Message))
