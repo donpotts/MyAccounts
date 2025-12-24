@@ -240,14 +240,6 @@
         var mode = isDarkMode ? Mode.Dark : Mode.Light;
         var background = isDarkMode ? "var(--mud-palette-background-dark)" : "var(--mud-palette-background)";
         var foreground = isDarkMode ? "#ffffff" : "#373d3f";
-        var labelDropShadow = isDarkMode ? new DropShadow
-        {
-            Enabled = true,
-            Top = 1,
-            Left = 1,
-            Blur = 2,
-            Opacity = 0.8
-        } : new DropShadow { Enabled = false };
 
         expenseChartOptions = new ApexChartOptions<ChartDataItem>
         {
@@ -257,9 +249,16 @@
             {
                 Style = new DataLabelsStyle
                 {
-                    Colors = new List<string> { foreground }
+                    Colors = new List<string> { "#ffffff" }
                 },
-                DropShadow = labelDropShadow,
+                DropShadow = new DropShadow
+                {
+                    Enabled = true,
+                    Top = 1,
+                    Left = 1,
+                    Blur = 2,
+                    Opacity = 0.8
+                },
                 Formatter = @"function(value, { seriesIndex, w }) {
                     return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }"
