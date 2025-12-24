@@ -36,7 +36,7 @@ namespace MyAccounts.Models
                 } 
                 catch (Exception ex)
                 { 
-                    Console.WriteLine($"Error reading records: {ex.Message}");
+                    // Console.WriteLine($"Error reading records: {ex.Message}");
                 }
             }
 
@@ -65,7 +65,7 @@ namespace MyAccounts.Models
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error reading records: {ex.Message}");
+                    // Console.WriteLine($"Error reading records: {ex.Message}");
                 }
             }
 
@@ -93,7 +93,7 @@ namespace MyAccounts.Models
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error reading records: {ex.Message}");
+                    // Console.WriteLine($"Error reading records: {ex.Message}");
                 }
             }
 

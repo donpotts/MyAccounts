@@ -95,12 +95,12 @@ public class AppService(
         try
         {
             var json = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("Response Content=" + json);
+            // Console.WriteLine("Response Content=" + json);
         }
         catch(Exception ex) {
-            Console.WriteLine("ERROR! Inner:", ex.InnerException);
-            Console.WriteLine("ERROR! Msg:", ex.Message);
-            Console.WriteLine("ERROR! Stack:", ex.StackTrace);
+            // Console.WriteLine("ERROR! Inner:", ex.InnerException);
+            // Console.WriteLine("ERROR! Msg:", ex.Message);
+            // Console.WriteLine("ERROR! Stack:", ex.StackTrace);
         }
 
         return await response.Content.ReadFromJsonAsync<ODataResult<T>>();

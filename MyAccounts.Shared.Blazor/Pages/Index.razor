@@ -1,7 +1,365 @@
 @page "/"
+@inject AppService AppService
+@inject ISnackbar Snackbar
+@inject ThemeService ThemeService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
 <div class="mb-3">
     <MudText Typo="Typo.h3">Roxane's Accounting</MudText>
 </div>
 
-<MudText>Simple Accounts application to manage your accounts.</MudText>
+<AuthorizeView Roles="Administrator">
+    <Authorized>
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                <MudText Typo="Typo.h5">Dashboard</MudText>
+                <MudStack Row="true" Spacing="2">
+                    <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@selectedRange" SelectedValueChanged="OnRangeChanged" Class="mud-chip-group-outlined">
+                        <MudChip Value="@("week")" Variant="Variant.Outlined" Color="MudBlazor.Color.Primary">Week</MudChip>
+                        <MudChip Value="@("month")" Variant="Variant.Outlined" Color="MudBlazor.Color.Primary">Month</MudChip>
+                        <MudChip Value="@("quarter")" Variant="Variant.Outlined" Color="MudBlazor.Color.Primary">Quarter</MudChip>
+                        <MudChip Value="@("year")" Variant="Variant.Outlined" Color="MudBlazor.Color.Primary">Year</MudChip>
+                    </MudChipSet>
+                </MudStack>
+            </MudStack>
+
+            <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4" @bind-ActivePanelIndex="activeTabIndex">
+                <MudTabPanel Text="Expenses by Category" Icon="@Icons.Material.Filled.PieChart">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" Class="my-4" />
+                    }
+                    else if (expenseData != null && expenseData.Count > 0)
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+                            <div>
+                                <MudText Typo="Typo.subtitle1" Class="mb-2">@GetDateRangeLabel()</MudText>
+                                <MudText Typo="Typo.h6" Color="MudBlazor.Color.Error">Total Expenses: @totalExpenses.ToString("C")</MudText>
+                            </div>
+                        </MudStack>
+                        <ApexChart TItem="ChartDataItem"
+                                   Title=""
+                                   Width="600"
+                                   Height="400"
+                                   @ref="expenseChart"
+                                   Options="expenseChartOptions">
+                            <ApexPointSeries TItem="ChartDataItem"
+                                             Items="expenseData"
+                                             Name="Expenses"
+                                             SeriesType="SeriesType.Pie"
+                                             XValue="e => e.Label"
+                                             YValue="e => e.Value"
+                                             ShowDataLabels />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="my-4">No expense data available for this period.</MudAlert>
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="Income vs Expenses" Icon="@Icons.Material.Filled.BarChart">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" Class="my-4" />
+                    }
+                    else if (incomeExpenseData != null && incomeExpenseData.Count > 0)
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Class="mb-4">
+                            <div>
+                                <MudText Typo="Typo.subtitle1" Class="mb-2">@GetDateRangeLabel()</MudText>
+                                <MudStack Row="true" Spacing="4">
+                                    <MudText Typo="Typo.h6" Color="MudBlazor.Color.Success">Income: @totalIncome.ToString("C")</MudText>
+                                    <MudText Typo="Typo.h6" Color="MudBlazor.Color.Error">Expenses: @totalExpenses.ToString("C")</MudText>
+                                    <MudText Typo="Typo.h6" Color="@(netAmount >= 0 ? MudBlazor.Color.Success : MudBlazor.Color.Error)">Net: @netAmount.ToString("C")</MudText>
+                                </MudStack>
+                            </div>
+                        </MudStack>
+                        <ApexChart TItem="ChartDataItem"
+                                   Title=""
+                                   Width="700"
+                                   Height="400"
+                                   @ref="incomeExpenseChart"
+                                   Options="incomeExpenseChartOptions">
+                            <ApexPointSeries TItem="ChartDataItem"
+                                             Items="incomeExpenseData"
+                                             Name="Amount"
+                                             SeriesType="SeriesType.Bar"
+                                             XValue="e => e.Label"
+                                             YValue="e => e.Value"
+                                             ShowDataLabels />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="my-4">No data available for this period.</MudAlert>
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="Monthly Trend" Icon="@Icons.Material.Filled.TrendingUp">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" Class="my-4" />
+                    }
+                    else if (trendData != null && trendData.Count > 0)
+                    {
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">@GetDateRangeLabel()</MudText>
+                        <ApexChart TItem="TrendDataItem"
+                                   Title=""
+                                   Width="800"
+                                   Height="400"
+                                   @ref="trendChart"
+                                   Options="trendChartOptions">
+                            <ApexPointSeries TItem="TrendDataItem"
+                                             Items="incomeTrendData"
+                                             Name="Income"
+                                             SeriesType="SeriesType.Line"
+                                             XValue="e => e.Period"
+                                             YValue="e => e.Value" />
+                            <ApexPointSeries TItem="TrendDataItem"
+                                             Items="expenseTrendData"
+                                             Name="Expenses"
+                                             SeriesType="SeriesType.Line"
+                                             XValue="e => e.Period"
+                                             YValue="e => e.Value" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="my-4">No trend data available for this period.</MudAlert>
+                    }
+                </MudTabPanel>
+            </MudTabs>
+        </MudPaper>
+    </Authorized>
+    <NotAuthorized>
+        <MudText>Simple Accounts application to manage your accounts.</MudText>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string selectedRange = "month";
+    private int activeTabIndex = 0;
+    private bool isLoading = false;
+
+    private List<ChartDataItem> expenseData = new();
+    private List<ChartDataItem> incomeExpenseData = new();
+    private List<TrendDataItem> trendData = new();
+    private List<TrendDataItem> incomeTrendData = new();
+    private List<TrendDataItem> expenseTrendData = new();
+
+    private ApexChart<ChartDataItem>? expenseChart;
+    private ApexChart<ChartDataItem>? incomeExpenseChart;
+    private ApexChart<TrendDataItem>? trendChart;
+
+    private ApexChartOptions<ChartDataItem> expenseChartOptions = new();
+    private ApexChartOptions<ChartDataItem> incomeExpenseChartOptions = new();
+    private ApexChartOptions<TrendDataItem> trendChartOptions = new();
+
+    private decimal totalExpenses = 0;
+    private decimal totalIncome = 0;
+    private decimal netAmount = 0;
+
+    private DateOnly startDate;
+    private DateOnly endDate;
+
+    public class ChartDataItem
+    {
+        public string Label { get; set; } = "";
+        public decimal Value { get; set; }
+    }
+
+    public class TrendDataItem
+    {
+        public string Period { get; set; } = "";
+        public string Type { get; set; } = "";
+        public decimal Value { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.OnChange += OnThemeChanged;
+        SetDateRange();
+        ConfigureChartOptions();
+        await LoadDataAsync();
+    }
+
+    private void ConfigureChartOptions()
+    {
+        var isDarkMode = ThemeService.IsDarkMode;
+        var mode = isDarkMode ? Mode.Dark : Mode.Light;
+        var background = isDarkMode ? "var(--mud-palette-background-dark)" : "var(--mud-palette-background)";
+
+        expenseChartOptions = new ApexChartOptions<ChartDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart { Background = background },
+            DataLabels = new DataLabels
+            {
+                Formatter = @"function(value, { seriesIndex, w }) {
+                    return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }"
+            }
+        };
+
+        incomeExpenseChartOptions = new ApexChartOptions<ChartDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart { Background = background },
+            Colors = new List<string> { "#4CAF50", "#F44336" }, // Green for Income, Red for Expenses
+            PlotOptions = new PlotOptions
+            {
+                Bar = new PlotOptionsBar
+                {
+                    Horizontal = false,
+                    ColumnWidth = "50%",
+                    Distributed = true // Use different color for each bar
+                }
+            },
+            Legend = new Legend { Show = false }, // Hide legend since bars are labeled
+            DataLabels = new DataLabels
+            {
+                Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }"
+            }
+        };
+
+        trendChartOptions = new ApexChartOptions<TrendDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart { Background = background },
+            Colors = new List<string> { "#4CAF50", "#F44336" }, // Green for Income, Red for Expenses
+            Stroke = new Stroke { Curve = Curve.Smooth, Width = 3 },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }"
+                    }
+                }
+            }
+        };
+    }
+
+    private async void OnThemeChanged()
+    {
+        ConfigureChartOptions();
+        if (expenseChart != null) await expenseChart.UpdateOptionsAsync(true, true, true);
+        if (incomeExpenseChart != null) await incomeExpenseChart.UpdateOptionsAsync(true, true, true);
+        if (trendChart != null) await trendChart.UpdateOptionsAsync(true, true, true);
+        StateHasChanged();
+    }
+
+    private void SetDateRange()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        endDate = today;
+
+        startDate = selectedRange switch
+        {
+            "week" => today.AddDays(-7),
+            "month" => today.AddMonths(-1),
+            "quarter" => today.AddMonths(-3),
+            "year" => today.AddYears(-1),
+            _ => today.AddMonths(-1)
+        };
+    }
+
+    private string GetDateRangeLabel()
+    {
+        return $"{startDate:MMM dd, yyyy} - {endDate:MMM dd, yyyy}";
+    }
+
+    private async Task OnRangeChanged(string newRange)
+    {
+        selectedRange = newRange;
+        SetDateRange();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var filter = $"Date ge {startDate:yyyy-MM-dd} and Date le {endDate:yyyy-MM-dd}";
+            var result = await AppService.ListTransactionODataAsync(null, null, "Date ASC", filter, true, "Account,Category");
+
+            if (result?.Value != null)
+            {
+                var transactions = result.Value.ToList();
+
+                // Calculate totals
+                totalIncome = transactions.Where(t => t.Amount > 0 && !t.Category.Name.StartsWith("Transfer:[")).Sum(t => t.Amount ?? 0);
+                totalExpenses = Math.Abs(transactions.Where(t => t.Amount < 0 && !t.Category.Name.StartsWith("Transfer:[")).Sum(t => t.Amount ?? 0));
+                netAmount = totalIncome - totalExpenses;
+
+                // Expense by category (pie chart)
+                expenseData = transactions
+                    .Where(t => t.Amount < 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["))
+                    .GroupBy(t => t.Category.Name)
+                    .Select(g => new ChartDataItem
+                    {
+                        Label = g.Key,
+                        Value = Math.Abs(g.Sum(t => t.Amount ?? 0))
+                    })
+                    .OrderByDescending(x => x.Value)
+                    .Take(10)
+                    .ToList();
+
+                // Income vs Expenses (bar chart)
+                incomeExpenseData = new List<ChartDataItem>
+                {
+                    new ChartDataItem { Label = "Income", Value = totalIncome },
+                    new ChartDataItem { Label = "Expenses", Value = totalExpenses }
+                };
+
+                // Monthly trend (line chart)
+                trendData = BuildTrendData(transactions);
+                incomeTrendData = trendData.Where(x => x.Type == "Income").ToList();
+                expenseTrendData = trendData.Where(x => x.Type == "Expenses").ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading dashboard data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private List<TrendDataItem> BuildTrendData(List<Transaction> transactions)
+    {
+        var result = new List<TrendDataItem>();
+
+        var grouped = transactions
+            .Where(t => !t.Category.Name.StartsWith("Transfer:["))
+            .GroupBy(t => new { Year = t.Date?.Year ?? 0, Month = t.Date?.Month ?? 0 })
+            .OrderBy(g => g.Key.Year)
+            .ThenBy(g => g.Key.Month);
+
+        foreach (var group in grouped)
+        {
+            var period = $"{group.Key.Year}-{group.Key.Month:D2}";
+            var income = group.Where(t => t.Amount > 0).Sum(t => t.Amount ?? 0);
+            var expenses = Math.Abs(group.Where(t => t.Amount < 0).Sum(t => t.Amount ?? 0));
+
+            result.Add(new TrendDataItem { Period = period, Type = "Income", Value = income });
+            result.Add(new TrendDataItem { Period = period, Type = "Expenses", Value = expenses });
+        }
+
+        return result;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChange -= OnThemeChanged;
+    }
+}

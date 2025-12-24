@@ -40,7 +40,7 @@
             Snackbar.Add("No transaction account selected.", Severity.Warning);
             return;
         }
-        Console.WriteLine($"Selected AccountId: {accountId}");
+        // Console.WriteLine($"Selected AccountId: {accountId}");
         await UploadCsvAsync(file, accountId);
         NavigationService.NotifyStateChanged();
         StateHasChanged();
@@ -56,7 +56,7 @@
 
         try
         {
-            Console.WriteLine($"Uploading CSV for AccountId: {accountId}");
+            // Console.WriteLine($"Uploading CSV for AccountId: {accountId}");
             var response = await AppService.UploadCsvAsync(file, accountId);
             if (!string.IsNullOrWhiteSpace(response))
             {
