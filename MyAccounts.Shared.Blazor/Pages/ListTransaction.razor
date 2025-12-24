@@ -718,25 +718,39 @@
 
             if (result != null && result?.Value != null)
             {
-                var ar = result?.Value.ToList().Select(x => new
-                {
-                    x.Id,
-                    x.Date,
-                    x.Payee,
-                    x.Cleared,
-                    x.Amount,
-                    x.Balance,
-                    x.Description,
-                    AccountName = x.Account.Name,
-                    CategoryName = x.Category.Name,
-                });
-
                 using var memoryStream = new MemoryStream();
-                using (var writer = new StreamWriter(memoryStream))
+                using (var writer = new StreamWriter(memoryStream, leaveOpen: true))
                 using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                 {
-                    csv.WriteRecords(ar); // use CSVHelper to write the records to the CSV file
+                    // Write header manually to avoid reflection issues with anonymous types in AOT/trimmed environments
+                    csv.WriteField("Id");
+                    csv.WriteField("Date");
+                    csv.WriteField("Payee");
+                    csv.WriteField("Cleared");
+                    csv.WriteField("Amount");
+                    csv.WriteField("Balance");
+                    csv.WriteField("Description");
+                    csv.WriteField("AccountName");
+                    csv.WriteField("CategoryName");
+                    csv.NextRecord();
+
+                    // Write records manually
+                    foreach (var x in result.Value)
+                    {
+                        csv.WriteField(x.Id);
+                        csv.WriteField(x.Date);
+                        csv.WriteField(x.Payee);
+                        csv.WriteField(x.Cleared);
+                        csv.WriteField(x.Amount);
+                        csv.WriteField(x.Balance);
+                        csv.WriteField(x.Description);
+                        csv.WriteField(x.Account?.Name);
+                        csv.WriteField(x.Category?.Name);
+                        csv.NextRecord();
+                    }
                 }
+                // Ensure all data is written to the stream
+                memoryStream.Position = 0;
                 // Convert MemoryStream to ByteArray
                 var byteArray = memoryStream.ToArray();
 

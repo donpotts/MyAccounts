@@ -206,20 +206,27 @@
 
             if (result != null && result?.Value != null)
             {
-                var ar = result?.Value.ToList().Select(x => new
-                {
-                        x.Id,
-    x.Name,
-Account = string.Join(", ", x.Account?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
-
-                });
-
                 using var memoryStream = new MemoryStream();
-                using (var writer = new StreamWriter(memoryStream))
+                using (var writer = new StreamWriter(memoryStream, leaveOpen: true))
                 using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                 {
-                    csv.WriteRecords(ar); // use CSVHelper to write the records to the CSV file
+                    // Write header manually to avoid reflection issues with anonymous types in AOT/trimmed environments
+                    csv.WriteField("Id");
+                    csv.WriteField("Name");
+                    csv.WriteField("Account");
+                    csv.NextRecord();
+
+                    // Write records manually
+                    foreach (var x in result.Value)
+                    {
+                        csv.WriteField(x.Id);
+                        csv.WriteField(x.Name);
+                        csv.WriteField(string.Join(", ", x.Account?.Select(a => a.Name?.ToString() ?? string.Empty) ?? []));
+                        csv.NextRecord();
+                    }
                 }
+                // Ensure all data is written to the stream
+                memoryStream.Position = 0;
                 // Convert MemoryStream to ByteArray
                 var byteArray = memoryStream.ToArray();
 

@@ -173,6 +173,93 @@
                 </ChildContent>
             </MudExpansionPanel>
 
+            @* ==================== UNDERSTANDING ACCOUNT TYPES ==================== *@
+            <MudExpansionPanel MaxHeight="2000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">Understanding Account Types</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What is an Account Type?</strong> When you add a bank account or credit card to MyAccounts, you'll need to choose what type it is. This helps the app organize your accounts and display them correctly.</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">The Different Account Types:</MudText>
+
+                        <MudSimpleTable Bordered="true" Striped="true" Hover="true" Style="font-size: 1.1rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Account Type</th>
+                                    <th>What It's For</th>
+                                    <th style="width: 30%;">Examples</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><MudChip T="string" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">Checking</MudChip></td>
+                                    <td>Your everyday bank account for paying bills and making purchases. Money goes in and out regularly.</td>
+                                    <td>Bank of America Checking, Chase Checking</td>
+                                </tr>
+                                <tr>
+                                    <td><MudChip T="string" Color="MudBlazor.Color.Success" Size="MudBlazor.Size.Medium">Savings</MudChip></td>
+                                    <td>An account where you keep money you're saving. Usually earns a small amount of interest.</td>
+                                    <td>Emergency Fund, Vacation Savings</td>
+                                </tr>
+                                <tr>
+                                    <td><MudChip T="string" Color="MudBlazor.Color.Warning" Size="MudBlazor.Size.Medium">Credit Card</MudChip></td>
+                                    <td>A card that lets you borrow money for purchases. You pay it back each month.</td>
+                                    <td>Visa, Mastercard, Discover</td>
+                                </tr>
+                                <tr>
+                                    <td><MudChip T="string" Color="MudBlazor.Color.Secondary" Size="MudBlazor.Size.Medium">Cash</MudChip></td>
+                                    <td>Physical money you have on hand. Good for tracking cash spending.</td>
+                                    <td>Wallet, Petty Cash</td>
+                                </tr>
+                                <tr>
+                                    <td><MudChip T="string" Color="MudBlazor.Color.Info" Size="MudBlazor.Size.Medium">Investment</MudChip></td>
+                                    <td>Accounts for stocks, bonds, or retirement savings like 401(k) or IRA.</td>
+                                    <td>Fidelity IRA, Vanguard 401k</td>
+                                </tr>
+                                <tr>
+                                    <td><MudChip T="string" Color="MudBlazor.Color.Dark" Size="MudBlazor.Size.Medium">Loan</MudChip></td>
+                                    <td>Money you owe, like a car loan or mortgage. The balance goes down as you pay.</td>
+                                    <td>Car Loan, Mortgage, Student Loan</td>
+                                </tr>
+                            </tbody>
+                        </MudSimpleTable>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                            <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="MudBlazor.Color.Warning" />
+                            <MudText Typo="Typo.h6">Tips for Choosing the Right Type:</MudText>
+                        </MudStack>
+
+                        <MudList T="string" Dense="false">
+                            <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="MudBlazor.Color.Success">
+                                <MudText Style="font-size: 1.1rem;"><strong>Checking</strong> - Choose this for the account you use to pay bills and buy things with your debit card.</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="MudBlazor.Color.Success">
+                                <MudText Style="font-size: 1.1rem;"><strong>Savings</strong> - Choose this for money you're saving and don't spend often.</MudText>
+                            </MudListItem>
+                            <MudListItem Icon="@Icons.Material.Filled.Check" IconColor="MudBlazor.Color.Success">
+                                <MudText Style="font-size: 1.1rem;"><strong>Credit Card</strong> - Choose this for any credit card (Visa, Mastercard, store cards).</MudText>
+                            </MudListItem>
+                        </MudList>
+
+                        <MudAlert Severity="Severity.Success" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Info" />
+                                <MudText Style="font-size: 1.1rem;"><strong>Don't Worry!</strong> If you're not sure which type to choose, "Checking" works for most bank accounts. You can always change it later by editing the account.</MudText>
+                            </MudStack>
+                        </MudAlert>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
             @* ==================== HOW TO ADD AN ACCOUNT ==================== *@
             <MudExpansionPanel MaxHeight="2000">
                 <TitleContent>

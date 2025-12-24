@@ -227,22 +227,33 @@
 
             if (result != null && result?.Value != null)
             {
-                var ar = result?.Value.ToList().Select(x => new
-                {
-                    x.Id,
-                    x.Name,
-                    x.Date,
-                    x.Balance,
-                    AccountTypeName = x.AccountType.Name,
-                    Category = string.Join(", ", x.Category?.Select(x => x.Name?.ToString() ?? string.Empty) ?? []),
-                });
-
                 using var memoryStream = new MemoryStream();
-                using (var writer = new StreamWriter(memoryStream))
+                using (var writer = new StreamWriter(memoryStream, leaveOpen: true))
                 using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                 {
-                    csv.WriteRecords(ar); // use CSVHelper to write the records to the CSV file
+                    // Write header manually to avoid reflection issues with anonymous types in AOT/trimmed environments
+                    csv.WriteField("Id");
+                    csv.WriteField("Name");
+                    csv.WriteField("Date");
+                    csv.WriteField("Balance");
+                    csv.WriteField("AccountTypeName");
+                    csv.WriteField("Category");
+                    csv.NextRecord();
+
+                    // Write records manually
+                    foreach (var x in result.Value)
+                    {
+                        csv.WriteField(x.Id);
+                        csv.WriteField(x.Name);
+                        csv.WriteField(x.Date);
+                        csv.WriteField(x.Balance);
+                        csv.WriteField(x.AccountType?.Name);
+                        csv.WriteField(string.Join(", ", x.Category?.Select(c => c.Name?.ToString() ?? string.Empty) ?? []));
+                        csv.NextRecord();
+                    }
                 }
+                // Ensure all data is written to the stream
+                memoryStream.Position = 0;
                 // Convert MemoryStream to ByteArray
                 var byteArray = memoryStream.ToArray();
 
