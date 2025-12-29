@@ -60,6 +60,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(x => x.Account);
         modelBuilder.Entity<Transaction>()
             .HasOne(x => x.Category);
+        modelBuilder.Entity<Transaction>()
+            .Property(x => x.CategoryId)
+            .HasDefaultValue(1L);
         modelBuilder.Entity<TransactionSplit>()
             .Property(e => e.Amount)
             .HasConversion<double>();

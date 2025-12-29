@@ -110,7 +110,7 @@
                         }
                         <div style="display: flex; align-items: center;">
                             <MudNavLink Href=@($"/transaction/{accountitem.Name}") Match="NavLinkMatch.Prefix" Icon="@GetIcon(item.Name)">@accountitem.Name</MudNavLink>
-                            <MudText Class="@colorClass" Match="NavLinkMatch.Prefix">@accountitem.Balance</MudText>
+                            <MudText Class="@colorClass" Style="white-space: nowrap;" Match="NavLinkMatch.Prefix">@accountitem.Balance</MudText>
                             <MudText Match="NavLinkMatch.Prefix">&nbsp;</MudText>
                         </div>
                     }

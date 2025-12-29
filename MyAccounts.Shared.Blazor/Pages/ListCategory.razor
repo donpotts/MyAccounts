@@ -24,7 +24,7 @@
     </ToolBarContent>
     <Columns>
         @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
-        <TemplateColumn Title="Name" Sortable="true" Filterable="true">
+        <PropertyColumn Property="x => x!.Name" Title="Name" Sortable="true" Filterable="true" InitialDirection="SortDirection.Ascending">
             <CellTemplate Context="context">
                 @if (context.Item.ParentCategoryId != null)
                 {
@@ -35,7 +35,7 @@
                     <strong>@context.Item.Name</strong>
                 }
             </CellTemplate>
-        </TemplateColumn>
+        </PropertyColumn>
         <PropertyColumn Property="x => x!.ParentCategory != null ? x.ParentCategory.Name : null" Title="Parent Category" />
         <TemplateColumn Title="Budget Category" Sortable="true">
             <CellTemplate Context="context">
@@ -108,6 +108,10 @@
         var top = state.PageSize;
         var skip = state.Page * state.PageSize;
         var orderby = ODataHelpers.GetOrderBy(state.SortDefinitions);
+        if (string.IsNullOrEmpty(orderby))
+        {
+            orderby = "Name asc";
+        }
         var filter = ODataHelpers.GetFilter(state.FilterDefinitions);
 
         AppService.ODataResult<Category>? result = null;

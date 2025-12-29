@@ -104,6 +104,8 @@ public class TransactionController : ControllerBase
             return Conflict();
         }
 
+        transaction.CategoryId ??= 1;
+
         await ctx.Transaction.AddAsync(transaction);
 
         await ctx.SaveChangesAsync();
@@ -123,6 +125,8 @@ public class TransactionController : ControllerBase
         {
             return NotFound();
         }
+
+        update.CategoryId ??= 1;
 
         ctx.Entry(transaction).CurrentValues.SetValues(update);
 
@@ -145,6 +149,8 @@ public class TransactionController : ControllerBase
         }
 
         delta.Patch(transaction);
+
+        transaction.CategoryId ??= 1;
 
         await ctx.SaveChangesAsync();
 

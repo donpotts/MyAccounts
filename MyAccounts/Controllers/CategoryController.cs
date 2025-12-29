@@ -155,6 +155,18 @@ public class CategoryController(ApplicationDbContext ctx) : ControllerBase
             return BadRequest("Cannot delete a category that has subcategories. Delete the subcategories first.");
         }
 
+        var hasTransactions = await ctx.Transaction.AnyAsync(t => t.CategoryId == key);
+        if (hasTransactions)
+        {
+            return BadRequest("Cannot delete a category that has transactions. Reassign or delete the transactions first.");
+        }
+
+        var hasTransactionSplits = await ctx.TransactionSplit.AnyAsync(ts => ts.CategoryId == key);
+        if (hasTransactionSplits)
+        {
+            return BadRequest("Cannot delete a category that has transaction splits. Reassign or delete the transaction splits first.");
+        }
+
         ctx.Category.Remove(category);
         await ctx.SaveChangesAsync();
 
