@@ -256,18 +256,24 @@
         expenseChartOptions = new ApexChartOptions<ChartDataItem>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart 
-            { 
+            Chart = new Chart
+            {
                 Background = background,
                 // Safari fix: ensure proper event handling
-                Animations = new Animations { Enabled = true }
+                Animations = new Animations { Enabled = true },
+                // Safari fix: set explicit selection mode
+                Selection = new Selection { Enabled = true },
+                // Safari fix: ensure proper zoom/pan handling
+                Zoom = new Zoom { Enabled = false }
             },
             Tooltip = new Tooltip
             {
                 Enabled = true,
                 FillSeriesColor = false,
                 // Safari fix: use followCursor for better touch/hover detection
-                FollowCursor = true
+                FollowCursor = true,
+                // Safari fix: set fixed position for more reliable display
+                Fixed = new TooltipFixed { Enabled = false }
             },
             DataLabels = new DataLabels
             {
@@ -296,17 +302,20 @@
         incomeExpenseChartOptions = new ApexChartOptions<ChartDataItem>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart 
-            { 
+            Chart = new Chart
+            {
                 Background = background,
-                Animations = new Animations { Enabled = true }
+                Animations = new Animations { Enabled = true },
+                Selection = new Selection { Enabled = true },
+                Zoom = new Zoom { Enabled = false }
             },
             Tooltip = new Tooltip
             {
                 Enabled = true,
                 FollowCursor = true,
                 Intersect = false,
-                Shared = true
+                Shared = true,
+                Fixed = new TooltipFixed { Enabled = false }
             },
             Colors = new List<string> { "#66BB6A", "#EF5350" },
             PlotOptions = new PlotOptions
@@ -349,17 +358,20 @@
         trendChartOptions = new ApexChartOptions<TrendDataItem>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart 
-            { 
+            Chart = new Chart
+            {
                 Background = background,
-                Animations = new Animations { Enabled = true }
+                Animations = new Animations { Enabled = true },
+                Selection = new Selection { Enabled = true },
+                Zoom = new Zoom { Enabled = false }
             },
             Tooltip = new Tooltip
             {
                 Enabled = true,
                 FollowCursor = true,
                 Intersect = false,
-                Shared = true
+                Shared = true,
+                Fixed = new TooltipFixed { Enabled = false }
             },
             Colors = new List<string> { "#66BB6A", "#EF5350" },
             Stroke = new Stroke { Curve = Curve.Smooth, Width = 3 },
@@ -395,17 +407,20 @@
         accountChartOptions = new ApexChartOptions<AccountChartDataItem>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart 
-            { 
+            Chart = new Chart
+            {
                 Background = background,
-                Animations = new Animations { Enabled = true }
+                Animations = new Animations { Enabled = true },
+                Selection = new Selection { Enabled = true },
+                Zoom = new Zoom { Enabled = false }
             },
             Tooltip = new Tooltip
             {
                 Enabled = true,
                 FollowCursor = true,
                 Intersect = false,
-                Shared = true
+                Shared = true,
+                Fixed = new TooltipFixed { Enabled = false }
             },
             Colors = new List<string> { "#66BB6A", "#EF5350" },
             PlotOptions = new PlotOptions
@@ -500,15 +515,12 @@
             {
                 var transactions = result.Value.ToList();
 
-                // Fetch TransactionSplit records for split transactions
-                var transactionIds = transactions.Select(t => t.Id).ToList();
+                // Fetch TransactionSplit records for split transactions using date range
+                // (avoids OData URL length limits when there are many transaction IDs)
                 List<TransactionSplit> transactionSplits = new();
-                if (transactionIds.Any())
-                {
-                    var splitFilter = $"Transaction/Id in ({string.Join(",", transactionIds)})";
-                    var splitResult = await AppService.ListTransactionSplitODataAsync(null, null, null, splitFilter, true, "Transaction,Category");
-                    transactionSplits = splitResult?.Value?.ToList() ?? new();
-                }
+                var splitFilter = $"Transaction/Date ge {startDate:yyyy-MM-dd} and Transaction/Date le {endDate:yyyy-MM-dd}";
+                var splitResult = await AppService.ListTransactionSplitODataAsync(null, null, null, splitFilter, true, "Transaction,Category");
+                transactionSplits = splitResult?.Value?.ToList() ?? new();
 
                 // Calculate totals using both transactions and splits
                 // For income: positive amounts excluding transfers, and for Split transactions use the splits

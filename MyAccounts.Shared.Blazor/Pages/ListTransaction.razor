@@ -353,18 +353,23 @@
         options = new ApexChartOptions<TransactionCategoryData>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart 
-            { 
+            Chart = new Chart
+            {
                 Background = background,
                 // Safari fix: ensure proper event handling
-                Animations = new Animations { Enabled = true }
+                Animations = new Animations { Enabled = true },
+                // Safari fix: set explicit selection mode
+                Selection = new Selection { Enabled = true },
+                // Safari fix: ensure proper zoom/pan handling
+                Zoom = new Zoom { Enabled = false }
             },
             Tooltip = new Tooltip
             {
                 Enabled = true,
                 FillSeriesColor = false,
                 // Safari fix: use followCursor for better touch/hover detection
-                FollowCursor = true
+                FollowCursor = true,
+                Fixed = new TooltipFixed { Enabled = false }
             },
             DataLabels = new DataLabels
             {

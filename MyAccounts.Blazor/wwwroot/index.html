@@ -95,16 +95,23 @@
                             } else if (currentVersion !== serverVersion) {
                                 // Version changed - reload
                                 console.log('New version detected! Reloading...');
-                                
+
                                 // Clear caches before reloading
                                 if ('caches' in window) {
                                     const keys = await caches.keys();
                                     await Promise.all(keys.map(key => caches.delete(key)));
                                     console.log('Caches cleared');
                                 }
-                                
-                                // Force reload from server
-                                window.location.reload(true);
+
+                                // Unregister service worker to force fresh load (Safari fix)
+                                if ('serviceWorker' in navigator) {
+                                    const registrations = await navigator.serviceWorker.getRegistrations();
+                                    await Promise.all(registrations.map(r => r.unregister()));
+                                    console.log('Service workers unregistered');
+                                }
+
+                                // Force reload with cache-busting (works in Safari unlike reload(true))
+                                window.location.href = window.location.pathname + '?v=' + Date.now();
                             }
                         }
                     }
