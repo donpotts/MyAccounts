@@ -1,3 +1,6 @@
+using CsvHelper;
+using Microsoft.AspNetCore.Authentication.BearerToken;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OData;
@@ -5,18 +8,16 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.ModelBuilder;
 using Microsoft.OpenApi.Models;
-using System.Globalization;
-using System.Security.Claims;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
 using MyAccounts.Data;
 using MyAccounts.Models;
 using MyAccounts.Services;
 using MyAccounts.Shared.Models;
 using MyAccounts.Swagger;
-using Microsoft.AspNetCore.Authentication.BearerToken;
-using CsvHelper;
+using System.Globalization;
+using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 Environment.CurrentDirectory = AppContext.BaseDirectory;
 
@@ -28,6 +29,26 @@ if (!Directory.Exists(webRootPath))
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Kestrel for larger request/response sizes (unlimited)
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = null; // null = unlimited
+});
+
+// Configure form options for larger uploads
+builder.Services.Configure<FormOptions>(formOptions =>
+{
+    formOptions.MultipartBodyLengthLimit = long.MaxValue;
+    formOptions.ValueLengthLimit = int.MaxValue;
+    formOptions.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
+// Configure IIS for larger requests (Azure App Service)
+builder.Services.Configure<IISServerOptions>(iisOptions =>
+{
+    iisOptions.MaxRequestBodySize = null; // null = unlimited
+});
 
 builder.Services.Configure<RouteOptions>(options =>
 {

@@ -181,6 +181,7 @@
     private string selectedRange = "month";
     private int activeTabIndex = 0;
     private bool isLoading = false;
+    private bool isAuthenticated = false;
 
     private List<ChartDataItem> expenseData = new();
     private List<ChartDataItem> incomeExpenseData = new();
@@ -228,6 +229,17 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Check if user is authenticated before loading data
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        isAuthenticated = user.Identity?.IsAuthenticated == true && user.IsInRole("Administrator");
+        
+        if (!isAuthenticated)
+        {
+            // User is not authenticated or not an admin - don't load data
+            return;
+        }
+        
         ThemeService.OnChange += OnThemeChanged;
         SetDateRange();
         ConfigureChartOptions();
