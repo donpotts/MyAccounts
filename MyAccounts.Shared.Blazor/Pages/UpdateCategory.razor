@@ -30,6 +30,7 @@ else
             <DialogContent>
                 @* <MudNumericField @bind-Value="record.Id" For="@(() => record.Id)" Label="Id" ReadOnly="true" /> *@
                 <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
+                <MudAutocomplete T="long?" @bind-Value="record.ParentCategoryId" Label="Parent Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchParentCategories" ToStringFunc="@(id => GetParentCategoryDisplayName(id))" Clearable="true" CoerceValue="true" />
                 <MudCheckBox @bind-Value="record.BudgetCategory" Label="Budget Category"></MudCheckBox>
                 @* <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
                     @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
@@ -54,6 +55,7 @@ else
     IMudDialogInstance? MudDialog { get; set; }
 
     private Account[]? accountArray;
+    private Category[]? parentCategories;
     private IEnumerable<long?>? accountValues;
     private Category? record;
 
@@ -82,6 +84,9 @@ else
         {
             accountArray = await AppService.ListAccountAsync();
             record = await AppService.GetCategoryByIdAsync(Id);
+            var allCategories = await AppService.ListCategoryAsync();
+            // Only show top-level categories as possible parents (excluding self)
+            parentCategories = allCategories?.Where(c => c.ParentCategoryId == null).OrderBy(c => c.Name).ToArray();
             accountValues = record?.Account?.Select(x => x.Id).ToHashSet() ?? [];
         }
         catch (Exception ex)
@@ -95,7 +100,7 @@ else
         MudDialog?.Cancel();
     }
 
-    private async void OnSubmit()
+    private async Task OnSubmit()
     {
         if (record == null)
         {
@@ -113,6 +118,33 @@ else
         {
             Snackbar.Add(ex.Message, Severity.Error);
         }
+    }
+
+    private string GetParentCategoryDisplayName(long? id)
+    {
+        if (id == null)
+            return "(None - Top Level)";
+        var category = parentCategories?.FirstOrDefault(c => c.Id == id);
+        return category?.Name ?? "(Unknown)";
+    }
+
+    private async Task<IEnumerable<long?>> SearchParentCategories(string value, CancellationToken cancellationToken)
+    {
+        // Return null option first, then filter categories (excluding self)
+        var results = new List<long?> { null };
+        
+        if (parentCategories != null)
+        {
+            var filtered = parentCategories
+                .Where(c => c.Id != record?.Id) // Exclude self
+                .Where(c => string.IsNullOrWhiteSpace(value) || 
+                           (c.Name?.Contains(value, StringComparison.OrdinalIgnoreCase) ?? false))
+                .OrderBy(c => c.Name)
+                .Select(c => (long?)c.Id);
+            results.AddRange(filtered);
+        }
+        
+        return await Task.FromResult(results);
     }
 
     private async Task<string?> UploadImageAsync(IBrowserFile file, int maxWidth = 256, int maxHeight = 256)

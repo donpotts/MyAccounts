@@ -19,6 +19,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<BudgetIncome> BudgetIncome => Set<BudgetIncome>();
     public DbSet<BudgetMonth> BudgetMonth => Set<BudgetMonth>();
     public DbSet<BackupLog> BackupLog => Set<BackupLog>();
+    public DbSet<UserSettings> UserSettings => Set<UserSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +39,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasMany(x => x.Category);
         modelBuilder.Entity<Category>()
             .HasMany(x => x.Account);
+        modelBuilder.Entity<Category>()
+            .HasOne(c => c.ParentCategory)
+            .WithMany(c => c.SubCategories)
+            .HasForeignKey(c => c.ParentCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Transaction>()
             .Property(e => e.Amount)
             .HasConversion<double>();
@@ -65,9 +71,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<TransactionSplit>()
             .HasOne(x => x.Category);
 
-        // Make Category Name unique
+        // Make Category Name unique within same parent
         modelBuilder.Entity<Category>()
-            .HasIndex(c => c.Name)
+            .HasIndex(c => new { c.ParentCategoryId, c.Name })
             .IsUnique();
 
         // Make Account Name unique
@@ -80,6 +86,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<BudgetAccount>()
             .Property(e => e.MinPayment)
             .HasPrecision(19, 4);
+
+        // UserSettings configuration
+        modelBuilder.Entity<UserSettings>()
+            .HasIndex(us => new { us.UserId, us.SettingKey })
+            .IsUnique();
+        modelBuilder.Entity<UserSettings>()
+            .Property(us => us.CreatedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 
     //public List<Category> GetSortedCategories()

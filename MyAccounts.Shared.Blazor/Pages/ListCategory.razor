@@ -24,8 +24,20 @@
     </ToolBarContent>
     <Columns>
         @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
-        <PropertyColumn Property="x => x!.Name" Title="Name" />
-        <TemplateColumn Title="Budget Account" Sortable="true">
+        <TemplateColumn Title="Name" Sortable="true" Filterable="true">
+            <CellTemplate Context="context">
+                @if (context.Item.ParentCategoryId != null)
+                {
+                    <span style="padding-left: 20px;">@context.Item.Name</span>
+                }
+                else
+                {
+                    <strong>@context.Item.Name</strong>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x!.ParentCategory != null ? x.ParentCategory.Name : null" Title="Parent Category" />
+        <TemplateColumn Title="Budget Category" Sortable="true">
             <CellTemplate Context="context">
                 <MudCheckBox Value="@context.Item.BudgetCategory" Disabled="true" />
             </CellTemplate>
@@ -120,7 +132,7 @@
                    filter = $"contains(tolower(Name), '{_searchString}') ";
                }
             }
-            result = await AppService.ListCategoryODataAsync(top, skip, orderby, filter, true, "Account");
+            result = await AppService.ListCategoryODataAsync(top, skip, orderby, filter, true, "Account,ParentCategory");
         }
         catch (Exception ex)
         {
@@ -207,7 +219,7 @@
         try
         {
             // Fetch all data from the OData service without any filters or restrictions
-            result = await AppService.ListCategoryODataAsync(null, null, null, null, true, "Account");
+            result = await AppService.ListCategoryODataAsync(null, null, null, null, true, "Account,ParentCategory");
 
             if (result != null && result?.Value != null)
             {
@@ -218,6 +230,8 @@
                     // Write header manually to avoid reflection issues with anonymous types in AOT/trimmed environments
                     csv.WriteField("Id");
                     csv.WriteField("Name");
+                    csv.WriteField("ParentCategory");
+                    csv.WriteField("BudgetCategory");
                     csv.WriteField("Account");
                     csv.NextRecord();
 
@@ -226,6 +240,8 @@
                     {
                         csv.WriteField(x.Id);
                         csv.WriteField(x.Name);
+                        csv.WriteField(x.ParentCategory?.Name ?? "");
+                        csv.WriteField(x.BudgetCategory);
                         csv.WriteField(string.Join(", ", x.Account?.Select(a => a.Name?.ToString() ?? string.Empty) ?? []));
                         csv.NextRecord();
                     }

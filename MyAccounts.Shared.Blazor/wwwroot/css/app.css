@@ -1,9 +1,9 @@
 .text-red {
-    color: red;
+    color: #dc3545;
 }
 
 .text-green {
-    color: green;
+    color: #28a745;
 }
 
 .indent-5px {
@@ -22,20 +22,28 @@
     color: white !important;
 }
 
+.selected > td * {
+    color: white !important;
+}
+
 .selected > td .mud-input {
     color: white !important;
 }
 
+.text-white {
+    color: white !important;
+}
+
 .default-color {
-    color: var(--mud-palette-text-dark) !important;
+    color: var(--mud-palette-text-primary) !important;
 }
 
 .text-green {
-    color: green;
+    color: #28a745;
 }
 
 .text-red {
-    color: red;
+    color: #dc3545;
 }
 
 .date-range-picker {

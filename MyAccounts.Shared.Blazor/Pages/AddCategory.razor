@@ -12,6 +12,7 @@
         </TitleContent>
         <DialogContent>
             <MudTextField @bind-Value="record.Name" For="@(() => record.Name)" Label="Name" />
+            <MudAutocomplete T="long?" @bind-Value="record.ParentCategoryId" Label="Parent Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchParentCategories" ToStringFunc="@(id => GetParentCategoryDisplayName(id))" Clearable="true" CoerceValue="true" />
             <MudCheckBox @bind-Value="record.BudgetCategory" Label="Budget Category"></MudCheckBox>
             @* <MudSelect T="long?" Label="Account" MultiSelection="true" @bind-SelectedValues="accountValues" MultiSelectionTextFunc="@(x => string.Join(", ", x.Select(s => accountArray?.FirstOrDefault(i => i.Id?.ToString() == s)?.Name)))" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var account in accountArray ?? Enumerable.Empty<Account>())
@@ -32,6 +33,7 @@
     IMudDialogInstance? MudDialog { get; set; }
 
     private Account[]? accountArray;
+    private Category[]? parentCategories;
     private IEnumerable<long?>? accountValues;
     private Category record = new();
 
@@ -61,6 +63,9 @@
         try
         {
             accountArray = await AppService.ListAccountAsync();
+            var allCategories = await AppService.ListCategoryAsync();
+            // Only show top-level categories as possible parents
+            parentCategories = allCategories?.Where(c => c.ParentCategoryId == null).OrderBy(c => c.Name).ToArray();
             accountValues = record?.Account?.Select(x => x.Id).ToHashSet() ?? [];
         }
         catch(Exception ex)
@@ -74,7 +79,24 @@
         MudDialog?.Cancel();
     }
 
-    private async void OnSubmit()
+    private string GetParentCategoryDisplayName(long? id)
+    {
+        if (id == null) return string.Empty;
+        var category = parentCategories?.FirstOrDefault(c => c.Id == id);
+        return category?.Name ?? string.Empty;
+    }
+
+    private async Task<IEnumerable<long?>> SearchParentCategories(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(value))
+            return parentCategories?.Select(c => (long?)c.Id) ?? [];
+
+        return parentCategories?
+            .Where(c => c.Name?.Contains(value, StringComparison.InvariantCultureIgnoreCase) ?? false)
+            .Select(c => (long?)c.Id) ?? [];
+    }
+
+    private async Task OnSubmit()
     {
         try
         {

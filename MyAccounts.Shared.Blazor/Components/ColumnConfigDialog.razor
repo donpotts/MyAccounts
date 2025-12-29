@@ -1,0 +1,243 @@
+@using MudBlazor
+@using MyAccounts.Shared.Blazor.Services
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Configure Columns</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">Use arrows to reorder, toggle visibility, and click edit to rename.</MudText>
+
+        <MudList T="ColumnItem" Dense="true">
+            @for (int i = 0; i < columns.Count; i++)
+            {
+                var index = i;
+                var col = columns[i];
+                <MudListItem T="ColumnItem" @key="col.Key">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Style="width: 100%;">
+                        @* Up/Down buttons *@
+                        <MudStack Spacing="0">
+                            <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="MudBlazor.Size.Small"
+                                           Disabled="@(index == 0)" OnClick="@(() => MoveUp(index))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="MudBlazor.Size.Small"
+                                           Disabled="@(index == columns.Count - 1)" OnClick="@(() => MoveDown(index))" />
+                        </MudStack>
+
+                        @* Visibility checkbox *@
+                        <MudCheckBox T="bool" Value="@col.Visible" ValueChanged="@((bool v) => SetVisibility(col, v))"
+                                     Size="MudBlazor.Size.Small" Class="ma-0" />
+
+                        @* Name display or edit *@
+                        @if (editingColumn == col)
+                        {
+                            <MudTextField @bind-Value="editingName" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                          Style="flex: 1;" Placeholder="@col.DefaultName" Immediate="true" AutoFocus="true" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Check" Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Success"
+                                           OnClick="@(() => SaveColumnName(col))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Error"
+                                           OnClick="CancelEditing" />
+                        }
+                        else
+                        {
+                            <MudText Style="flex: 1;">@col.DisplayName</MudText>
+                            @if (col.DisplayName != col.DefaultName)
+                            {
+                                <MudChip T="string" Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Info" Class="ma-0">Custom</MudChip>
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="MudBlazor.Size.Small"
+                                           OnClick="@(() => StartEditing(col))" Title="Edit name" />
+                        }
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+
+        <MudDivider Class="my-3" />
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween">
+            <MudButton Size="MudBlazor.Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Visibility"
+                       OnClick="ShowAllColumns">Show All</MudButton>
+            <MudButton Size="MudBlazor.Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore"
+                       OnClick="ResetToDefaults">Reset to Defaults</MudButton>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public Dictionary<string, string> DefaultColumnNames { get; set; } = new();
+
+    [Parameter]
+    public List<string> DefaultColumnOrder { get; set; } = [];
+
+    [Parameter]
+    public ColumnConfig CurrentConfig { get; set; } = new();
+
+    private List<ColumnItem> columns = new();
+    private ColumnItem? editingColumn = null;
+    private string editingName = "";
+
+    protected override void OnInitialized()
+    {
+        InitializeColumns();
+    }
+
+    private List<string> GetDefaultOrder()
+    {
+        // If a default order is provided, use it; otherwise use dictionary keys
+        if (DefaultColumnOrder.Count > 0)
+            return DefaultColumnOrder;
+        return DefaultColumnNames.Keys.ToList();
+    }
+
+    private void InitializeColumns()
+    {
+        columns.Clear();
+
+        // Build ordered list: use saved order, then add any missing columns
+        var orderedKeys = new List<string>();
+        var defaultOrder = GetDefaultOrder();
+
+        if (CurrentConfig.ColumnOrder.Count > 0)
+        {
+            foreach (var key in CurrentConfig.ColumnOrder)
+            {
+                if (DefaultColumnNames.ContainsKey(key))
+                    orderedKeys.Add(key);
+            }
+        }
+
+        // Add any columns not in the saved order (in default order)
+        foreach (var key in defaultOrder)
+        {
+            if (!orderedKeys.Contains(key) && DefaultColumnNames.ContainsKey(key))
+                orderedKeys.Add(key);
+        }
+
+        // Create column items
+        foreach (var key in orderedKeys)
+        {
+            var displayName = CurrentConfig.ColumnNames.TryGetValue(key, out var customName)
+                ? customName
+                : DefaultColumnNames[key];
+
+            columns.Add(new ColumnItem
+            {
+                Key = key,
+                DefaultName = DefaultColumnNames[key],
+                DisplayName = displayName,
+                Visible = !CurrentConfig.HiddenColumns.Contains(key)
+            });
+        }
+    }
+
+    private void MoveUp(int index)
+    {
+        if (index <= 0) return;
+        (columns[index], columns[index - 1]) = (columns[index - 1], columns[index]);
+        StateHasChanged();
+    }
+
+    private void MoveDown(int index)
+    {
+        if (index >= columns.Count - 1) return;
+        (columns[index], columns[index + 1]) = (columns[index + 1], columns[index]);
+        StateHasChanged();
+    }
+
+    private void SetVisibility(ColumnItem item, bool visible)
+    {
+        item.Visible = visible;
+        StateHasChanged();
+    }
+
+    private void StartEditing(ColumnItem item)
+    {
+        editingColumn = item;
+        editingName = item.DisplayName;
+        StateHasChanged();
+    }
+
+    private void SaveColumnName(ColumnItem item)
+    {
+        item.DisplayName = string.IsNullOrWhiteSpace(editingName) ? item.DefaultName : editingName;
+        editingColumn = null;
+        editingName = "";
+        StateHasChanged();
+    }
+
+    private void CancelEditing()
+    {
+        editingColumn = null;
+        editingName = "";
+        StateHasChanged();
+    }
+
+    private void ShowAllColumns()
+    {
+        foreach (var col in columns)
+        {
+            col.Visible = true;
+        }
+        StateHasChanged();
+    }
+
+    private void ResetToDefaults()
+    {
+        columns.Clear();
+        var defaultOrder = GetDefaultOrder();
+        foreach (var key in defaultOrder)
+        {
+            if (DefaultColumnNames.ContainsKey(key))
+            {
+                columns.Add(new ColumnItem
+                {
+                    Key = key,
+                    DefaultName = DefaultColumnNames[key],
+                    DisplayName = DefaultColumnNames[key],
+                    Visible = true
+                });
+            }
+        }
+        editingColumn = null;
+        editingName = "";
+        StateHasChanged();
+    }
+
+    private void Cancel() => MudDialog?.Cancel();
+
+    private void Submit()
+    {
+        // Finish any active editing
+        if (editingColumn != null)
+        {
+            SaveColumnName(editingColumn);
+        }
+
+        var config = new ColumnConfig
+        {
+            ColumnOrder = columns.Select(c => c.Key).ToList(),
+            HiddenColumns = columns.Where(c => !c.Visible).Select(c => c.Key).ToHashSet(),
+            ColumnNames = columns
+                .Where(c => c.DisplayName != c.DefaultName)
+                .ToDictionary(c => c.Key, c => c.DisplayName)
+        };
+
+        MudDialog?.Close(DialogResult.Ok(config));
+    }
+
+    public class ColumnItem
+    {
+        public string Key { get; set; } = "";
+        public string DefaultName { get; set; } = "";
+        public string DisplayName { get; set; } = "";
+        public bool Visible { get; set; } = true;
+    }
+}

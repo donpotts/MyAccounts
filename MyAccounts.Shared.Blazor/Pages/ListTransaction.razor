@@ -8,7 +8,9 @@
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
 @inject ThemeService ThemeService
+@inject UserSettingsService UserSettingsService
 @using MyAccounts.Shared.Blazor.Components.Themes
+@using MyAccounts.Shared.Blazor.Components
 
 @attribute [Authorize(Roles = "Administrator")]
 
@@ -66,7 +68,7 @@
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())" Disabled="@isDisabled">Add</MudButton>
 </MudStack>
 
-<MudDataGrid T="Transaction" @ref="grid" Hover="true" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true" RowClass="cursor-pointer" RowClassFunc="@SelectedRow" RowClick="RowClicked" SelectedItem="@selectedItem" RowsPerPage="@pageSize">
+<MudDataGrid @key="@($"TransactionGrid_{columnConfigVersion}")" T="Transaction" @ref="grid" Hover="true" ServerData="(new Func<GridState<Transaction>, Task<GridData<Transaction>>>(ServerReload))" Filterable="true" RowClass="cursor-pointer" RowClassFunc="@SelectedRow" RowClick="RowClicked" SelectedItem="@selectedItem" RowsPerPage="@pageSize">
     <ToolBarContent>
         @if (!string.IsNullOrEmpty(Totals))
         {
@@ -77,52 +79,85 @@
         <MudSpacer />
         <MudTextField T="string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0" Immediate="true" ValueChanged="@(value => SearchChanged(value))"></MudTextField>
         <MudButton Color="MudBlazor.Color.Primary" OnClick="ExportAllToCSV">Export</MudButton>
+        <MudButton Color="MudBlazor.Color.Secondary" StartIcon="@Icons.Material.Filled.ViewColumn" OnClick="OpenColumnConfig">Columns</MudButton>
     </ToolBarContent>
     <Columns>
-        @* <PropertyColumn Property="x => x!.Id" Title="Id" /> *@
-        <PropertyColumn Property="x => x!.Date" Title="Date" />
-        <PropertyColumn Property="x => x!.Payee" Title="Payee" />
-        <TemplateColumn Title="Cleared" Sortable="true">
-            <CellTemplate Context="context">
-                <MudCheckBox Value="@context.Item.Cleared" Disabled="true" />
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Title="Amount" Sortable="true">
-            <CellTemplate Context="context">
-                @if (@context.Item.Amount != null)
-                {
-                    <div class="@(context.Item == selectedItem ? "default-color" : (context.Item.Amount > 0 ? "text-green" : "text-red"))">
-                        @FormatCurrency(context.Item.Amount.ToString() ?? "$0.00")
-                    </div>
-                }
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Title="Balance" Sortable="true">
-            <CellTemplate Context="context">
-                @if (@context.Item.Balance != null)
-                {
-                    <div class="@(context.Item == selectedItem ? " default-color" : (context.Item.Balance>
-                        0 ? "text-green" : "text-red"))">
-                        @FormatCurrency(context.Item.Balance.ToString() ?? "$0.00")
-                    </div>
-                }
-            </CellTemplate>
-        </TemplateColumn>
-        <PropertyColumn Property="x => x!.Description" Title="Description" />
-        <PropertyColumn @ref="accountColumn" Property="x => x!.Account != null ? x.Account.Name : null" Title="Account" />
-        <TemplateColumn T="Transaction" Title="Category">
-            <CellTemplate>
-                @if (context.Item.Category.Name == "Split")
-                {
-                    <MudButton Color="MudBlazor.Color.Default" OnClick="@(e => ShowEditDialog(context.Item))">@context.Item.Category.Name</MudButton>
-                }
-                else
-                {
-                    <MudText>@context.Item.Category.Name</MudText>
-                }
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
+        @foreach (var colKey in GetOrderedColumns())
+        {
+            @switch (colKey)
+            {
+                case "Date":
+                    <PropertyColumn @key="@colKey" Property="x => x!.Date" Title="@GetColumnName("Date")" Hidden="@IsColumnHidden("Date")" />
+                    break;
+                case "Payee":
+                    <PropertyColumn @key="@colKey" Property="x => x!.Payee" Title="@GetColumnName("Payee")" Hidden="@IsColumnHidden("Payee")" />
+                    break;
+                case "Cleared":
+                    <TemplateColumn @key="@colKey" Title="@GetColumnName("Cleared")" Sortable="true" Hidden="@IsColumnHidden("Cleared")">
+                        <CellTemplate Context="context">
+                            <MudCheckBox Value="@context.Item.Cleared" Disabled="true" />
+                        </CellTemplate>
+                    </TemplateColumn>
+                    break;
+                case "DepositAmount":
+                    <TemplateColumn @key="@colKey" Title="@GetColumnName("DepositAmount")" Sortable="true" Hidden="@IsColumnHidden("DepositAmount")">
+                        <CellTemplate Context="context">
+                            @if (context.Item.Amount != null && context.Item.Amount > 0)
+                            {
+                                <div class="@(context.Item == selectedItem ? "text-white" : "text-green")">
+                                    @FormatCurrency(context.Item.Amount.ToString() ?? "$0.00")
+                                </div>
+                            }
+                        </CellTemplate>
+                    </TemplateColumn>
+                    break;
+                case "PaymentAmount":
+                    <TemplateColumn @key="@colKey" Title="@GetColumnName("PaymentAmount")" Sortable="true" Hidden="@IsColumnHidden("PaymentAmount")">
+                        <CellTemplate Context="context">
+                            @if (context.Item.Amount != null && context.Item.Amount < 0)
+                            {
+                                <div class="@(context.Item == selectedItem ? "text-white" : "text-red")">
+                                    @FormatCurrency(Math.Abs(context.Item.Amount.Value).ToString() ?? "$0.00")
+                                </div>
+                            }
+                        </CellTemplate>
+                    </TemplateColumn>
+                    break;
+                case "Balance":
+                    <TemplateColumn @key="@colKey" Title="@GetColumnName("Balance")" Sortable="true" Hidden="@IsColumnHidden("Balance")">
+                        <CellTemplate Context="context">
+                            @if (@context.Item.Balance != null)
+                            {
+                                <div class="@(context.Item == selectedItem ? "text-white" : (context.Item.Balance > 0 ? "text-green" : "text-red"))">
+                                    @FormatCurrency(context.Item.Balance.ToString() ?? "$0.00")
+                                </div>
+                            }
+                        </CellTemplate>
+                    </TemplateColumn>
+                    break;
+                case "Description":
+                    <PropertyColumn @key="@colKey" Property="x => x!.Description" Title="@GetColumnName("Description")" Hidden="@IsColumnHidden("Description")" />
+                    break;
+                case "Account":
+                    <PropertyColumn @key="@colKey" @ref="accountColumn" Property="x => x!.Account != null ? x.Account.Name : null" Title="@GetColumnName("Account")" Hidden="@IsColumnHidden("Account")" />
+                    break;
+                case "Category":
+                    <TemplateColumn @key="@colKey" T="Transaction" Title="@GetColumnName("Category")" Hidden="@IsColumnHidden("Category")">
+                        <CellTemplate>
+                            @if (context.Item.Category.Name == "Split")
+                            {
+                                <MudButton Color="MudBlazor.Color.Default" OnClick="@(e => ShowEditDialog(context.Item))">@context.Item.Category.Name</MudButton>
+                            }
+                            else
+                            {
+                                <MudText>@context.Item.Category.Name</MudText>
+                            }
+                        </CellTemplate>
+                    </TemplateColumn>
+                    break;
+            }
+        }
+        <TemplateColumn @key="@("Actions")" Style="width: 50px;" StickyRight="true" Sortable="false" Filterable="false">
             <CellTemplate>
                 <MudStack Row="true">
                     <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@MudBlazor.Size.Small" Title="Edit" OnClick="@(e => OnEdit(context.Item!))" />
@@ -197,10 +232,94 @@
 
     int pageSize = 10;
 
+    private ColumnConfig columnConfig = new();
+    private const string GridName = "TransactionGrid";
+    private int columnConfigVersion = 0; // Forces grid re-render when columns change
+
+    // Default column names
+    private static readonly Dictionary<string, string> DefaultColumnNames = new()
+    {
+        { "Date", "Date" },
+        { "Payee", "Payee" },
+        { "Cleared", "Cleared" },
+        { "DepositAmount", "Deposit Amount" },
+        { "PaymentAmount", "Payment Amount" },
+        { "Balance", "Balance" },
+        { "Description", "Description" },
+        { "Account", "Account" },
+        { "Category", "Category" }
+    };
+
+    private bool IsColumnHidden(string columnName) => columnConfig.HiddenColumns.Contains(columnName);
+
+    private string GetColumnName(string columnKey) =>
+        columnConfig.ColumnNames.TryGetValue(columnKey, out var name) ? name : DefaultColumnNames.GetValueOrDefault(columnKey, columnKey);
+
+    private List<string> GetOrderedColumns()
+    {
+        // If we have a saved order, use it (adding any missing columns at the end)
+        if (columnConfig.ColumnOrder.Count > 0)
+        {
+            var ordered = new List<string>();
+            foreach (var key in columnConfig.ColumnOrder)
+            {
+                if (DefaultColumnNames.ContainsKey(key))
+                    ordered.Add(key);
+            }
+            // Add any columns not in the saved order (in default order)
+            foreach (var key in DefaultColumnOrder)
+            {
+                if (!ordered.Contains(key) && DefaultColumnNames.ContainsKey(key))
+                    ordered.Add(key);
+            }
+            return ordered;
+        }
+        // Default order
+        return DefaultColumnOrder;
+    }
+
+    // Define a consistent default column order
+    private static readonly List<string> DefaultColumnOrder =
+    [
+        "Date", "Payee", "Cleared", "DepositAmount", "PaymentAmount", "Balance", "Description", "Account", "Category"
+    ];
+
+    private async Task OpenColumnConfig()
+    {
+        var parameters = new DialogParameters<ColumnConfigDialog>
+        {
+            { x => x.DefaultColumnNames, DefaultColumnNames },
+            { x => x.DefaultColumnOrder, DefaultColumnOrder },
+            { x => x.CurrentConfig, columnConfig }
+        };
+
+        var dialog = await DialogService.ShowAsync<ColumnConfigDialog>("Configure Columns", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is ColumnConfig newConfig)
+        {
+            columnConfig = newConfig;
+            columnConfigVersion++; // Force grid to re-render with new column order
+            await UserSettingsService.SetColumnConfigAsync(GridName, columnConfig);
+            StateHasChanged();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         ThemeService.OnChange += UpdateExpensesPieChart;
         chart = new ApexChart<TransactionCategoryData>();
+
+        // Load column configuration
+        try
+        {
+            columnConfig = await UserSettingsService.GetColumnConfigAsync(GridName);
+        }
+        catch
+        {
+            // Ignore errors loading settings - use defaults
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

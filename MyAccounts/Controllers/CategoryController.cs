@@ -23,7 +23,9 @@ public class CategoryController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<IQueryable<Category>> Get()
     {
-        return Ok(ctx.Category.Include(x => x.Account));
+        return Ok(ctx.Category
+            .Include(x => x.Account)
+            .Include(x => x.ParentCategory));
     }
 
     [HttpGet("{key}")]
@@ -33,7 +35,11 @@ public class CategoryController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Category>> GetAsync(long key)
     {
-        var category = await ctx.Category.Include(x => x.Account).FirstOrDefaultAsync(x => x.Id == key);
+        var category = await ctx.Category
+            .Include(x => x.Account)
+            .Include(x => x.ParentCategory)
+            .Include(x => x.SubCategories)
+            .FirstOrDefaultAsync(x => x.Id == key);
 
         if (category == null)
         {
@@ -78,7 +84,10 @@ public class CategoryController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Category>> PutAsync(long key, Category update)
     {
-        var category = await ctx.Category.Include(x => x.Account).FirstOrDefaultAsync(x => x.Id == key);
+        var category = await ctx.Category
+            .Include(x => x.Account)
+            .Include(x => x.ParentCategory)
+            .FirstOrDefaultAsync(x => x.Id == key);
 
         if (category == null)
         {
@@ -108,7 +117,10 @@ public class CategoryController(ApplicationDbContext ctx) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Category>> PatchAsync(long key, Delta<Category> delta)
     {
-        var category = await ctx.Category.Include(x => x.Account).FirstOrDefaultAsync(x => x.Id == key);
+        var category = await ctx.Category
+            .Include(x => x.Account)
+            .Include(x => x.ParentCategory)
+            .FirstOrDefaultAsync(x => x.Id == key);
 
         if (category == null)
         {
@@ -124,17 +136,27 @@ public class CategoryController(ApplicationDbContext ctx) : ControllerBase
 
     [HttpDelete("{key}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAsync(long key)
     {
-        var category = await ctx.Category.FindAsync(key);
+        var category = await ctx.Category
+            .Include(x => x.SubCategories)
+            .FirstOrDefaultAsync(x => x.Id == key);
 
-        if (category != null)
+        if (category == null)
         {
-            ctx.Category.Remove(category);
-            await ctx.SaveChangesAsync();
+            return NotFound();
         }
+
+        if (category.SubCategories?.Any() == true)
+        {
+            return BadRequest("Cannot delete a category that has subcategories. Delete the subcategories first.");
+        }
+
+        ctx.Category.Remove(category);
+        await ctx.SaveChangesAsync();
 
         return NoContent();
     }

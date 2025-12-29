@@ -34,5 +34,6 @@ public class Account
     public AccountType? AccountType { get; set; }
 
     [DataMember]
+    [JsonIgnore]
     public List<Category>? Category { get; set; }
 }

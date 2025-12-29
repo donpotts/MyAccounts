@@ -1,6 +1,8 @@
 @page "/help"
 @attribute [Authorize]
 @inject IDialogService DialogService
+@inject UserSettingsService UserSettingsService
+@inject ISnackbar Snackbar
 
 <PageTitle>Help & How To Guide</PageTitle>
 
@@ -981,7 +983,7 @@
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                     <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
                                     <MudStack>
-                                        <MudText Style="font-size: 1.2rem;"><strong>Click "FILE IMPORTS" at the top of the screen</strong></MudText>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click "File Imports" at the top of the screen</strong></MudText>
                                         <MudText Style="font-size: 1rem;">A dropdown menu will appear.</MudText>
                                     </MudStack>
                                 </MudStack>
@@ -994,7 +996,7 @@
                                     <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
                                     <MudStack>
                                         <MudText Style="font-size: 1.2rem;"><strong>Click "Transaction Import"</strong></MudText>
-                                        <MudText Style="font-size: 1rem;">This is specifically for credit card transactions.</MudText>
+                                        <MudText Style="font-size: 1rem;">This opens the Credit Card Transaction Import page.</MudText>
                                     </MudStack>
                                 </MudStack>
                             </MudCardContent>
@@ -1005,7 +1007,7 @@
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                     <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
                                     <MudStack>
-                                        <MudText Style="font-size: 1.2rem;"><strong>Click "IMPORT CSV"</strong></MudText>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click "Upload CSV"</strong></MudText>
                                         <MudText Style="font-size: 1rem;">A file picker will open.</MudText>
                                     </MudStack>
                                 </MudStack>
@@ -1018,7 +1020,7 @@
                                     <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
                                     <MudStack>
                                         <MudText Style="font-size: 1.2rem;"><strong>Find and select your downloaded file</strong></MudText>
-                                        <MudText Style="font-size: 1rem;">Look in your Downloads folder for the CSV file you downloaded.</MudText>
+                                        <MudText Style="font-size: 1rem;">Look in your Downloads folder for the CSV file you downloaded from your credit card website.</MudText>
                                     </MudStack>
                                 </MudStack>
                             </MudCardContent>
@@ -1029,8 +1031,8 @@
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                     <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">5</MudAvatar>
                                     <MudStack>
-                                        <MudText Style="font-size: 1.2rem;"><strong>Review the transactions</strong></MudText>
-                                        <MudText Style="font-size: 1rem;">You'll see a preview of the transactions. Make sure they look correct.</MudText>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Select the credit card account</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">A dialog will appear asking you to select which credit card account these transactions belong to. Choose your credit card from the list.</MudText>
                                     </MudStack>
                                 </MudStack>
                             </MudCardContent>
@@ -1041,8 +1043,8 @@
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                     <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">6</MudAvatar>
                                     <MudStack>
-                                        <MudText Style="font-size: 1.2rem;"><strong>Select the credit card account</strong></MudText>
-                                        <MudText Style="font-size: 1rem;">Choose which credit card account these transactions belong to.</MudText>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Done!</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">The transactions will be imported and you'll see a message showing how many were added.</MudText>
                                     </MudStack>
                                 </MudStack>
                             </MudCardContent>
@@ -1129,6 +1131,127 @@
                 </ChildContent>
             </MudExpansionPanel>
 
+            @* ==================== USER SETTINGS ==================== *@
+            <MudExpansionPanel MaxHeight="2000">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Settings" Color="MudBlazor.Color.Primary" />
+                        <MudText Typo="Typo.h6">User Settings & Customization</MudText>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            <MudText Style="font-size: 1.1rem;"><strong>What are User Settings?</strong> User settings let you customize how MyAccounts looks and works for you. Your preferences are saved automatically!</MudText>
+                        </MudAlert>
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Customizing Your Transaction Columns:</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">1</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Go to any transaction list</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Click on an account in the left sidebar to view its transactions.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">2</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click the "Columns" button</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Look for the "Columns" button in the toolbar above the transaction list.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">3</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Configure your columns</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">In the dialog that opens, you can:</MudText>
+                                        <MudList T="string" Dense="true" Class="mt-2">
+                                            <MudListItem Icon="@Icons.Material.Filled.Visibility">
+                                                <MudText><strong>Show/Hide columns</strong> - Use the checkboxes to show or hide columns</MudText>
+                                            </MudListItem>
+                                            <MudListItem Icon="@Icons.Material.Filled.SwapVert">
+                                                <MudText><strong>Reorder columns</strong> - Use the up/down arrows to change the column order</MudText>
+                                            </MudListItem>
+                                            <MudListItem Icon="@Icons.Material.Filled.Edit">
+                                                <MudText><strong>Rename columns</strong> - Click the edit icon to give a column a custom name</MudText>
+                                            </MudListItem>
+                                        </MudList>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">4</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Use "Show All" or "Reset to Defaults"</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Click "Show All" to make all columns visible, or "Reset to Defaults" to restore the original column settings.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Medium">5</MudAvatar>
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Click "Save"</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Your column preferences will be saved and remembered the next time you use the app.</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.h5" Class="mb-4" Color="MudBlazor.Color.Primary">Theme Settings:</MudText>
+
+                        <MudCard Class="mb-3" Outlined="true">
+                            <MudCardContent>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Palette" Color="MudBlazor.Color.Primary" Size="MudBlazor.Size.Large" />
+                                    <MudStack>
+                                        <MudText Style="font-size: 1.2rem;"><strong>Change App Colors</strong></MudText>
+                                        <MudText Style="font-size: 1rem;">Click the paint palette icon in the top right corner to open theme settings. You can:</MudText>
+                                        <MudList T="string" Dense="true" Class="mt-2">
+                                            <MudListItem Icon="@Icons.Material.Filled.DarkMode">
+                                                <MudText><strong>Dark Mode</strong> - Switch between light and dark themes</MudText>
+                                            </MudListItem>
+                                            <MudListItem Icon="@Icons.Material.Filled.ColorLens">
+                                                <MudText><strong>Primary Color</strong> - Change the main accent color of the app</MudText>
+                                            </MudListItem>
+                                        </MudList>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+
+                        <MudAlert Severity="Severity.Success" Class="mt-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Save" />
+                                <MudText Style="font-size: 1.1rem;"><strong>Column settings</strong> are saved to your account and sync across devices. <strong>Theme settings</strong> are saved in your browser and apply to this device only.</MudText>
+                            </MudStack>
+                        </MudAlert>
+                    </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+
             @* ==================== HELPFUL TIPS ==================== *@
             <MudExpansionPanel MaxHeight="2000">
                 <TitleContent>
@@ -1194,13 +1317,67 @@
                 </MudButton>
             </MudStack>
         </MudPaper>
+
+        @* ==================== RESET SETTINGS ==================== *@
+        <MudPaper Class="pa-6 mt-6" Elevation="2">
+            <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="MudBlazor.Size.Large" Color="MudBlazor.Color.Warning" />
+                <MudText Typo="Typo.h5">Reset Settings</MudText>
+                <MudText Typo="Typo.body1" Align="MudBlazor.Align.Center" Style="font-size: 1.1rem;">
+                    If your column settings or preferences aren't working correctly, you can reset them to the default values.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Warning" Size="MudBlazor.Size.Large" StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="OnResetSettingsClick" Disabled="@_isResetting">
+                    @if (_isResetting)
+                    {
+                        <MudProgressCircular Size="MudBlazor.Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Resetting...</span>
+                    }
+                    else
+                    {
+                        <span>Reset Settings to Defaults</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudPaper>
     </MudStack>
 </MudContainer>
 
 @code {
+    private bool _isResetting = false;
+
     private async Task ShowContactSupportDialog()
     {
         var dialog = await DialogService.ShowAsync<ContactSupportDialog>("Contact Support");
         await dialog.Result;
+    }
+
+    private async Task OnResetSettingsClick()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Reset Settings to Defaults",
+            "Are you sure you want to reset all your settings to the default values? This will reset your column visibility, column order, and column names to their original settings.",
+            yesText: "Reset",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            _isResetting = true;
+            StateHasChanged();
+
+            try
+            {
+                await UserSettingsService.ResetToDefaultsAsync();
+                Snackbar.Add("Settings have been reset to defaults. Please refresh the page to see the changes.", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Failed to reset settings: {ex.Message}", Severity.Error);
+            }
+            finally
+            {
+                _isResetting = false;
+                StateHasChanged();
+            }
+        }
     }
 }

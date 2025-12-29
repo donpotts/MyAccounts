@@ -1,0 +1,53 @@
+@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Edit Column Name</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="newName" Label="Column Name" Variant="Variant.Outlined"
+                      Placeholder="@DefaultName" HelperText="Leave empty to use default name" />
+        @if (newName != DefaultName)
+        {
+            <MudButton Size="MudBlazor.Size.Small" OnClick="ResetToDefault" Class="mt-2">Reset to Default</MudButton>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public string ColumnKey { get; set; } = "";
+
+    [Parameter]
+    public string CurrentName { get; set; } = "";
+
+    [Parameter]
+    public string DefaultName { get; set; } = "";
+
+    private string newName = "";
+
+    protected override void OnInitialized()
+    {
+        newName = CurrentName;
+    }
+
+    private void ResetToDefault()
+    {
+        newName = DefaultName;
+    }
+
+    private void Cancel() => MudDialog?.Cancel();
+
+    private void Submit()
+    {
+        var result = string.IsNullOrWhiteSpace(newName) ? DefaultName : newName;
+        MudDialog?.Close(DialogResult.Ok(result));
+    }
+}

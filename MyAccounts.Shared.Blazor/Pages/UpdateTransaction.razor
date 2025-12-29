@@ -53,7 +53,7 @@ else
                         <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
                     }
                 </MudSelect> *@
-                <MudAutocomplete T="long?" @bind-Value="record.CategoryId" Label="Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchCategories" ToStringFunc="@(id => categoryArray.FirstOrDefault(c => c.Id == id)?.Name)" CoerceValue="true" />
+                <MudAutocomplete T="long?" @bind-Value="record.CategoryId" Label="Category" AnchorOrigin="Origin.BottomCenter" SearchFunc="SearchCategories" ToStringFunc="@(id => GetCategoryDisplayName(id))" CoerceValue="true" />
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="OnCancel">Cancel</MudButton>
@@ -81,15 +81,30 @@ else
         record.Amount = -record.Amount;
     }
 
+    private string GetCategoryDisplayName(long? id)
+    {
+        if (id == null) return string.Empty;
+        var category = categoryArray?.FirstOrDefault(c => c.Id == id);
+        if (category == null) return string.Empty;
+
+        if (category.ParentCategoryId != null)
+        {
+            var parent = categoryArray?.FirstOrDefault(c => c.Id == category.ParentCategoryId);
+            if (parent != null)
+                return $"{parent.Name} : {category.Name}";
+        }
+        return category.Name ?? string.Empty;
+    }
+
     private async Task<IEnumerable<long?>> SearchCategories(string value, CancellationToken cancellationToken)
     {
-        var filteredCategories = categoryArray.Where(c => c.Name != "Split");
+        var filteredCategories = categoryArray?.Where(c => c.Name != "Split") ?? [];
 
         if (string.IsNullOrEmpty(value))
-            return categoryArray.Select(c => (long?)c.Id);
+            return filteredCategories.Select(c => (long?)c.Id);
 
-        return categoryArray
-            .Where(c => c.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+        return filteredCategories
+            .Where(c => GetCategoryDisplayName(c.Id).Contains(value, StringComparison.InvariantCultureIgnoreCase))
             .Select(c => (long?)c.Id);
     }
 

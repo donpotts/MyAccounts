@@ -13,6 +13,7 @@ public static class Extensions
     public static void AddBlazorServices(this IServiceCollection services, string baseAddress)
     {
         services.AddScoped<AppService>();
+        services.AddScoped<UserSettingsService>();
 
         services.AddScoped(sp
             => new HttpClient { BaseAddress = new Uri(baseAddress) });
