@@ -5,13 +5,102 @@
 @inject HttpClient HttpClient
 @inject IJSRuntime JSRuntime
 @inject NavigationService NavigationService
+@inject ThemeService ThemeService
 @attribute [Authorize(Roles = "Administrator")]
+@implements IDisposable
 
 <PageTitle>Account</PageTitle>
 
 <div class="mb-3">
     <MudText Typo="Typo.h3">Account</MudText>
 </div>
+
+@if (isChartLoading)
+{
+    <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (accountBalanceData.Count > 0 || accountActivityData.Count > 0)
+{
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+            <MudTabPanel Text="Balance Distribution" Icon="@Icons.Material.Filled.DonutLarge">
+                @if (accountBalanceData.Count > 0)
+                {
+                    <ApexChart TItem="AccountBalanceDataItem"
+                               Title=""
+                               Width="600"
+                               Height="400"
+                               @ref="balanceDonutChart"
+                               Options="balanceDonutOptions">
+                        <ApexPointSeries TItem="AccountBalanceDataItem"
+                                         Items="accountBalanceData"
+                                         Name="Balance"
+                                         SeriesType="SeriesType.Donut"
+                                         XValue="e => e.AccountName"
+                                         YValue="e => e.Balance"
+                                         ShowDataLabels />
+                    </ApexChart>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">No account balance data available.</MudAlert>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Monthly Activity" Icon="@Icons.Material.Filled.StackedLineChart">
+                @if (accountActivityData.Count > 0)
+                {
+                    <ApexChart TItem="StackedAreaDataItem"
+                               Title=""
+                               Width="800"
+                               Height="400"
+                               @ref="activityAreaChart"
+                               Options="activityAreaOptions">
+                        @foreach (var account in accountActivityData.Select(x => x.Category).Distinct())
+                        {
+                            <ApexPointSeries TItem="StackedAreaDataItem"
+                                             Items="accountActivityData.Where(x => x.Category == account).ToList()"
+                                             Name="@account"
+                                             SeriesType="SeriesType.Area"
+                                             XValue="e => e.Period"
+                                             YValue="e => e.Value" />
+                        }
+                    </ApexChart>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">No monthly activity data available.</MudAlert>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Activity Heatmap" Icon="@Icons.Material.Filled.GridOn">
+                @if (accountHeatmapData.Count > 0)
+                {
+                    <ApexChart TItem="HeatmapDataItem"
+                               Title=""
+                               Width="800"
+                               Height="350"
+                               @ref="activityHeatmapChart"
+                               Options="activityHeatmapOptions">
+                        @foreach (var account in accountHeatmapData.Select(x => x.YLabel).Distinct())
+                        {
+                            <ApexPointSeries TItem="HeatmapDataItem"
+                                             Items="accountHeatmapData.Where(x => x.YLabel == account).ToList()"
+                                             Name="@account"
+                                             SeriesType="SeriesType.Heatmap"
+                                             XValue="e => e.XLabel"
+                                             YValue="e => e.Value" />
+                        }
+                    </ApexChart>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">No activity heatmap data available.</MudAlert>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    </MudPaper>
+}
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircleOutline" Color="MudBlazor.Color.Primary" OnClick="@(e => OnAdd())">Add</MudButton>
@@ -79,6 +168,284 @@
     private PropertyColumn<Account, string?>? accountTypeColumn;
 
     private string? _searchString;
+
+    // Chart references
+    private ApexChart<AccountBalanceDataItem>? balanceDonutChart;
+    private ApexChart<StackedAreaDataItem>? activityAreaChart;
+    private ApexChart<HeatmapDataItem>? activityHeatmapChart;
+
+    // Chart options
+    private ApexChartOptions<AccountBalanceDataItem> balanceDonutOptions = new();
+    private ApexChartOptions<StackedAreaDataItem> activityAreaOptions = new();
+    private ApexChartOptions<HeatmapDataItem> activityHeatmapOptions = new();
+
+    // Chart data
+    private List<AccountBalanceDataItem> accountBalanceData = new();
+    private List<StackedAreaDataItem> accountActivityData = new();
+    private List<HeatmapDataItem> accountHeatmapData = new();
+
+    private bool isChartLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.OnChange += OnThemeChanged;
+        ConfigureChartOptions();
+        await LoadChartDataAsync();
+    }
+
+    private void ConfigureChartOptions()
+    {
+        var isDarkMode = ThemeService.IsDarkMode;
+        var mode = isDarkMode ? Mode.Dark : Mode.Light;
+        var background = isDarkMode ? "var(--mud-palette-background-dark)" : "var(--mud-palette-background)";
+        var foreground = isDarkMode ? "#ffffff" : "#373d3f";
+
+        // Balance Donut chart options
+        balanceDonutOptions = new ApexChartOptions<AccountBalanceDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Animations = new Animations { Enabled = true },
+                Selection = new Selection { Enabled = true },
+                Zoom = new Zoom { Enabled = false }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            PlotOptions = new PlotOptions
+            {
+                Pie = new PlotOptionsPie
+                {
+                    Donut = new PlotOptionsDonut
+                    {
+                        Size = "65%",
+                        Labels = new DonutLabels
+                        {
+                            Show = true,
+                            Total = new DonutLabelTotal
+                            {
+                                Show = true,
+                                Label = "Total",
+                                FontSize = "16px",
+                                Color = foreground,
+                                Formatter = @"function(w) {
+                                    return '$' + w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                                        .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }"
+                            }
+                        }
+                    }
+                }
+            },
+            DataLabels = new DataLabels
+            {
+                Formatter = @"function(value, { seriesIndex, w }) {
+                    return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }"
+            },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            }
+        };
+
+        // Activity Area chart options
+        activityAreaOptions = new ApexChartOptions<StackedAreaDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Stacked = true,
+                StackType = StackType.Normal,
+                Animations = new Animations { Enabled = true },
+                Selection = new Selection { Enabled = true },
+                Zoom = new Zoom { Enabled = false }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Intersect = false,
+                Shared = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            Colors = new List<string> { "#66BB6A", "#EF5350", "#42A5F5", "#FFA726", "#AB47BC", "#26C6DA", "#D4E157", "#78909C" },
+            Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
+            Fill = new Fill { Type = FillType.Gradient },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            },
+            Xaxis = new XAxis
+            {
+                Type = XAxisType.Category,
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = foreground }
+                }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Style = new AxisLabelStyle { Colors = foreground },
+                        Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }"
+                    }
+                }
+            }
+        };
+
+        // Activity Heatmap chart options
+        activityHeatmapOptions = new ApexChartOptions<HeatmapDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            DataLabels = new DataLabels
+            {
+                Enabled = true,
+                Style = new DataLabelsStyle
+                {
+                    Colors = new List<string> { "#ffffff" }
+                },
+                Formatter = @"function(value) { return '$' + value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }"
+            },
+            PlotOptions = new PlotOptions
+            {
+                Heatmap = new PlotOptionsHeatmap
+                {
+                    Radius = 2,
+                    EnableShades = true,
+                    ShadeIntensity = 0.5
+                }
+            },
+            Colors = new List<string> { "#43A047" },
+            Xaxis = new XAxis
+            {
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = foreground }
+                }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Style = new AxisLabelStyle { Colors = foreground }
+                    }
+                }
+            },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            }
+        };
+    }
+
+    private async void OnThemeChanged()
+    {
+        ConfigureChartOptions();
+        if (balanceDonutChart != null) await balanceDonutChart.UpdateOptionsAsync(true, true, true);
+        if (activityAreaChart != null) await activityAreaChart.UpdateOptionsAsync(true, true, true);
+        if (activityHeatmapChart != null) await activityHeatmapChart.UpdateOptionsAsync(true, true, true);
+        StateHasChanged();
+    }
+
+    private async Task LoadChartDataAsync()
+    {
+        isChartLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // Load accounts for balance distribution
+            var accountResult = await AppService.ListAccountODataAsync(null, null, null, null, true, "AccountType");
+            if (accountResult?.Value != null)
+            {
+                accountBalanceData = accountResult.Value
+                    .Where(a => a.Balance.HasValue && a.Balance > 0)
+                    .Select(a => new AccountBalanceDataItem
+                    {
+                        AccountName = a.Name ?? "Unknown",
+                        Balance = a.Balance ?? 0
+                    })
+                    .ToList();
+            }
+
+            // Load transactions for activity charts (last 6 months)
+            var endDate = DateOnly.FromDateTime(DateTime.Today);
+            var startDate = endDate.AddMonths(-6);
+            var filter = $"Date ge {startDate:yyyy-MM-dd} and Date le {endDate:yyyy-MM-dd}";
+            var transResult = await AppService.ListTransactionODataAsync(null, null, "Date ASC", filter, true, "Account,Category");
+
+            if (transResult?.Value != null)
+            {
+                var transactions = transResult.Value.ToList();
+
+                // Build stacked area data (activity by account per month)
+                var grouped = transactions
+                    .Where(t => t.Account != null && t.Date.HasValue)
+                    .GroupBy(t => new { Account = t.Account?.Name ?? "Unknown", Year = t.Date!.Value.Year, Month = t.Date!.Value.Month })
+                    .Select(g => new StackedAreaDataItem
+                    {
+                        Category = g.Key.Account,
+                        Period = $"{g.Key.Year}-{g.Key.Month:D2}",
+                        Value = Math.Abs(g.Where(t => t.Amount < 0).Sum(t => t.Amount ?? 0))
+                    })
+                    .ToList();
+
+                accountActivityData = grouped;
+
+                // Build heatmap data (activity by account per month)
+                var heatmapGrouped = transactions
+                    .Where(t => t.Account != null && t.Date.HasValue)
+                    .GroupBy(t => new { Account = t.Account?.Name ?? "Unknown", Year = t.Date!.Value.Year, Month = t.Date!.Value.Month })
+                    .Select(g => new HeatmapDataItem
+                    {
+                        YLabel = g.Key.Account,
+                        XLabel = $"{g.Key.Year}-{g.Key.Month:D2}",
+                        Value = Math.Abs(g.Sum(t => t.Amount ?? 0))
+                    })
+                    .ToList();
+
+                accountHeatmapData = heatmapGrouped;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading chart data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isChartLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChange -= OnThemeChanged;
+    }
+
     private string GetAbsoluteUri(string uri)
     {
         if (!uri.StartsWith("/"))

@@ -37,21 +37,45 @@
                                 <MudText Typo="Typo.subtitle1" Class="mb-2">@GetDateRangeLabel()</MudText>
                                 <MudText Typo="Typo.h6" Color="MudBlazor.Color.Error">Total Expenses: @totalExpenses.ToString("C")</MudText>
                             </div>
+                            <MudToggleGroup T="bool" @bind-Value="showDonutChart" Color="MudBlazor.Color.Primary" CheckMark Size="MudBlazor.Size.Small">
+                                <MudToggleItem Value="false" Text="Pie" />
+                                <MudToggleItem Value="true" Text="Donut" />
+                            </MudToggleGroup>
                         </MudStack>
-                        <ApexChart TItem="ChartDataItem"
-                                   Title=""
-                                   Width="600"
-                                   Height="400"
-                                   @ref="expenseChart"
-                                   Options="expenseChartOptions">
-                            <ApexPointSeries TItem="ChartDataItem"
-                                             Items="expenseData"
-                                             Name="Expenses"
-                                             SeriesType="SeriesType.Pie"
-                                             XValue="e => e.Label"
-                                             YValue="e => e.Value"
-                                             ShowDataLabels />
-                        </ApexChart>
+                        @if (showDonutChart)
+                        {
+                            <ApexChart TItem="ChartDataItem"
+                                       Title=""
+                                       Width="600"
+                                       Height="400"
+                                       @ref="donutChart"
+                                       Options="donutChartOptions">
+                                <ApexPointSeries TItem="ChartDataItem"
+                                                 Items="expenseData"
+                                                 Name="Expenses"
+                                                 SeriesType="SeriesType.Donut"
+                                                 XValue="e => e.Label"
+                                                 YValue="e => e.Value"
+                                                 ShowDataLabels />
+                            </ApexChart>
+                        }
+                        else
+                        {
+                            <ApexChart TItem="ChartDataItem"
+                                       Title=""
+                                       Width="600"
+                                       Height="400"
+                                       @ref="expenseChart"
+                                       Options="expenseChartOptions">
+                                <ApexPointSeries TItem="ChartDataItem"
+                                                 Items="expenseData"
+                                                 Name="Expenses"
+                                                 SeriesType="SeriesType.Pie"
+                                                 XValue="e => e.Label"
+                                                 YValue="e => e.Value"
+                                                 ShowDataLabels />
+                            </ApexChart>
+                        }
                     }
                     else
                     {
@@ -104,26 +128,54 @@
                     }
                     else if (trendData != null && trendData.Count > 0)
                     {
-                        <MudText Typo="Typo.subtitle1" Class="mb-2">@GetDateRangeLabel()</MudText>
-                        <ApexChart TItem="TrendDataItem"
-                                   Title=""
-                                   Width="800"
-                                   Height="400"
-                                   @ref="trendChart"
-                                   Options="trendChartOptions">
-                            <ApexPointSeries TItem="TrendDataItem"
-                                             Items="incomeTrendData"
-                                             Name="Income"
-                                             SeriesType="SeriesType.Line"
-                                             XValue="e => e.Period"
-                                             YValue="e => e.Value" />
-                            <ApexPointSeries TItem="TrendDataItem"
-                                             Items="expenseTrendData"
-                                             Name="Expenses"
-                                             SeriesType="SeriesType.Line"
-                                             XValue="e => e.Period"
-                                             YValue="e => e.Value" />
-                        </ApexChart>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Class="mb-2">
+                            <MudText Typo="Typo.subtitle1">@GetDateRangeLabel()</MudText>
+                            <MudToggleGroup T="bool" @bind-Value="showStackedArea" Color="MudBlazor.Color.Primary" CheckMark Size="MudBlazor.Size.Small">
+                                <MudToggleItem Value="false" Text="Line" />
+                                <MudToggleItem Value="true" Text="Stacked Area" />
+                            </MudToggleGroup>
+                        </MudStack>
+                        @if (showStackedArea && stackedAreaData.Count > 0)
+                        {
+                            <ApexChart TItem="StackedAreaDataItem"
+                                       Title=""
+                                       Width="800"
+                                       Height="400"
+                                       @ref="stackedAreaChart"
+                                       Options="stackedAreaChartOptions">
+                                @foreach (var category in stackedAreaData.Select(x => x.Category).Distinct())
+                                {
+                                    <ApexPointSeries TItem="StackedAreaDataItem"
+                                                     Items="stackedAreaData.Where(x => x.Category == category).ToList()"
+                                                     Name="@category"
+                                                     SeriesType="SeriesType.Area"
+                                                     XValue="e => e.Period"
+                                                     YValue="e => e.Value" />
+                                }
+                            </ApexChart>
+                        }
+                        else
+                        {
+                            <ApexChart TItem="TrendDataItem"
+                                       Title=""
+                                       Width="800"
+                                       Height="400"
+                                       @ref="trendChart"
+                                       Options="trendChartOptions">
+                                <ApexPointSeries TItem="TrendDataItem"
+                                                 Items="incomeTrendData"
+                                                 Name="Income"
+                                                 SeriesType="SeriesType.Line"
+                                                 XValue="e => e.Period"
+                                                 YValue="e => e.Value" />
+                                <ApexPointSeries TItem="TrendDataItem"
+                                                 Items="expenseTrendData"
+                                                 Name="Expenses"
+                                                 SeriesType="SeriesType.Line"
+                                                 XValue="e => e.Period"
+                                                 YValue="e => e.Value" />
+                            </ApexChart>
+                        }
                     }
                     else
                     {
@@ -169,6 +221,65 @@
                         <MudAlert Severity="Severity.Info" Class="my-4">No account data available for this period.</MudAlert>
                     }
                 </MudTabPanel>
+
+                <MudTabPanel Text="Spending Heatmap" Icon="@Icons.Material.Filled.GridOn">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" Class="my-4" />
+                    }
+                    else if (heatmapData != null && heatmapData.Count > 0)
+                    {
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">@GetDateRangeLabel() - Spending by Day of Week</MudText>
+                        <ApexChart TItem="HeatmapDataItem"
+                                   Title=""
+                                   Width="800"
+                                   Height="350"
+                                   @ref="heatmapChart"
+                                   Options="heatmapChartOptions">
+                            @foreach (var day in heatmapData.Select(x => x.YLabel).Distinct())
+                            {
+                                <ApexPointSeries TItem="HeatmapDataItem"
+                                                 Items="heatmapData.Where(x => x.YLabel == day).ToList()"
+                                                 Name="@day"
+                                                 SeriesType="SeriesType.Heatmap"
+                                                 XValue="e => e.XLabel"
+                                                 YValue="e => e.Value" />
+                            }
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="my-4">No heatmap data available for this period.</MudAlert>
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="Category Breakdown" Icon="@Icons.Material.Filled.ViewModule">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" Class="my-4" />
+                    }
+                    else if (treemapData != null && treemapData.Count > 0)
+                    {
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">@GetDateRangeLabel() - Expense Categories</MudText>
+                        <ApexChart TItem="TreemapDataItem"
+                                   Title=""
+                                   Width="800"
+                                   Height="400"
+                                   @ref="treemapChart"
+                                   Options="treemapChartOptions">
+                            <ApexPointSeries TItem="TreemapDataItem"
+                                             Items="treemapData"
+                                             Name="Expenses"
+                                             SeriesType="SeriesType.Treemap"
+                                             XValue="e => e.Category"
+                                             YValue="e => e.Value" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="my-4">No category data available for this period.</MudAlert>
+                    }
+                </MudTabPanel>
             </MudTabs>
         </MudPaper>
     </Authorized>
@@ -194,11 +305,28 @@
     private ApexChart<ChartDataItem>? incomeExpenseChart;
     private ApexChart<TrendDataItem>? trendChart;
     private ApexChart<AccountChartDataItem>? accountChart;
+    private ApexChart<ChartDataItem>? donutChart;
+    private ApexChart<StackedAreaDataItem>? stackedAreaChart;
+    private ApexChart<TreemapDataItem>? treemapChart;
+    private ApexChart<HeatmapDataItem>? heatmapChart;
 
     private ApexChartOptions<ChartDataItem> expenseChartOptions = new();
     private ApexChartOptions<ChartDataItem> incomeExpenseChartOptions = new();
     private ApexChartOptions<TrendDataItem> trendChartOptions = new();
     private ApexChartOptions<AccountChartDataItem> accountChartOptions = new();
+    private ApexChartOptions<ChartDataItem> donutChartOptions = new();
+    private ApexChartOptions<StackedAreaDataItem> stackedAreaChartOptions = new();
+    private ApexChartOptions<TreemapDataItem> treemapChartOptions = new();
+    private ApexChartOptions<HeatmapDataItem> heatmapChartOptions = new();
+
+    // Toggle states for chart type switching
+    private bool showDonutChart = false;
+    private bool showStackedArea = false;
+
+    // New chart data lists
+    private List<StackedAreaDataItem> stackedAreaData = new();
+    private List<TreemapDataItem> treemapData = new();
+    private List<HeatmapDataItem> heatmapData = new();
 
     private decimal totalExpenses = 0;
     private decimal totalIncome = 0;
@@ -207,25 +335,6 @@
     private DateOnly startDate;
     private DateOnly endDate;
 
-    public class ChartDataItem
-    {
-        public string Label { get; set; } = "";
-        public decimal Value { get; set; }
-    }
-
-    public class TrendDataItem
-    {
-        public string Period { get; set; } = "";
-        public string Type { get; set; } = "";
-        public decimal Value { get; set; }
-    }
-
-    public class AccountChartDataItem
-    {
-        public string Account { get; set; } = "";
-        public decimal Credits { get; set; }
-        public decimal Debits { get; set; }
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -462,6 +571,221 @@
                 }
             }
         };
+
+        // Donut chart options (similar to pie but with center label)
+        donutChartOptions = new ApexChartOptions<ChartDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Animations = new Animations { Enabled = true },
+                Selection = new Selection { Enabled = true },
+                Zoom = new Zoom { Enabled = false }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FillSeriesColor = false,
+                FollowCursor = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            PlotOptions = new PlotOptions
+            {
+                Pie = new PlotOptionsPie
+                {
+                    Donut = new PlotOptionsDonut
+                    {
+                        Size = "65%",
+                        Labels = new DonutLabels
+                        {
+                            Show = true,
+                            Total = new DonutLabelTotal
+                            {
+                                Show = true,
+                                Label = "Total",
+                                FontSize = "16px",
+                                Color = foreground,
+                                Formatter = @"function(w) {
+                                    return '$' + w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                                        .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }"
+                            }
+                        }
+                    }
+                }
+            },
+            DataLabels = new DataLabels
+            {
+                Style = new DataLabelsStyle
+                {
+                    Colors = new List<string> { "#ffffff" }
+                },
+                DropShadow = new DropShadow
+                {
+                    Enabled = true,
+                    Top = 1,
+                    Left = 1,
+                    Blur = 2,
+                    Opacity = 0.8
+                },
+                Formatter = @"function(value, { seriesIndex, w }) {
+                    return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }"
+            },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            }
+        };
+
+        // Stacked Area chart options
+        stackedAreaChartOptions = new ApexChartOptions<StackedAreaDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Stacked = true,
+                StackType = StackType.Normal,
+                Animations = new Animations { Enabled = true },
+                Selection = new Selection { Enabled = true },
+                Zoom = new Zoom { Enabled = false }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Intersect = false,
+                Shared = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            Colors = new List<string> { "#66BB6A", "#EF5350", "#42A5F5", "#FFA726", "#AB47BC", "#26C6DA", "#D4E157", "#78909C" },
+            Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
+            Fill = new Fill { Type = FillType.Gradient },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            },
+            Xaxis = new XAxis
+            {
+                Type = XAxisType.Category,
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = foreground }
+                }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Style = new AxisLabelStyle { Colors = foreground },
+                        Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }"
+                    }
+                }
+            }
+        };
+
+        // Treemap chart options
+        treemapChartOptions = new ApexChartOptions<TreemapDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            DataLabels = new DataLabels
+            {
+                Enabled = true,
+                Style = new DataLabelsStyle
+                {
+                    FontSize = "14px"
+                },
+                Formatter = @"function(text, op) {
+                    return [text, '$' + op.value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })];
+                }"
+            },
+            PlotOptions = new PlotOptions
+            {
+                Treemap = new PlotOptionsTreemap
+                {
+                    EnableShades = true,
+                    ShadeIntensity = 0.5,
+                    Distributed = true
+                }
+            },
+            Colors = new List<string> { "#42A5F5", "#66BB6A", "#FFA726", "#AB47BC", "#26C6DA", "#EF5350", "#D4E157", "#78909C" },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            }
+        };
+
+        // Heatmap chart options
+        heatmapChartOptions = new ApexChartOptions<HeatmapDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            DataLabels = new DataLabels
+            {
+                Enabled = true,
+                Style = new DataLabelsStyle
+                {
+                    Colors = new List<string> { "#ffffff" }
+                },
+                Formatter = @"function(value) { return '$' + value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }"
+            },
+            PlotOptions = new PlotOptions
+            {
+                Heatmap = new PlotOptionsHeatmap
+                {
+                    Radius = 2,
+                    EnableShades = true,
+                    ShadeIntensity = 0.5
+                }
+            },
+            Colors = new List<string> { "#43A047" },
+            Xaxis = new XAxis
+            {
+                Labels = new XAxisLabels
+                {
+                    Style = new AxisLabelStyle { Colors = foreground }
+                }
+            },
+            Yaxis = new List<YAxis>
+            {
+                new YAxis
+                {
+                    Labels = new YAxisLabels
+                    {
+                        Style = new AxisLabelStyle { Colors = foreground }
+                    }
+                }
+            },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            }
+        };
     }
 
     private async void OnThemeChanged()
@@ -471,6 +795,10 @@
         if (incomeExpenseChart != null) await incomeExpenseChart.UpdateOptionsAsync(true, true, true);
         if (trendChart != null) await trendChart.UpdateOptionsAsync(true, true, true);
         if (accountChart != null) await accountChart.UpdateOptionsAsync(true, true, true);
+        if (donutChart != null) await donutChart.UpdateOptionsAsync(true, true, true);
+        if (stackedAreaChart != null) await stackedAreaChart.UpdateOptionsAsync(true, true, true);
+        if (treemapChart != null) await treemapChart.UpdateOptionsAsync(true, true, true);
+        if (heatmapChart != null) await heatmapChart.UpdateOptionsAsync(true, true, true);
         StateHasChanged();
     }
 
@@ -571,6 +899,11 @@
                     .Where(a => a.Credits > 0 || a.Debits > 0)
                     .OrderByDescending(a => a.Credits + a.Debits)
                     .ToList();
+
+                // Build data for new chart types
+                stackedAreaData = BuildStackedAreaData(transactions, transactionSplits);
+                treemapData = BuildTreemapData(transactions, transactionSplits);
+                heatmapData = BuildHeatmapData(transactions, transactionSplits);
             }
         }
         catch (Exception ex)
@@ -688,6 +1021,136 @@
         }
 
         return result;
+    }
+
+    private List<StackedAreaDataItem> BuildStackedAreaData(List<Transaction> transactions, List<TransactionSplit> transactionSplits)
+    {
+        var result = new List<StackedAreaDataItem>();
+        var transactionDates = transactions.ToDictionary(t => t.Id ?? 0, t => t.Date);
+
+        // Get top 5 expense categories
+        var topCategories = GroupExpensesByCategory(transactions, transactionSplits)
+            .Take(5)
+            .Select(x => x.Label)
+            .ToList();
+
+        // Group non-split transactions by period and category
+        var groupedTransactions = transactions
+            .Where(t => t.Amount < 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:[") && topCategories.Contains(t.Category.Name))
+            .GroupBy(t => new { Year = t.Date?.Year ?? 0, Month = t.Date?.Month ?? 0, Category = t.Category.Name })
+            .ToDictionary(
+                g => g.Key,
+                g => Math.Abs(g.Sum(t => t.Amount ?? 0))
+            );
+
+        // Group splits by period and category
+        var groupedSplits = transactionSplits
+            .Where(s => s.Amount < 0 && !s.Category.Name.StartsWith("Transfer:[") && topCategories.Contains(s.Category.Name))
+            .Select(s => new { Split = s, Date = transactionDates.GetValueOrDefault(s.TransactionId ?? 0) })
+            .Where(x => x.Date.HasValue)
+            .GroupBy(x => new { Year = x.Date!.Value.Year, Month = x.Date!.Value.Month, Category = x.Split.Category.Name })
+            .ToDictionary(
+                g => g.Key,
+                g => Math.Abs(g.Sum(x => x.Split.Amount ?? 0))
+            );
+
+        // Get all unique periods
+        var allPeriods = groupedTransactions.Keys.Select(k => new { k.Year, k.Month })
+            .Union(groupedSplits.Keys.Select(k => new { k.Year, k.Month }))
+            .Distinct()
+            .OrderBy(k => k.Year).ThenBy(k => k.Month)
+            .ToList();
+
+        // Build result for each period and category
+        foreach (var period in allPeriods)
+        {
+            var periodLabel = $"{period.Year}-{period.Month:D2}";
+            foreach (var category in topCategories)
+            {
+                var transKey = new { period.Year, period.Month, Category = category };
+                var splitKey = new { period.Year, period.Month, Category = category };
+                var transValue = groupedTransactions.GetValueOrDefault(transKey, 0);
+                var splitValue = groupedSplits.GetValueOrDefault(splitKey, 0);
+                result.Add(new StackedAreaDataItem { Period = periodLabel, Category = category, Value = transValue + splitValue });
+            }
+        }
+
+        return result;
+    }
+
+    private List<TreemapDataItem> BuildTreemapData(List<Transaction> transactions, List<TransactionSplit> transactionSplits)
+    {
+        // Use the same expense data as the pie chart
+        var expensesByCategory = GroupExpensesByCategory(transactions, transactionSplits);
+
+        return expensesByCategory.Select(x => new TreemapDataItem
+        {
+            Category = x.Label,
+            ParentCategory = null,
+            Value = x.Value
+        }).ToList();
+    }
+
+    private List<HeatmapDataItem> BuildHeatmapData(List<Transaction> transactions, List<TransactionSplit> transactionSplits)
+    {
+        var result = new List<HeatmapDataItem>();
+        var transactionDates = transactions.ToDictionary(t => t.Id ?? 0, t => t.Date);
+
+        // Get expense transactions with dates
+        var expenseTransactions = transactions
+            .Where(t => t.Amount < 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:[") && t.Date.HasValue)
+            .Select(t => new { Date = t.Date!.Value, Amount = Math.Abs(t.Amount ?? 0) })
+            .ToList();
+
+        // Add split transactions
+        var expenseSplits = transactionSplits
+            .Where(s => s.Amount < 0 && !s.Category.Name.StartsWith("Transfer:["))
+            .Select(s => new { Date = transactionDates.GetValueOrDefault(s.TransactionId ?? 0), Amount = Math.Abs(s.Amount ?? 0) })
+            .Where(x => x.Date.HasValue)
+            .Select(x => new { Date = x.Date!.Value, x.Amount })
+            .ToList();
+
+        var allExpenses = expenseTransactions.Concat(expenseSplits).ToList();
+
+        // Group by day of week and week number
+        var grouped = allExpenses
+            .GroupBy(x => new { DayOfWeek = x.Date.DayOfWeek, WeekOfYear = GetIso8601WeekOfYear(x.Date) })
+            .Select(g => new HeatmapDataItem
+            {
+                YLabel = g.Key.DayOfWeek.ToString(),
+                XLabel = $"Wk {g.Key.WeekOfYear}",
+                Value = g.Sum(x => x.Amount)
+            })
+            .ToList();
+
+        // Ensure we have all days of week for each week that has data
+        var weeks = grouped.Select(x => x.XLabel).Distinct().OrderBy(x => x).ToList();
+        var days = new[] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+
+        foreach (var week in weeks)
+        {
+            foreach (var day in days)
+            {
+                var existing = grouped.FirstOrDefault(g => g.XLabel == week && g.YLabel == day);
+                if (existing == null)
+                {
+                    result.Add(new HeatmapDataItem { YLabel = day, XLabel = week, Value = 0 });
+                }
+                else
+                {
+                    result.Add(existing);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static int GetIso8601WeekOfYear(DateOnly date)
+    {
+        var dayOfWeek = (int)date.DayOfWeek;
+        var dayOfYear = date.DayOfYear;
+        return (dayOfYear - dayOfWeek + 10) / 7;
     }
 
     public void Dispose()

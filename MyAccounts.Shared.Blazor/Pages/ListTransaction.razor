@@ -31,37 +31,89 @@
     <MudDateRangePicker DateRange="dateRange" DateRangeChanged="OnDateRangeChanged" Label="Select Date Range" Class="small-date-picker" />
 </div>
 
-<MudText Typo="Typo.h6">Total Expenses: @totalSum.ToString("C")</MudText>
+<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudText Typo="Typo.h6">Total Expenses: @totalSum.ToString("C")</MudText>
+    <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@chartType" SelectedValueChanged="OnChartTypeChanged">
+        <MudChip Value="@("donut")" Variant="Variant.Text" Color="MudBlazor.Color.Default" SelectedColor="MudBlazor.Color.Primary">Donut</MudChip>
+        <MudChip Value="@("pie")" Variant="Variant.Text" Color="MudBlazor.Color.Default" SelectedColor="MudBlazor.Color.Primary">Pie</MudChip>
+        <MudChip Value="@("treemap")" Variant="Variant.Text" Color="MudBlazor.Color.Default" SelectedColor="MudBlazor.Color.Primary">Treemap</MudChip>
+    </MudChipSet>
+</MudStack>
 
 @if (Data != null && Data.Count > 0)
 {
-    <ApexChart TItem="TransactionCategoryData"
-    Title=""
-    Width="700"
-    Height="700"
-    @ref="chart"
-    Options=options
-    OnDataPointSelection="HandleDataPointSelection">
-
-        <ApexPointTooltip>
-            <MudCard>
-                <MudCardContent>
-                    <MudText>@context.DataPoint.X @* The percentage is coded into the category name *@</MudText>
-                    <MudText Typo="Typo.body2">@context.DataPoint.Items.Sum(x => x.TotalAmount).ToString("C")</MudText>
-                </MudCardContent>
-            </MudCard>
-        </ApexPointTooltip>
-
-        <ChildContent>
-            <ApexPointSeries TItem="TransactionCategoryData"
-            Items="Data"
-            Name="Expenses"
-            SeriesType="SeriesType.Pie"
-            XValue="e => e.Category"
-            YValue="e => e.TotalAmount"
-            ShowDataLabels/>
-        </ChildContent>
-    </ApexChart>
+    @if (chartType == "donut")
+    {
+        <ApexChart TItem="TransactionCategoryData"
+                   Title=""
+                   Width="700"
+                   Height="600"
+                   @ref="donutChart"
+                   Options="donutOptions"
+                   OnDataPointSelection="HandleDataPointSelection">
+            <ApexPointTooltip>
+                <MudCard>
+                    <MudCardContent>
+                        <MudText>@context.DataPoint.X</MudText>
+                        <MudText Typo="Typo.body2">@context.DataPoint.Items.Sum(x => x.TotalAmount).ToString("C")</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </ApexPointTooltip>
+            <ChildContent>
+                <ApexPointSeries TItem="TransactionCategoryData"
+                                 Items="Data"
+                                 Name="Expenses"
+                                 SeriesType="SeriesType.Donut"
+                                 XValue="e => e.Category"
+                                 YValue="e => e.TotalAmount"
+                                 ShowDataLabels />
+            </ChildContent>
+        </ApexChart>
+    }
+    else if (chartType == "treemap" && treemapData.Count > 0)
+    {
+        <ApexChart TItem="TreemapDataItem"
+                   Title=""
+                   Width="700"
+                   Height="500"
+                   @ref="treemapChart"
+                   Options="treemapOptions">
+            <ApexPointSeries TItem="TreemapDataItem"
+                             Items="treemapData"
+                             Name="Expenses"
+                             SeriesType="SeriesType.Treemap"
+                             XValue="e => e.Category"
+                             YValue="e => e.Value" />
+        </ApexChart>
+    }
+    else
+    {
+        <ApexChart TItem="TransactionCategoryData"
+                   Title=""
+                   Width="700"
+                   Height="700"
+                   @ref="chart"
+                   Options="options"
+                   OnDataPointSelection="HandleDataPointSelection">
+            <ApexPointTooltip>
+                <MudCard>
+                    <MudCardContent>
+                        <MudText>@context.DataPoint.X</MudText>
+                        <MudText Typo="Typo.body2">@context.DataPoint.Items.Sum(x => x.TotalAmount).ToString("C")</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </ApexPointTooltip>
+            <ChildContent>
+                <ApexPointSeries TItem="TransactionCategoryData"
+                                 Items="Data"
+                                 Name="Expenses"
+                                 SeriesType="SeriesType.Pie"
+                                 XValue="e => e.Category"
+                                 YValue="e => e.TotalAmount"
+                                 ShowDataLabels />
+            </ChildContent>
+        </ApexChart>
+    }
 }
 
 <MudStack AlignItems="AlignItems.End" Class="mb-3">
@@ -197,7 +249,13 @@
     public string CategoryName { get; set; } = null;
     private List<TransactionCategoryData> Data { get; set; } = new();
     private ApexChart<TransactionCategoryData> chart;
+    private ApexChart<TransactionCategoryData> donutChart;
+    private ApexChart<TreemapDataItem> treemapChart;
     private ApexChartOptions<TransactionCategoryData> options { get; set; } = new();
+    private ApexChartOptions<TransactionCategoryData> donutOptions { get; set; } = new();
+    private ApexChartOptions<TreemapDataItem> treemapOptions { get; set; } = new();
+    private List<TreemapDataItem> treemapData { get; set; } = new();
+    private string chartType = "donut"; // Default to donut
 
     int? top = null;
     int? skip = null;
@@ -345,29 +403,27 @@
     }
 
     private async void UpdateExpensesPieChart()
-    {        
+    {
         isDarkMode = ThemeService.IsDarkMode;
         var mode = isDarkMode ? Mode.Dark : Mode.Light;
         var background = isDarkMode ? "var(--mud-palette-background-dark)" : "var(--mud-palette-background)";
-        
+        var foreground = isDarkMode ? "#ffffff" : "#373d3f";
+
+        // Pie chart options
         options = new ApexChartOptions<TransactionCategoryData>
         {
             Theme = new Theme { Mode = mode },
             Chart = new Chart
             {
                 Background = background,
-                // Safari fix: ensure proper event handling
                 Animations = new Animations { Enabled = true },
-                // Safari fix: set explicit selection mode
                 Selection = new Selection { Enabled = true },
-                // Safari fix: ensure proper zoom/pan handling
                 Zoom = new Zoom { Enabled = false }
             },
             Tooltip = new Tooltip
             {
                 Enabled = true,
                 FillSeriesColor = false,
-                // Safari fix: use followCursor for better touch/hover detection
                 FollowCursor = true,
                 Fixed = new TooltipFixed { Enabled = false }
             },
@@ -376,10 +432,114 @@
                 Formatter = @"function(value, { seriesIndex, w }) {
                     return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }"
+            },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            }
+        };
+
+        // Donut chart options
+        donutOptions = new ApexChartOptions<TransactionCategoryData>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Animations = new Animations { Enabled = true },
+                Selection = new Selection { Enabled = true },
+                Zoom = new Zoom { Enabled = false }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FillSeriesColor = false,
+                FollowCursor = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            PlotOptions = new PlotOptions
+            {
+                Pie = new PlotOptionsPie
+                {
+                    Donut = new PlotOptionsDonut
+                    {
+                        Size = "65%",
+                        Labels = new DonutLabels
+                        {
+                            Show = true,
+                            Total = new DonutLabelTotal
+                            {
+                                Show = true,
+                                Label = "Total",
+                                FontSize = "16px",
+                                Color = foreground,
+                                Formatter = @"function(w) {
+                                    return '$' + w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                                        .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }"
+                            }
+                        }
+                    }
+                }
+            },
+            DataLabels = new DataLabels
+            {
+                Formatter = @"function(value, { seriesIndex, w }) {
+                    return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }"
+            },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
+            }
+        };
+
+        // Treemap chart options
+        treemapOptions = new ApexChartOptions<TreemapDataItem>
+        {
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart
+            {
+                Background = background,
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Fixed = new TooltipFixed { Enabled = false }
+            },
+            DataLabels = new DataLabels
+            {
+                Enabled = true,
+                Style = new DataLabelsStyle { FontSize = "14px" },
+                Formatter = @"function(text, op) {
+                    return [text, '$' + op.value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })];
+                }"
+            },
+            PlotOptions = new PlotOptions
+            {
+                Treemap = new PlotOptionsTreemap
+                {
+                    EnableShades = true,
+                    ShadeIntensity = 0.5,
+                    Distributed = true
+                }
+            },
+            Colors = new List<string> { "#42A5F5", "#66BB6A", "#FFA726", "#AB47BC", "#26C6DA", "#EF5350", "#D4E157", "#78909C" },
+            Legend = new Legend
+            {
+                Labels = new LegendLabels { Colors = foreground }
             }
         };
 
         await ResetChart();
+        StateHasChanged();
+    }
+
+    private void OnChartTypeChanged(string newType)
+    {
+        chartType = newType;
         StateHasChanged();
     }
 
@@ -597,18 +757,23 @@
         data = groupedData.Select(g => ((double)g.TotalAmount / totalSum) * 100).ToArray();
         labels = groupedData.Select(g => $"{g.Category}: {g.TotalAmount} ({((double)g.TotalAmount / totalSum) * 100:F2}%)").ToArray();
 
-        // for (int i = 0; i < data.Length; i++)
-        // {
-        //     Console.WriteLine($"Category: {labels[i]}, Percentage: {data[i]}%");
-        // }
-
         Data.Clear();
+        treemapData.Clear();
         await ResetChart();
+
         foreach (var item in groupedData)
         {
             item.TotalAmount = Math.Abs(item.TotalAmount);
-            item.Category = item.Category.Replace(":", " ") + $" ({(Math.Abs((double)item.TotalAmount / totalSum)) * 100:F2}%)";
+            var categoryName = item.Category.Replace(":", " ");
+            item.Category = categoryName + $" ({(Math.Abs((double)item.TotalAmount / totalSum)) * 100:F2}%)";
             Data.Add(item);
+
+            // Build treemap data
+            treemapData.Add(new TreemapDataItem
+            {
+                Category = categoryName,
+                Value = item.TotalAmount
+            });
         }
     }
 
