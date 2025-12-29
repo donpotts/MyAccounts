@@ -346,25 +346,35 @@
 
     private async void UpdateExpensesPieChart()
     {        
+        isDarkMode = ThemeService.IsDarkMode;
+        var mode = isDarkMode ? Mode.Dark : Mode.Light;
+        var background = isDarkMode ? "var(--mud-palette-background-dark)" : "var(--mud-palette-background)";
+        
         options = new ApexChartOptions<TransactionCategoryData>
         {
-            Theme = new Theme()
+            Theme = new Theme { Mode = mode },
+            Chart = new Chart 
+            { 
+                Background = background,
+                // Safari fix: ensure proper event handling
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FillSeriesColor = false,
+                // Safari fix: use followCursor for better touch/hover detection
+                FollowCursor = true
+            },
+            DataLabels = new DataLabels
+            {
+                Formatter = @"function(value, { seriesIndex, w }) {
+                    return '$' + w.config.series[seriesIndex].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }"
+            }
         };
 
-        isDarkMode = ThemeService.IsDarkMode;
-        if (isDarkMode)
-        {
-            options.Theme.Mode = Mode.Dark;
-            options.Chart.Background = "var(--mud-palette-background-dark)";
-
-        }
-        else
-        {
-            options.Theme.Mode = Mode.Light;
-            options.Chart.Background = "var(--mud-palette-background)";
-        }
         await ResetChart();
-
         StateHasChanged();
     }
 

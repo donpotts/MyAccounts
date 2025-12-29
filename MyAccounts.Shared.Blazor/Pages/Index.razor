@@ -256,7 +256,19 @@
         expenseChartOptions = new ApexChartOptions<ChartDataItem>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart { Background = background },
+            Chart = new Chart 
+            { 
+                Background = background,
+                // Safari fix: ensure proper event handling
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FillSeriesColor = false,
+                // Safari fix: use followCursor for better touch/hover detection
+                FollowCursor = true
+            },
             DataLabels = new DataLabels
             {
                 Style = new DataLabelsStyle
@@ -284,8 +296,19 @@
         incomeExpenseChartOptions = new ApexChartOptions<ChartDataItem>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart { Background = background },
-            Colors = new List<string> { "#66BB6A", "#EF5350" }, // Lighter green/red for better dark mode visibility
+            Chart = new Chart 
+            { 
+                Background = background,
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Intersect = false,
+                Shared = true
+            },
+            Colors = new List<string> { "#66BB6A", "#EF5350" },
             PlotOptions = new PlotOptions
             {
                 Bar = new PlotOptionsBar
@@ -300,7 +323,7 @@
             {
                 Style = new DataLabelsStyle
                 {
-                    Colors = new List<string> { "#ffffff" } // White text on colored bars
+                    Colors = new List<string> { "#ffffff" }
                 },
                 Formatter = @"function(value) { return '$' + Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }"
             },
@@ -326,9 +349,25 @@
         trendChartOptions = new ApexChartOptions<TrendDataItem>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart { Background = background },
-            Colors = new List<string> { "#66BB6A", "#EF5350" }, // Lighter green/red for better visibility
+            Chart = new Chart 
+            { 
+                Background = background,
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Intersect = false,
+                Shared = true
+            },
+            Colors = new List<string> { "#66BB6A", "#EF5350" },
             Stroke = new Stroke { Curve = Curve.Smooth, Width = 3 },
+            Markers = new Markers
+            {
+                Size = 5,
+                Hover = new MarkersHover { SizeOffset = 3 }
+            },
             Legend = new Legend
             {
                 Labels = new LegendLabels { Colors = foreground }
@@ -356,8 +395,19 @@
         accountChartOptions = new ApexChartOptions<AccountChartDataItem>
         {
             Theme = new Theme { Mode = mode },
-            Chart = new Chart { Background = background },
-            Colors = new List<string> { "#66BB6A", "#EF5350" }, // Green for credits, Red for debits
+            Chart = new Chart 
+            { 
+                Background = background,
+                Animations = new Animations { Enabled = true }
+            },
+            Tooltip = new Tooltip
+            {
+                Enabled = true,
+                FollowCursor = true,
+                Intersect = false,
+                Shared = true
+            },
+            Colors = new List<string> { "#66BB6A", "#EF5350" },
             PlotOptions = new PlotOptions
             {
                 Bar = new PlotOptionsBar
@@ -590,7 +640,7 @@
                 }
             );
 
-        // Group splits by the transaction's period
+        // Group splits with enhanced error handling
         var groupedSplits = transactionSplits
             .Where(s => !s.Category.Name.StartsWith("Transfer:["))
             .Select(s => new
