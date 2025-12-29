@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - main
+    - postgresql_db
 env:
   AZURE_WEBAPP_NAME: myaccounts
   AZURE_WEBAPP_PACKAGE_PATH: MyAccounts\publish
@@ -30,6 +31,7 @@ jobs:
     - name: Publish with version from run number
       run: |
         $version = "1.0.${{ github.run_number }}"
+        Write-Host "Publishing version: $version"
         dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}" /p:Version=$version /p:AssemblyVersion=$version.0 /p:FileVersion=$version.0
     - name: Publish Artifacts
       uses: actions/upload-artifact@v4

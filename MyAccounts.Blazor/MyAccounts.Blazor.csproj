@@ -6,11 +6,35 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
     
-    <!-- Simple version - increment manually before each publish -->
-    <Version>1.0.4</Version>
-    <AssemblyVersion>1.0.4.0</AssemblyVersion>
-    <FileVersion>1.0.4.0</FileVersion>
+    <!-- Version is set dynamically from version.txt or CI/CD -->
+    <VersionFile>$(MSBuildProjectDirectory)\version.txt</VersionFile>
   </PropertyGroup>
+
+  <!-- Read and increment version from file for local publish -->
+  <Target Name="SetVersionFromFile" BeforeTargets="BeforeBuild;Publish">
+    <PropertyGroup>
+      <!-- Read current build number from file, default to 1 if not exists -->
+      <BuildNumber Condition="Exists('$(VersionFile)')">$([System.IO.File]::ReadAllText('$(VersionFile)').Trim())</BuildNumber>
+      <BuildNumber Condition="'$(BuildNumber)' == ''">1</BuildNumber>
+      
+      <!-- Set version if not provided via command line -->
+      <Version Condition="'$(Version)' == '' OR '$(Version)' == '1.0.0'">1.0.$(BuildNumber)</Version>
+      <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">1.0.$(BuildNumber).0</AssemblyVersion>
+      <FileVersion Condition="'$(FileVersion)' == ''">1.0.$(BuildNumber).0</FileVersion>
+    </PropertyGroup>
+    <Message Importance="High" Text="Building with version: $(Version)" />
+  </Target>
+
+  <!-- Increment version file after successful publish -->
+  <Target Name="IncrementVersionAfterPublish" AfterTargets="Publish">
+    <PropertyGroup>
+      <CurrentBuildNumber Condition="Exists('$(VersionFile)')">$([System.IO.File]::ReadAllText('$(VersionFile)').Trim())</CurrentBuildNumber>
+      <CurrentBuildNumber Condition="'$(CurrentBuildNumber)' == ''">1</CurrentBuildNumber>
+      <NextBuildNumber>$([MSBuild]::Add($(CurrentBuildNumber), 1))</NextBuildNumber>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(VersionFile)" Lines="$(NextBuildNumber)" Overwrite="true" />
+    <Message Importance="High" Text="Version incremented to: 1.0.$(NextBuildNumber) for next publish" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
@@ -33,6 +57,18 @@
     <Content Update="wwwroot\favicon.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <!-- Don't include version.txt in published output -->
+    <Content Update="version.txt">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Exclude version.txt from being included in the build -->
+  <ItemGroup>
+    <None Update="version.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

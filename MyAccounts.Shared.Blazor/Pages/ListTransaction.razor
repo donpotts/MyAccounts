@@ -468,11 +468,41 @@
         {
             var myresult = await AppService.ListTransactionODataAsync(null, null, sorderby, filter, true, "Account,Category");
 
-            var transactionIds = myresult?.Value.Select(t => t.Id).ToList();
-            var sfilter2 = $"Transaction/Id in ({string.Join(",", transactionIds)})";
-            var myresult2 = await AppService.ListTransactionSplitODataAsync(null, null, null, sfilter2, true, "Transaction,Category");
+            if (myresult?.Value == null || !myresult.Value.Any())
+            {
+                Data.Clear();
+                await ResetChart();
+                return;
+            }
 
-            var groupedData = GroupTransactions(myresult?.Value, myresult2?.Value);
+            // Get transaction splits - batch the requests to avoid URL length limits
+            var transactionIds = myresult.Value.Where(t => t.Id.HasValue).Select(t => t.Id!.Value).ToList();
+            var allSplits = new List<TransactionSplit>();
+            
+            // Process in batches of 50 to avoid URL length limits
+            const int batchSize = 50;
+            for (int i = 0; i < transactionIds.Count; i += batchSize)
+            {
+                var batch = transactionIds.Skip(i).Take(batchSize).ToList();
+                if (batch.Count > 0)
+                {
+                    try
+                    {
+                        var sfilter2 = $"Transaction/Id in ({string.Join(",", batch)})";
+                        var batchResult = await AppService.ListTransactionSplitODataAsync(null, null, null, sfilter2, true, "Transaction,Category");
+                        if (batchResult?.Value != null)
+                        {
+                            allSplits.AddRange(batchResult.Value);
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore errors fetching splits for this batch
+                    }
+                }
+            }
+
+            var groupedData = GroupTransactions(myresult.Value, allSplits);
 
             CalculateDataAndLabels(groupedData);
         }
@@ -505,22 +535,29 @@
 
     private List<TransactionCategoryData> GroupTransactions(IEnumerable<Transaction> transactions, IEnumerable<TransactionSplit> transactionSplits)
     {
-        var filteredTransactions = transactions.Where(t => t.Amount <= 0 && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["));
-        var filteredTransactionSplits = transactionSplits.Where(t => t.Amount <= 0);
+        // Filter transactions - add null checks for Category
+        var filteredTransactions = transactions
+            .Where(t => t.Amount <= 0 && t.Category != null && t.Category.Name != "Split" && !t.Category.Name.StartsWith("Transfer:["));
+        
+        // Filter splits - add null checks for Category
+        var filteredTransactionSplits = (transactionSplits ?? Enumerable.Empty<TransactionSplit>())
+            .Where(t => t.Amount <= 0 && t.Category != null);
 
-        var groupedDataSplit = filteredTransactionSplits.GroupBy(t => t.Category.Name)
-                                              .Select(g => new TransactionCategoryData
-                                                  {
-                                                      Category = g.Key,
-                                                      TotalAmount = g.Sum(t => (decimal)t.Amount)
-                                                  }).ToList();
+        var groupedDataSplit = filteredTransactionSplits
+            .GroupBy(t => t.Category?.Name ?? "Unknown")
+            .Select(g => new TransactionCategoryData
+            {
+                Category = g.Key,
+                TotalAmount = g.Sum(t => (decimal)(t.Amount ?? 0))
+            }).ToList();
 
-        var groupedData = filteredTransactions.GroupBy(t => t.Category.Name)
-                                              .Select(g => new TransactionCategoryData
-                                                  {
-                                                      Category = g.Key,
-                                                      TotalAmount = g.Sum(t => (decimal)t.Amount)
-                                                  }).ToList();
+        var groupedData = filteredTransactions
+            .GroupBy(t => t.Category?.Name ?? "Unknown")
+            .Select(g => new TransactionCategoryData
+            {
+                Category = g.Key,
+                TotalAmount = g.Sum(t => (decimal)(t.Amount ?? 0))
+            }).ToList();
 
         foreach (var split in groupedDataSplit)
         {
