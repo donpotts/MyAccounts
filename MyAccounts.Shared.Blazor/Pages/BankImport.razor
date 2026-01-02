@@ -112,11 +112,23 @@
 
     private class ABankStatement
     {
+        [CsvHelper.Configuration.Attributes.Name("date")]
+        [CsvHelper.Configuration.Attributes.Format("yyyy-MM-dd", "MM/dd/yyyy", "M/d/yyyy", "yyyy/MM/dd")]
         public DateOnly Date { get; set; }
+        [CsvHelper.Configuration.Attributes.Name("time")]
+        [CsvHelper.Configuration.Attributes.Optional]
+        [CsvHelper.Configuration.Attributes.Format("HH:mm:ss", "HH:mm", "h:mm:ss tt", "h:mm tt")]
         public TimeOnly Time { get; set; }
+        [CsvHelper.Configuration.Attributes.Name("amount")]
         public decimal Amount { get; set; }
+        [CsvHelper.Configuration.Attributes.Name("type")]
+        [CsvHelper.Configuration.Attributes.Optional]
         public string? Type { get; set; }
+        [CsvHelper.Configuration.Attributes.Name("description")]
+        [CsvHelper.Configuration.Attributes.Optional]
         public string? Description { get; set; }
+        [CsvHelper.Configuration.Attributes.Name("category")]
+        [CsvHelper.Configuration.Attributes.Optional]
         public string? Category { get; set; }
     }
 
@@ -304,7 +316,15 @@
                 using var memoryStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(fullContent));
                 using var newReader = new StreamReader(memoryStream);
 
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture) { TrimOptions = TrimOptions.Trim };
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture) 
+                { 
+                    TrimOptions = TrimOptions.Trim,
+                    HeaderValidated = null, // Don't throw on header validation
+                    MissingFieldFound = null, // Don't throw on missing optional fields
+                    PrepareHeaderForMatch = args => args.Header.Trim().ToLowerInvariant(), // Normalize headers for matching
+                    // Auto-detect delimiter (tab or comma)
+                    Delimiter = headerLine.Contains('\t') ? "\t" : ","
+                };
 
                 // Check if header matches one of the alternate formats
                 var headers = headerLine.Split(new[] { '\t', ',' }, StringSplitOptions.TrimEntries);
@@ -330,41 +350,58 @@
                             });
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Logger.LogError(ex, "Error processing NFCU format: {Message}", ex.Message);
+                        throw; // Re-throw to be caught by outer exception handler
                     }
                 }
                 else if (isUFormat)
                 {
                     using CsvReader csv = new(newReader, config);
-                    await foreach (var record in csv.GetRecordsAsync<UBankStatement>())
+                    try
                     {
-                        _bankRecords.Add(new BankRecord
+                        await foreach (var record in csv.GetRecordsAsync<UBankStatement>())
                         {
-                            Date = record.Date,
-                            Amount = record.Amount,
-                            Description = record.Description,
-                            Type = record.Category,
-                            Time = default,
-                            Category = record.Category
-                        });
+                            _bankRecords.Add(new BankRecord
+                            {
+                                Date = record.Date,
+                                Amount = record.Amount,
+                                Description = record.Description,
+                                Type = record.Category,
+                                Time = default,
+                                Category = record.Category
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, "Error processing USAA format: {Message}", ex.Message);
+                        throw; // Re-throw to be caught by outer exception handler
                     }
                 }
                 else
                 {
                     using CsvReader csv = new(newReader, config);
-                    await foreach (var record in csv.GetRecordsAsync<ABankStatement>())
+                    try
                     {
-                        _bankRecords.Add(new BankRecord
+                        await foreach (var record in csv.GetRecordsAsync<ABankStatement>())
                         {
-                            Date = record.Date,
-                            Amount = record.Amount,
-                            Description = record.Description,
-                            Type = record.Type,
-                            Time = record.Time,
-                            Category = record.Category
-                        });
+                            _bankRecords.Add(new BankRecord
+                            {
+                                Date = record.Date,
+                                Amount = record.Amount,
+                                Description = record.Description,
+                                Type = record.Type,
+                                Time = record.Time,
+                                Category = record.Category
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, "Error processing standard bank statement format: {Message}", ex.Message);
+                        throw; // Re-throw to be caught by outer exception handler
                     }
                 }
             }
@@ -377,10 +414,71 @@
 
             _bankRecords = _bankRecords.OrderByDescending(r => r.Date).ThenByDescending(r => r.Time).ToList();
         }
-        catch(CsvHelperException)
+        catch(CsvHelperException ex)
         {
             _bankRecords.Clear();
-            Snackbar.Add("There was an error while processing the file.", Severity.Error);
+            Logger.LogError(ex, "CSV parsing error: {Message}", ex.Message);
+            
+            // Provide user-friendly error message based on the exception
+            var friendlyMessage = "There was an error processing the CSV file. ";
+            
+            // Try to extract specific error details
+            var innerMessage = ex.InnerException?.Message ?? ex.Message;
+            var context = ex.Context;
+            
+            if (context?.Reader != null)
+            {
+                var row = context.Reader.CurrentIndex + 1;
+                var rawRecord = context.Reader.Parser?.RawRecord?.Trim();
+                friendlyMessage += $"Error on row {row}. ";
+                
+                if (!string.IsNullOrEmpty(rawRecord) && rawRecord.Length <= 100)
+                {
+                    friendlyMessage += $"Data: \"{rawRecord}\". ";
+                }
+            }
+            
+            if (innerMessage.Contains("header", StringComparison.OrdinalIgnoreCase))
+            {
+                friendlyMessage += "The file headers don't match the expected format. Please check the CSV file structure.";
+            }
+            else if (innerMessage.Contains("convert", StringComparison.OrdinalIgnoreCase) || 
+                     innerMessage.Contains("parse", StringComparison.OrdinalIgnoreCase) ||
+                     innerMessage.Contains("TypeConverterException", StringComparison.OrdinalIgnoreCase))
+            {
+                // Try to identify which field caused the issue
+                if (innerMessage.Contains("Date", StringComparison.OrdinalIgnoreCase))
+                {
+                    friendlyMessage += "Invalid date format detected. Expected format: MM/DD/YYYY or YYYY-MM-DD.";
+                }
+                else if (innerMessage.Contains("Amount", StringComparison.OrdinalIgnoreCase) || 
+                         innerMessage.Contains("decimal", StringComparison.OrdinalIgnoreCase))
+                {
+                    friendlyMessage += "Invalid amount format detected. Amounts should be numeric values like 123.45.";
+                }
+                else if (innerMessage.Contains("Time", StringComparison.OrdinalIgnoreCase))
+                {
+                    friendlyMessage += "Invalid time format detected. Expected format: HH:MM:SS or HH:MM.";
+                }
+                else
+                {
+                    friendlyMessage += "Some data in the file couldn't be read. Please check that dates and amounts are formatted correctly.";
+                }
+            }
+            else
+            {
+                friendlyMessage += "Please ensure the file is a valid bank statement CSV with the correct format.";
+            }
+            
+            Snackbar.Add(friendlyMessage, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            _bankRecords.Clear();
+            Logger.LogError(ex, "Unexpected error processing bank import: {Message}", ex.Message);
+            
+            var errorDetails = ex.Message.Length > 100 ? ex.Message.Substring(0, 100) + "..." : ex.Message;
+            Snackbar.Add($"An unexpected error occurred: {errorDetails}. Please try again or contact support.", Severity.Error);
         }
         finally
         {
