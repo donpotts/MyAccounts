@@ -5,7 +5,21 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>a6a59fd0-bbee-40c1-a13b-bea1a9b75eba</UserSecretsId>
+		
+		<!-- Version file location (in Blazor project) -->
+		<BlazorVersionFile>$(MSBuildThisFileDirectory)..\MyAccounts.Blazor\version.txt</BlazorVersionFile>
 	</PropertyGroup>
+
+	<!-- Increment Blazor version file after successful publish of main project -->
+	<Target Name="IncrementBlazorVersionAfterPublish" AfterTargets="Publish">
+		<PropertyGroup>
+			<CurrentBuildNumber Condition="Exists('$(BlazorVersionFile)')">$([System.IO.File]::ReadAllText('$(BlazorVersionFile)').Trim())</CurrentBuildNumber>
+			<CurrentBuildNumber Condition="'$(CurrentBuildNumber)' == ''">1</CurrentBuildNumber>
+			<NextBuildNumber>$([MSBuild]::Add($(CurrentBuildNumber), 1))</NextBuildNumber>
+		</PropertyGroup>
+		<WriteLinesToFile File="$(BlazorVersionFile)" Lines="$(NextBuildNumber)" Overwrite="true" />
+		<Message Importance="High" Text="Blazor version incremented to: 1.0.$(NextBuildNumber) for next publish" />
+	</Target>
 
 	<ItemGroup>
 		<None Remove="MyAccounts-2024-08-16-import.csv" />

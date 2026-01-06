@@ -22,11 +22,31 @@ async function onInstall(event) {
     console.info('Service worker: Install - Version: ' + self.assetsManifest.version);
 
     // Fetch and cache all matching items from the assets manifest
+    // Note: We don't use integrity checks here because during updates, the browser
+    // may have cached old files that don't match the new integrity hashes.
+    // Instead, we use cache: 'no-cache' to force fresh fetches from the server.
     const assetsRequests = self.assetsManifest.assets
         .filter(asset => offlineAssetsInclude.some(pattern => pattern.test(asset.url)))
         .filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)))
-        .map(asset => new Request(asset.url, { integrity: asset.hash, cache: 'no-cache' }));
-    await caches.open(cacheName).then(cache => cache.addAll(assetsRequests));
+        .map(asset => new Request(asset.url, { cache: 'no-cache' }));
+    
+    try {
+        const cache = await caches.open(cacheName);
+        await cache.addAll(assetsRequests);
+        console.info('Service worker: Assets cached successfully');
+    } catch (error) {
+        console.error('Service worker: Failed to cache assets', error);
+        // Try to cache assets individually to identify which one fails
+        const cache = await caches.open(cacheName);
+        for (const request of assetsRequests) {
+            try {
+                const response = await fetch(request);
+                await cache.put(request, response);
+            } catch (e) {
+                console.error('Service worker: Failed to cache:', request.url, e);
+            }
+        }
+    }
 
     // Force the waiting service worker to become the active service worker immediately
     self.skipWaiting();

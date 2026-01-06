@@ -104,7 +104,8 @@
                     {
                         decimal totalValue = 0;
                         var colorClass = "text-green";
-                        if (accountitem.Balance != null && decimal.TryParse(accountitem.Balance.ToString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out totalValue) && totalValue <= 0)
+                        // Show red only for negative amounts (not zero)
+                        if (accountitem.Balance != null && decimal.TryParse(accountitem.Balance.ToString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out totalValue) && totalValue < 0)
                         {
                             colorClass = "text-red";
                         }
@@ -269,6 +270,10 @@
             if (Decimal.TryParse(totalBalance.ToString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out totalBalanceValue) && totalBalanceValue < 0)
             {
                 totalBalanceColorClass = "text-red";
+            }
+            else
+            {
+                totalBalanceColorClass = "text-green";
             }
         }
         catch { }
